@@ -1,50 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Eventy Privacy Policy</title>
-        <style>
-            body {
-                font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial,
-                    sans-serif;
-                max-width: 720px;
-                margin: 40px auto;
-                padding: 0 16px;
-                line-height: 1.6;
-            }
-            h1 {
-                font-size: 28px;
-                margin-bottom: 8px;
-            }
-            .muted {
-                color: #6a737d;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>Eventy Privacy Policy</h1>
-        <div class="muted">Effective date: 2025-09-19</div>
-        <p>
-            Eventy processes webpage or selected text only when you use the
-            "Scan" action. The selected text or page text is sent to our
-            Cloudflare proxy and to OpenRouter to extract event details. We then
-            open a prefilled Google Calendar page.
-        </p>
-        <ul>
-            <li>
-                We do not collect, store, sell, or share personal information.
-            </li>
-            <li>No third-party trackers are embedded.</li>
-            <li>
-                Data is transmitted over HTTPS and used only to fulfill the
-                requested feature.
-            </li>
-            <li>Contact: eventy.sup@gmail.com</li>
-        </ul>
-        <p>
-            If you have questions about this policy, contact us at the email
-            above.
-        </p>
-    </body>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Eventy Privacy Policy</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial,
+                sans-serif;
+            max-width: 720px;
+            margin: 40px auto;
+            padding: 0 16px;
+            line-height: 1.6;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .muted {
+            color: #6a737d;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Eventy Privacy Policy</h1>
+    <div class="muted">Effective date: 2025-10-20</div>
+    <p>
+        Eventy processes webpage content or selected text only when you use
+        the "Scan" action. The selected text or page text is sent to our
+        Cloudflare Worker proxy and to OpenRouter to extract event details.
+        Depending on your Settings, Eventy then either opens a prefilled
+        Google Calendar page or creates events via the Google Calendar API
+        after you authorize with Google.
+    </p>
+    <h2>What data we handle</h2>
+    <ul>
+        <li>No third‑party trackers are embedded.</li>
+        <li>
+            We do not sell or share your personal information. We do not
+            maintain server‑side user profiles.
+        </li>
+        <li>
+            Text you choose to scan is sent to our Cloudflare Worker and to
+            OpenRouter solely to extract event fields (title, date/time,
+            location, description, optional recurrence).
+        </li>
+        <li>
+            When you enable "Use Google Calendar API (OAuth)", Eventy uses
+            the minimal scope <code>https://www.googleapis.com/auth/calendar.events</code>
+            to create calendar events you select. Eventy does not request
+            broader calendar scopes.
+        </li>
+    </ul>
+    <h2>OAuth and tokens</h2>
+    <ul>
+        <li>
+            Authentication uses Chrome Identity. Access tokens are obtained
+            from Google and cached by Chrome; Eventy does not store tokens on
+            our servers.
+        </li>
+        <li>
+            Tokens are used only to call Google Calendar’s REST API from the
+            extension. They are not sent to our Cloudflare proxy.
+        </li>
+        <li>
+            You can revoke access at any time via Settings → Disconnect, or
+            in your Google Account at
+            <a href="https://myaccount.google.com/permissions">Google Account → Security → Third‑party access</a>.
+        </li>
+    </ul>
+    <h2>Storage and retention</h2>
+    <ul>
+        <li>
+            Basic preferences (e.g., theme, whether API mode is enabled) are
+            stored in your browser’s <code>chrome.storage</code>. Event
+            extraction results may be cached locally to improve UX. We do
+            not store your data on our servers.
+        </li>
+        <li>All network traffic is transmitted over HTTPS.</li>
+    </ul>
+    <h2>Contact</h2>
+    <ul>
+        <li>Support and privacy inquiries: <a href="mailto:eventy.sup@gmail.com">eventy.sup@gmail.com</a></li>
+    </ul>
+    <p>
+        If you have questions about this policy, contact us at the email
+        above.
+    </p>
+</body>
+
 </html>
