@@ -1,6 +1,6 @@
 # Eventy Terms of Service
 
-Effective date: 2025-10-20
+Effective date: 2026-01-26
 
 1. Overview
 
@@ -15,6 +15,7 @@ Effective date: 2025-10-20
 3. Permissions and data use
 
 -   Minimal Google scope used: https://www.googleapis.com/auth/calendar.events (create events only, when enabled).
+-   **API Keys (BYOK):** Users providing their own API keys depend on OpenRouter services. We facilitate the request but are not responsible for OpenRouter availability.
 -   Tokens are obtained via Chrome Identity; Eventy does not store tokens on our servers.
 -   See Privacy Policy for more details: `docs/privacy.html` (or hosted URL).
 
