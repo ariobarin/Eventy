@@ -1,6 +1,7 @@
 import { openCalendarEventsInBackground } from "./background/openCalendar.js";
 import { DEBUG } from "../config.js";
 import { escapeHtml } from "./utils/string.js";
+import { isFreshScanResult } from "./utils/cache.js";
 import { applyTheme } from "./ui/theme.js";
 import { debug, warn, error } from "./utils/logger.js";
 import { htmlToMarkdown, tablesToCsvSnippets, buildModelInput } from "./llm/preprocess.js";
@@ -1199,7 +1200,7 @@ addSelectedBtn?.addEventListener("click", async () => {
 
 
 // Generic polling function
-async function pollForResults(url, storageKey, onComplete, onError) {
+async function pollForResults(url, storageKey, onComplete, onError, options = {}) {
     let currentInterval = SCAN_POLL_INITIAL_INTERVAL_MS;
     let attempts = 0;
     const startTime = Date.now();
@@ -1265,12 +1266,19 @@ async function pollForResults(url, storageKey, onComplete, onError) {
             } else {
                 // URL based scan
                 const key = `eventy-scan:${url}`;
-                const checkResult = await chrome.storage.local.get(key);
+                const scanningKey = `eventy-scanning:${url}`;
+                const checkResult = await chrome.storage.local.get([key, scanningKey]);
                 const cached = checkResult[key];
+                const scanning = checkResult[scanningKey];
+                const minimumResultTs = options.minimumResultTs;
 
-                if (cached && Array.isArray(cached.events)) {
+                if (isFreshScanResult(cached, minimumResultTs)) {
                     isReady = true;
                     resultData = cached;
+                } else if (!scanning) {
+                    cleanup();
+                    onError();
+                    return;
                 }
             }
 
@@ -1329,7 +1337,8 @@ async function checkForInProgressScan() {
                     restoreSelection(cached.selected);
                 }
             },
-            () => setState(UI_STATE.IDLE)
+            () => setState(UI_STATE.IDLE),
+            { minimumResultTs: isScanning.startTime }
         );
 
         return true;

@@ -6,27 +6,38 @@ export function buildCalendarCreateUrl(event) {
     if (event.location) params.set("location", event.location);
     if (event.description) params.set("details", event.description);
 
-    function toGoogleDate(dateStr, timeStr) {
+    function toDate(dateStr, timeStr) {
         if (!dateStr) return null;
         try {
             const dt = new Date(`${dateStr} ${timeStr || "00:00"}`);
-            if (isNaN(dt.getTime())) return null;
-
-            const y = dt.getFullYear();
-            const m = padZero(dt.getMonth() + 1);
-            const d = padZero(dt.getDate());
-            const hh = padZero(dt.getHours());
-            const mm = padZero(dt.getMinutes());
-            const ss = padZero(dt.getSeconds());
-            return `${y}${m}${d}T${hh}${mm}${ss}`;
+            return isNaN(dt.getTime()) ? null : dt;
         } catch (_) {
             return null;
         }
     }
 
-    const start = toGoogleDate(event.startDate, event.startTime);
-    const end = toGoogleDate(event.endDate || event.startDate, event.endTime);
-    if (start && end) params.set("dates", `${start}/${end}`);
+    function formatGoogleDate(dt) {
+        const y = dt.getFullYear();
+        const m = padZero(dt.getMonth() + 1);
+        const d = padZero(dt.getDate());
+        const hh = padZero(dt.getHours());
+        const mm = padZero(dt.getMinutes());
+        const ss = padZero(dt.getSeconds());
+        return `${y}${m}${d}T${hh}${mm}${ss}`;
+    }
+
+    function resolveEndDate(startDate) {
+        const explicitEnd = toDate(event.endDate || event.startDate, event.endTime);
+        if (explicitEnd && explicitEnd > startDate) return explicitEnd;
+        if (event.startTime && !event.endTime) {
+            return new Date(startDate.getTime() + 60 * 60 * 1000);
+        }
+        return explicitEnd;
+    }
+
+    const startDate = toDate(event.startDate, event.startTime);
+    const endDate = startDate ? resolveEndDate(startDate) : null;
+    if (startDate && endDate) params.set("dates", `${formatGoogleDate(startDate)}/${formatGoogleDate(endDate)}`);
 
     if (event.recurrence) {
         params.set("recur", `RRULE:${event.recurrence}`);
