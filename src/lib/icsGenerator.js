@@ -4,26 +4,44 @@ import { padZero } from '../utils/string.js';
 // iCalendar format requires CRLF line endings
 const CRLF = '\r\n';
 
-// Helper to format dates as iCalendar format in floating time (YYYYMMDDTHHMMSS)
-// Using floating time (no 'Z' suffix) to avoid timezone shifts
-function formatICSDate(dateStr, timeStr) {
+function toDate(dateStr, timeStr) {
     if (!dateStr) return null;
 
     try {
         const dt = new Date(`${dateStr} ${timeStr || '00:00'}`);
-        if (isNaN(dt.getTime())) return null;
-        // Use local time for floating events (no timezone shift)
-        const y = dt.getFullYear();
-        const m = padZero(dt.getMonth() + 1);
-        const d = padZero(dt.getDate());
-        const hh = padZero(dt.getHours());
-        const mm = padZero(dt.getMinutes());
-        const ss = padZero(dt.getSeconds());
-        // No 'Z' suffix for floating time
-        return `${y}${m}${d}T${hh}${mm}${ss}`;
+        return isNaN(dt.getTime()) ? null : dt;
     } catch (e) {
         return null;
     }
+}
+
+function addDays(dt, days) {
+    return new Date(dt.getTime() + days * 24 * 60 * 60 * 1000);
+}
+
+function addHours(dt, hours) {
+    return new Date(dt.getTime() + hours * 60 * 60 * 1000);
+}
+
+function formatICSAllDayDate(dt) {
+    const y = dt.getFullYear();
+    const m = padZero(dt.getMonth() + 1);
+    const d = padZero(dt.getDate());
+    return `${y}${m}${d}`;
+}
+
+// Helper to format dates as iCalendar format in floating time (YYYYMMDDTHHMMSS)
+// Using floating time (no 'Z' suffix) to avoid timezone shifts
+function formatICSDateTime(dt) {
+    if (!dt) return null;
+
+    const y = dt.getFullYear();
+    const m = padZero(dt.getMonth() + 1);
+    const d = padZero(dt.getDate());
+    const hh = padZero(dt.getHours());
+    const mm = padZero(dt.getMinutes());
+    const ss = padZero(dt.getSeconds());
+    return `${y}${m}${d}T${hh}${mm}${ss}`;
 }
 
 // Helper to escape text for iCalendar format
@@ -80,22 +98,27 @@ function generateVEVENT(event) {
         lines.push(foldLine(`SUMMARY:${escapeICS(event.title)}`));
     }
 
-    // Start date/time (floating time)
-    const dtstart = formatICSDate(event.startDate, event.startTime);
-    if (!dtstart) {
+    const startDate = toDate(event.startDate, event.startTime);
+    if (!startDate) {
         // Skip invalid events instead of throwing error for merged ICS
         console.warn('DTSTART is required for VEVENT', event);
-        return []; 
+        return [];
     }
-    lines.push(`DTSTART:${dtstart}`);
 
-    // End date/time (floating time)
-    const dtend = formatICSDate(
-        event.endDate || event.startDate,
-        event.endTime || event.startTime
-    );
-    if (dtend) {
-        lines.push(`DTEND:${dtend}`);
+    const isAllDay = !event.startTime && !event.endTime;
+    if (isAllDay) {
+        const explicitEndDate = toDate(event.endDate, null);
+        const endDate = explicitEndDate && explicitEndDate > startDate
+            ? addDays(explicitEndDate, 1)
+            : addDays(startDate, 1);
+        lines.push(`DTSTART;VALUE=DATE:${formatICSAllDayDate(startDate)}`);
+        lines.push(`DTEND;VALUE=DATE:${formatICSAllDayDate(endDate)}`);
+    } else {
+        const endDate = event.endTime
+            ? toDate(event.endDate || event.startDate, event.endTime)
+            : addHours(startDate, 1);
+        lines.push(`DTSTART:${formatICSDateTime(startDate)}`);
+        lines.push(`DTEND:${formatICSDateTime(endDate)}`);
     }
 
     // Location

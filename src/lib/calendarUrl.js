@@ -33,14 +33,21 @@ export function buildCalendarCreateUrl(event) {
         return `${y}${m}${d}`;
     }
 
+    function addDays(dt, days) {
+        return new Date(dt.getTime() + days * 24 * 60 * 60 * 1000);
+    }
+
     function resolveEndDate(startDate) {
+        const isAllDay = !event.startTime && !event.endTime;
         const explicitEnd = toDate(event.endDate || event.startDate, event.endTime);
-        if (explicitEnd && explicitEnd > startDate) return explicitEnd;
+        if (explicitEnd && explicitEnd > startDate) {
+            return isAllDay ? addDays(explicitEnd, 1) : explicitEnd;
+        }
         if (event.startTime && !event.endTime) {
             return new Date(startDate.getTime() + 60 * 60 * 1000);
         }
-        if (!event.startTime && !event.endTime) {
-            return new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+        if (isAllDay) {
+            return addDays(startDate, 1);
         }
         return explicitEnd;
     }

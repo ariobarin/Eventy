@@ -36,3 +36,13 @@ test("google calendar uses all day range for date only events", () => {
 
     assert.equal(getDatesParam(url), "20251005/20251006");
 });
+
+test("google calendar treats all day end dates as inclusive", () => {
+    const url = buildCalendarCreateUrl({
+        title: "Festival",
+        startDate: "2025-09-26",
+        endDate: "2025-09-28",
+    });
+
+    assert.equal(getDatesParam(url), "20250926/20250929");
+});
