@@ -23,3 +23,12 @@ test("eventy home maps nested assets to github pages assets", () => {
         { upstreamUrl: "https://ariobarin.github.io/Eventy/assets/icon128.png?v=1" },
     );
 });
+
+test("eventy page declares a relative favicon", async () => {
+    const page = await import("node:fs/promises").then((fs) =>
+        fs.readFile(new URL("../docs/index.html", import.meta.url), "utf8"),
+    );
+
+    assert.match(page, /<link rel="icon" type="image\/png" sizes="128x128" href="\.\/assets\/icon128\.png">/);
+    assert.match(page, /<link rel="apple-touch-icon" href="\.\/assets\/icon128\.png">/);
+});
