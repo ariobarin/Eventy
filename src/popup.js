@@ -5,6 +5,12 @@ import { isFreshScanResult } from "./utils/cache.js";
 import { applyTheme } from "./ui/theme.js";
 import { debug, warn, error } from "./utils/logger.js";
 import { htmlToMarkdown, tablesToCsvSnippets, buildModelInput } from "./llm/preprocess.js";
+import {
+    createTabScanAccessError,
+    getScriptInjectionFailureMessage,
+    getRequiredTabScanBlockReason,
+    isTabScanAccessError,
+} from "./utils/tabAccess.js";
 
 // ============================================================================
 // ANIMATION TIMING CONSTANTS - Centralized animation parameters
@@ -148,8 +154,61 @@ const UI_STATE = {
     QUOTA_EXCEEDED: "quota_exceeded",
 };
 
+const SCAN_AVAILABILITY_CHECKING_MESSAGE = "Checking page scan availability.";
+
 let currentState = UI_STATE.IDLE;
 let stateCleanupTimeout = null; // Track cleanup timeout to prevent race conditions
+let currentScanBlockReason = null;
+let scanAvailabilityReady = false;
+
+function applyScanButtonAvailability() {
+    if (!scanBtn) return;
+
+    const reason = currentScanBlockReason;
+    const isUnavailable = Boolean(reason);
+    const isChecking = !scanAvailabilityReady;
+    const isBusy = currentState === UI_STATE.SCANNING;
+    const title = isUnavailable
+        ? reason
+        : isChecking
+            ? SCAN_AVAILABILITY_CHECKING_MESSAGE
+            : "Scan Page";
+
+    scanBtn.disabled = isBusy || isUnavailable || isChecking;
+    scanBtn.title = title;
+    scanBtn.classList.toggle("scan-unavailable", isUnavailable || isChecking);
+    scanSection?.classList.toggle("scan-unavailable", isUnavailable || isChecking);
+    if (scanSection) {
+        scanSection.title = isUnavailable || isChecking ? title : "";
+    }
+}
+
+function setScanAvailabilityReason(reason) {
+    scanAvailabilityReady = true;
+    currentScanBlockReason = reason || null;
+    applyScanButtonAvailability();
+    if (currentScanBlockReason) {
+        hideToast();
+    }
+}
+
+async function refreshScanAvailability(activeTab = null) {
+    let reason = null;
+
+    scanAvailabilityReady = false;
+    applyScanButtonAvailability();
+
+    try {
+        const tab = activeTab || await getActiveTab();
+        reason = getRequiredTabScanBlockReason(tab?.url);
+    } catch (err) {
+        DEBUG && debug("[Eventy][Popup] Failed to check scan availability:", err);
+        reason = "This page cannot be scanned.";
+    }
+
+    setScanAvailabilityReason(reason);
+    return reason;
+}
 
 /**
  * Transition to scanning state
@@ -215,7 +274,7 @@ function setState(newState) {
             // Smoothly collapse everything back to initial state
             resultsEl?.classList.remove("open", "scanning", "has-results", "quota-exceeded");
             scanBtn?.classList.remove("scanning");
-            scanBtn.disabled = false;
+            applyScanButtonAvailability();
 
             // Hide quota panel
             const quotaPanelIdle = document.getElementById("quotaExceeded");
@@ -242,7 +301,7 @@ function setState(newState) {
             resultsEl?.classList.add("open");
             resultsEl?.classList.remove("scanning", "quota-exceeded");
             scanBtn?.classList.remove("scanning");
-            scanBtn.disabled = false;
+            applyScanButtonAvailability();
 
             // Hide quota panel if visible
             const quotaPanelResults = document.getElementById("quotaExceeded");
@@ -260,7 +319,7 @@ function setState(newState) {
             resultsEl?.classList.add("open", "quota-exceeded");
             resultsEl?.classList.remove("scanning", "has-results");
             scanBtn?.classList.remove("scanning");
-            scanBtn.disabled = false;
+            applyScanButtonAvailability();
 
             // Clear any skeleton cards
             if (upcomingEventsListEl) upcomingEventsListEl.innerHTML = "";
@@ -559,18 +618,37 @@ async function getActiveTab() {
     return tab;
 }
 
-async function captureActiveTabHtml() {
-    const tab = await getActiveTab();
+async function captureActiveTabHtml(activeTab = null) {
+    const tab = activeTab || await getActiveTab();
     if (!tab?.id) throw new Error("No active tab");
-    const [{ result }] = await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: () => ({
-            html: document.documentElement.outerHTML,
-            text: document.body ? document.body.innerText : "",
-            title: document.title,
-            lang: document.documentElement && document.documentElement.lang,
-        }),
-    });
+
+    const blockReason = getRequiredTabScanBlockReason(tab.url);
+    if (blockReason) {
+        throw createTabScanAccessError(blockReason);
+    }
+
+    let injection;
+    try {
+        [injection] = await chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            func: () => ({
+                html: document.documentElement.outerHTML,
+                text: document.body ? document.body.innerText : "",
+                title: document.title,
+                lang: document.documentElement && document.documentElement.lang,
+            }),
+        });
+    } catch (err) {
+        const message = getScriptInjectionFailureMessage(tab.url, err);
+        if (message) {
+            throw createTabScanAccessError(message);
+        }
+        throw err;
+    }
+
+    const result = injection?.result;
+    if (!result) throw new Error("No page content available");
+
     return {
         html: result.html,
         text: result.text,
@@ -582,9 +660,14 @@ async function captureActiveTabHtml() {
 
 async function handleScan() {
     try {
-        setState(UI_STATE.SCANNING);
-        const { html, text, title, lang, url } = await captureActiveTabHtml();
         const tab = await getActiveTab();
+        const blockReason = await refreshScanAvailability(tab);
+        if (blockReason) {
+            return;
+        }
+
+        setState(UI_STATE.SCANNING);
+        const { html, text, title, lang, url } = await captureActiveTabHtml(tab);
 
         // Clear any existing poll timeout for this URL before starting new scan
         const existingTimeout = pollTimeouts.get(url);
@@ -666,6 +749,12 @@ async function handleScan() {
         error(e);
         const errorStr = e.message || String(e);
 
+        if (isTabScanAccessError(e)) {
+            setState(UI_STATE.IDLE);
+            setScanAvailabilityReason(e.userMessage || e.message);
+            return;
+        }
+
         // Check if this is a rate limit error
         if (e.name === "RateLimitError" ||
             errorStr.toLowerCase().includes("rate limit") ||
@@ -676,16 +765,8 @@ async function handleScan() {
         }
 
         // Silent error handling for other errors - disable button instead of showing toast
-        if (scanBtn) {
-            scanBtn.title = "An error occurred. Please refresh the page.";
-        }
-
         setState(UI_STATE.IDLE);
-
-        // Re-disable after state transition enables it
-        if (scanBtn) {
-            scanBtn.disabled = true;
-        }
+        setScanAvailabilityReason("An error occurred. Please refresh the page.");
     }
 }
 
@@ -882,6 +963,7 @@ function restoreSelection(selectedIdxs) {
 }
 
 scanBtn?.addEventListener("click", handleScan);
+refreshScanAvailability();
 
 // Helper to save current state
 async function saveCustomState() {
@@ -925,6 +1007,7 @@ customContextBtn?.addEventListener("click", () => {
     } else {
         customContextSection.classList.add("hidden");
         scanSection.classList.remove("hidden");
+        refreshScanAvailability();
     }
     saveCustomState();
 });
@@ -1068,12 +1151,37 @@ function showToast(message, type = "success") {
     if (toast.dataset.timeoutId) {
         clearTimeout(Number(toast.dataset.timeoutId));
     }
+    if (toast.dataset.hideTimeoutId) {
+        clearTimeout(Number(toast.dataset.hideTimeoutId));
+    }
 
     const timeoutId = setTimeout(() => {
         toast.classList.remove("visible");
+        toast.dataset.hideTimeoutId = String(setTimeout(() => {
+            toast.classList.add("hidden");
+            delete toast.dataset.hideTimeoutId;
+        }, 250));
+        delete toast.dataset.timeoutId;
     }, 3000);
 
     toast.dataset.timeoutId = String(timeoutId);
+}
+
+function hideToast() {
+    const toast = document.getElementById("toast");
+    if (!toast) return;
+
+    if (toast.dataset.timeoutId) {
+        clearTimeout(Number(toast.dataset.timeoutId));
+        delete toast.dataset.timeoutId;
+    }
+    if (toast.dataset.hideTimeoutId) {
+        clearTimeout(Number(toast.dataset.hideTimeoutId));
+        delete toast.dataset.hideTimeoutId;
+    }
+
+    toast.classList.remove("visible");
+    toast.classList.add("hidden");
 }
 
 scanMediaBtn?.addEventListener("click", async () => {

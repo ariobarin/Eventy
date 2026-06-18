@@ -1,6 +1,6 @@
 {
     "name": "eventy",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "description": "Chrome extension that turns webpages, images, and pasted text into calendar events.",
     "type": "module",
     "license": "MIT",
