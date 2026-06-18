@@ -11,7 +11,7 @@
     "bugs": {
         "url": "https://github.com/ariobarin/Eventy/issues"
     },
-    "homepage": "https://ariobarin.github.io/Eventy/",
+    "homepage": "https://ariobarin.com/eventy-home/",
     "scripts": {
         "test": "node --test tests/*.test.js",
         "package": "node scripts/package-extension.mjs"

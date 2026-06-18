@@ -4,6 +4,8 @@ Eventy is a Chrome extension that finds event details on webpages, images, and p
 
 Version: v1.1
 
+Homepage: https://ariobarin.com/eventy-home/
+
 ## What It Does
 
 - Scans active pages, selected text, pasted text, images, flyers, and schedules.
@@ -57,8 +59,8 @@ npm test
 
 ## Legal
 
-- [Privacy Policy](https://ariobarin.github.io/Eventy/docs/privacy.html)
-- [Terms of Service](https://ariobarin.github.io/Eventy/docs/terms.html)
+- [Privacy Policy](https://ariobarin.github.io/Eventy/privacy.html)
+- [Terms of Service](https://ariobarin.github.io/Eventy/terms.html)
 
 ## License
 
