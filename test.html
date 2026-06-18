@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Eventy Test Page</title>
+        <style>
+            body {
+                font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+                margin: 24px;
+                background: #181c23;
+                color: #e6edf3;
+            }
+            h1 {
+                margin-bottom: 16px;
+                color: #f3f4f6;
+            }
+            h2 {
+                margin-top: 28px;
+                border-bottom: 1px solid #2d3748;
+                padding-bottom: 6px;
+                color: #cbd5e1;
+            }
+            .event-card {
+                display: flex;
+                gap: 12px;
+                align-items: flex-start;
+                padding: 12px;
+                border: 1px solid #232b38;
+                border-radius: 8px;
+                margin: 10px 0;
+                background: #232b38;
+            }
+            .calendar-card {
+                width: 48px;
+                text-align: center;
+                border: 1px solid #2d3748;
+                border-radius: 6px;
+                padding: 6px 4px;
+                background: #181c23;
+            }
+            .calendar-card .month {
+                font-weight: 600;
+                color: #a3aed6;
+                text-transform: uppercase;
+                font-size: 12px;
+            }
+            .calendar-card .day {
+                font-weight: 700;
+                font-size: 18px;
+                color: #fbbf24;
+            }
+            .details .title {
+                font-weight: 700;
+                font-size: 16px;
+                margin-bottom: 4px;
+                color: #f3f4f6;
+            }
+            .details .date,
+            .details .time,
+            .details .location,
+            .details .desc {
+                color: #cbd5e1;
+            }
+            .details .time {
+                color: #a3aed6;
+            }
+            .pill {
+                display: inline-block;
+                padding: 2px 8px;
+                font-size: 12px;
+                background: #232b38;
+                border: 1px solid #374151;
+                border-radius: 999px;
+                margin-left: 8px;
+                color: #fbbf24;
+            }
+            .muted {
+                color: #6b7280;
+            }
+            table {
+                border-collapse: collapse;
+                width: 100%;
+                background: #232b38;
+                color: #e6edf3;
+            }
+            th,
+            td {
+                border: 1px solid #2d3748;
+                padding: 8px;
+                text-align: left;
+            }
+            th {
+                background: #181c23;
+                color: #f3f4f6;
+            }
+            pre.ics {
+                background: #101624;
+                color: #e2e8f0;
+                padding: 12px;
+                border-radius: 6px;
+                overflow: auto;
+                border: 1px solid #232b38;
+            }
+            a {
+                color: #60a5fa;
+            }
+            a:visited {
+                color: #818cf8;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Eventy Test Page</h1>
+
+        <h2>Events with Timezones (should auto-convert to your local time)</h2>
+        <div class="event-card">
+            <div class="calendar-card">
+                <div class="month">Nov</div>
+                <div class="day">15</div>
+            </div>
+            <div class="details">
+                <div class="title">Global Team Meeting</div>
+                <div class="date">Friday, November 15, 2025</div>
+                <div class="time">2:00 PM EST - 3:30 PM EST</div>
+                <div class="location">Zoom</div>
+                <div class="desc">
+                    Quarterly planning session. Time shown in Eastern Standard Time.
+                </div>
+            </div>
+        </div>
+
+        <div class="event-card">
+            <div class="calendar-card">
+                <div class="month">Nov</div>
+                <div class="day">20</div>
+            </div>
+            <div class="details">
+                <div class="title">West Coast Launch Event</div>
+                <div class="date">Wednesday, Nov 20, 2025</div>
+                <div class="time">10:00 AM PST - 12:00 PM PST</div>
+                <div class="location">San Francisco, CA</div>
+                <div class="desc">Product launch in Pacific Standard Time</div>
+            </div>
+        </div>
+
+        <div class="event-card">
+            <div class="calendar-card">
+                <div class="month">Nov</div>
+                <div class="day">22</div>
+            </div>
+            <div class="details">
+                <div class="title">International Webinar</div>
+                <div class="date">Friday, November 22, 2025</div>
+                <div class="time">14:00 GMT - 16:00 GMT</div>
+                <div class="location">Online</div>
+                <div class="desc">Time in Greenwich Mean Time</div>
+            </div>
+        </div>
+
+        <h2>Card-style events</h2>
+        <div class="event-card">
+            <div class="calendar-card">
+                <div class="month">Sep</div>
+                <div class="day">21</div>
+            </div>
+            <div class="details">
+                <div class="title">
+                    SESoc F25 Bonfire Social<span class="pill"
+                        >Private Event</span
+                    >
+                </div>
+                <div class="date">Sunday, September 21</div>
+                <div class="time">6:00 PM - 9:00 PM</div>
+                <div class="location">
+                    <a
+                        href="https://www.google.com/maps/search/?api=1&query=Columbia%20lake%20fire%20pit%202&query_place_id=ChIJzQnNhf_3K4gRunVza1yVJhE"
+                        target="_blank"
+                        rel="noopener"
+                        >Columbia lake fire pit 2</a
+                    >, Waterloo, Ontario
+                </div>
+                <div class="desc">
+                    Bring a sweater, it may get chilly by the lake.
+                </div>
+            </div>
+        </div>
+
+        <div class="event-card">
+            <div class="calendar-card">
+                <div class="month">Sep</div>
+                <div class="day">21</div>
+            </div>
+            <div class="details">
+                <div class="title">Late-night Study Jam</div>
+                <div class="date">Sat, Sep 21, 2025</div>
+                <div class="time">10:00 PM - 1:00 AM</div>
+                <div class="location">Library West, 2nd Floor</div>
+                <div class="desc">
+                    Snacks provided. Quiet hours after midnight.
+                </div>
+            </div>
+        </div>
+
+        <div class="event-card">
+            <div class="calendar-card">
+                <div class="month">Sep</div>
+                <div class="day">26</div>
+            </div>
+            <div class="details">
+                <div class="title">Hackathon Weekend</div>
+                <div class="date">Fri, Sep 26 - Sun, Sep 28, 2025</div>
+                <div class="time">5:00 PM (Fri) - 3:00 PM (Sun)</div>
+                <div class="location">Innovation Hub</div>
+                <div class="desc">
+                    48-hour hackathon with mentors and prizes.
+                </div>
+            </div>
+        </div>
+
+        <div class="event-card">
+            <div class="calendar-card">
+                <div class="month">Sep</div>
+                <div class="day">29</div>
+            </div>
+            <div class="details">
+                <div class="title">Company Holiday</div>
+                <div class="date">Monday, Sep 29, 2025</div>
+                <div class="time">All day</div>
+                <div class="location">Company-wide</div>
+                <div class="desc">Observe with your team.</div>
+            </div>
+        </div>
+
+        <h2>Recurring events</h2>
+        <div class="event-card">
+            <div class="calendar-card">
+                <div class="month">Sep</div>
+                <div class="day">23</div>
+            </div>
+            <div class="details">
+                <div class="title">Yoga Class</div>
+                <div class="date">Every Tuesday</div>
+                <div class="time">6:30 PM - 7:15 PM</div>
+                <div class="location">Rec Center Studio B</div>
+                <div class="desc">
+                    Through Dec 10, 2025. Suggested RRULE:
+                    FREQ=WEEKLY;BYDAY=TU;UNTIL=20251210
+                </div>
+            </div>
+        </div>
+
+        <div class="event-card">
+            <div class="calendar-card">
+                <div class="month">Sep</div>
+                <div class="day">24</div>
+            </div>
+            <div class="details">
+                <div class="title">Running Club</div>
+                <div class="date">Every Thu</div>
+                <div class="time">6:00 AM - 7:00 AM</div>
+                <div class="location">Riverside Park</div>
+                <div class="desc">
+                    5k easy pace. Suggested RRULE: FREQ=WEEKLY;BYDAY=TH
+                </div>
+            </div>
+        </div>
+
+        <h2>List and natural language</h2>
+        <ul>
+            <li>
+                Game Night - Fri Sep 26, 7:00 PM - 10:00 PM - 123 Main St -
+                Snacks provided.
+            </li>
+            <li>
+                Team Standup - 2025-09-22 09:00-09:30 - Zoom:
+                https://example.com/meet/standup
+            </li>
+            <li>Doctor Appointment - Sep 23 at 14:15 - Downtown Clinic</li>
+            <li>Tomorrow 6pm - 8pm: Dinner with Sam at The Keg.</li>
+            <li>Next Friday 10:30-11:00: Coffee chat at Cafe Noir.</li>
+        </ul>
+
+        <h2>Table of events</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Location</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Workshop: Web Security</td>
+                    <td>Sep 24, 2025</td>
+                    <td>3:00 PM - 5:30 PM</td>
+                    <td>Engineering Bldg Room 210</td>
+                    <td>Register online.</td>
+                </tr>
+                <tr>
+                    <td>Concert: The Lumens</td>
+                    <td>Sat, Sep 27</td>
+                    <td>Doors 7:00 PM / Show 8:00 PM - 10:30 PM</td>
+                    <td>Downtown Arena</td>
+                    <td>All ages.</td>
+                </tr>
+                <tr>
+                    <td>Server Maintenance</td>
+                    <td>2025-09-30</td>
+                    <td>22:00 - 23:30</td>
+                    <td>Data Center 3</td>
+                    <td>Expect brief outages.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>ICS-like block</h2>
+        <pre class="ics">
+BEGIN:VEVENT
+SUMMARY:Board Meeting
+DTSTART:20250925T130000
+DTEND:20250925T143000
+LOCATION:HQ Conference Room A
+DESCRIPTION:Quarterly review
+RRULE:FREQ=MONTHLY;BYDAY=TH;BYSETPOS=4
+END:VEVENT</pre
+        >
+
+        <h2>Miscellaneous blocks</h2>
+        <div class="event-card">
+            <div class="calendar-card">
+                <div class="month">Sep</div>
+                <div class="day">25</div>
+            </div>
+            <div class="details">
+                <div class="title">Career Fair</div>
+                <div class="date">Thursday, Sep 25</div>
+                <div class="time">11:00 AM - 4:00 PM</div>
+                <div class="location">
+                    <a
+                        href="https://maps.google.com/?q=Student+Center+Hall"
+                        target="_blank"
+                        rel="noopener"
+                        >Student Center Hall</a
+                    >
+                </div>
+                <div class="desc">RSVP by Sep 21. Bring resumes.</div>
+            </div>
+        </div>
+
+        <div class="event-card">
+            <div class="calendar-card">
+                <div class="month">Oct</div>
+                <div class="day">1</div>
+            </div>
+            <div class="details">
+                <div class="title">Project Kickoff</div>
+                <div class="date">Wednesday, Oct 1, 2025</div>
+                <div class="time">09:30 AM - 11:00 AM</div>
+                <div class="location">HQ Building, Room 5A</div>
+                <div class="desc">
+                    Sprint 1 planning and stakeholder alignment.
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

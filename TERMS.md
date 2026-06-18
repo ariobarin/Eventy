@@ -17,11 +17,11 @@ Effective date: 2026-01-26
 -   Minimal Google scope used: https://www.googleapis.com/auth/calendar.events (create events only, when enabled).
 -   **API Keys (BYOK):** Users providing their own API keys depend on OpenRouter services. We facilitate the request but are not responsible for OpenRouter availability.
 -   Tokens are obtained via Chrome Identity; Eventy does not store tokens on our servers.
--   See Privacy Policy for more details: `docs/privacy.html` (or hosted URL).
+-   See Privacy Policy for more details: https://ariobarin.github.io/Eventy/docs/privacy.html.
 
 4. Availability and changes
 
--   Eventy is provided “as is”, without warranties.
+-   Eventy is provided "as is", without warranties.
 -   Features and integrations may change or be discontinued.
 
 5. Liability
