@@ -1,0 +1,23 @@
+{
+    "name": "eventy",
+    "version": "1.1.0",
+    "description": "Chrome extension that turns webpages, images, and pasted text into calendar events.",
+    "type": "module",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ariobarin/Eventy.git"
+    },
+    "bugs": {
+        "url": "https://github.com/ariobarin/Eventy/issues"
+    },
+    "homepage": "https://ariobarin.github.io/Eventy/",
+    "scripts": {
+        "test": "node --test tests/*.test.js",
+        "package": "node scripts/package-extension.mjs"
+    },
+    "devDependencies": {
+        "archiver": "^8.0.0",
+        "chrome-types": "^0.1.429"
+    }
+}

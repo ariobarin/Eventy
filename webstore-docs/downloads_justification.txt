@@ -1,0 +1,1 @@
+Enables iCalendar (.ics) file export for compatibility with Outlook, Apple Calendar, and other calendar apps. Downloads are user-initiated only; no automatic or background downloads occur.

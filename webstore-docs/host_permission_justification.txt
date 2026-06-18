@@ -1,0 +1,1 @@
+Sends user-initiated page content to https://eventy-proxy.eventy.workers.dev/api for AI event extraction. The same proxy handles user-requested BYOK key validation and model listing. No scripts are loaded from this origin.

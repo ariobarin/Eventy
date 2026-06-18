@@ -1,0 +1,54 @@
+{
+    "name": "Eventy",
+    "description": "Extract events from any webpage into Google Calendar or iCloud Calendar with one click.",
+    "version": "1.1",
+    "manifest_version": 3,
+    "action": {
+        "default_popup": "src/ui/index.html",
+        "default_icon": {
+            "16": "assets/icon16.png",
+            "32": "assets/icon32.png",
+            "48": "assets/icon48.png",
+            "128": "assets/icon128.png"
+        }
+    },
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "contextMenus",
+        "storage",
+        "downloads"
+    ],
+    "host_permissions": [
+        "https://eventy-proxy.eventy.workers.dev/*"
+    ],
+    "icons": {
+        "16": "assets/icon16.png",
+        "32": "assets/icon32.png",
+        "48": "assets/icon48.png",
+        "128": "assets/icon128.png"
+    },
+    "background": {
+        "service_worker": "src/background.js",
+        "type": "module"
+    },
+    "commands": {
+        "eventy-scan-selection": {
+            "description": "Scan text for events",
+            "suggested_key": {
+                "default": "Ctrl+Shift+E",
+                "mac": "Command+Shift+E"
+            }
+        }
+    },
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "src/content/eventMarkers.js"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
+        }
+    ]
+}
