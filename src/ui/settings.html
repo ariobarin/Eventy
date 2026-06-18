@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eventy Settings</title>
+    <link rel="stylesheet" href="./base.css" />
+    <!-- Choices.js for searchable model selector (local copy for CSP compliance) -->
+    <link rel="stylesheet" href="./vendor/choices.min.css" />
+    <link rel="stylesheet" href="./settings.css" />
+    <script src="./vendor/choices.min.js"></script>
+    <script type="module" src="./settings.js"></script>
+</head>
+
+<body class="settings-page auto-mode theme-loading">
+    <!-- Top Header -->
+    <header class="top-bar">
+        <div>
+            <img src="../../assets/icon32.png" alt="Eventy logo" width="24" height="24" />
+            <span class="app-title">Eventy</span>
+        </div>
+        <div>
+            <button id="saveButton" disabled="disabled" class="save-button" style="display: none;">Save
+                preferences</button>
+        </div>
+    </header>
+
+    <!-- Prompt for preference save notification -->
+    <section id="savePrompt" class="hidden" role="status" aria-live="polite" aria-atomic="true">
+        <div class="prompt">
+            <span class="prompt-check-icon">✓</span>
+            <span class="prompt-title">Preferences saved successfully</span>
+            <span class="prompt-close-icon">
+                <button id="prompt-close" aria-label="Close">×</button>
+            </span>
+        </div>
+    </section>
+
+    <!-- Options -->
+    <div class="content">
+        <!-- API Settings Section -->
+        <header>
+            <h1>API Settings</h1>
+        </header>
+
+        <div id="apiSettings">
+            <!-- API Key Mode option -->
+            <div class="option">
+                <label class="label" for="apiKeyMode">
+                    <span class="label-title">API key</span>
+                    <span class="label-description">Choose to use the shared service with daily limits, or your own
+                        OpenRouter key for unlimited usage.</span>
+                </label>
+                <span>
+                    <select id="apiKeyMode" class="option-select">
+                        <option value="shared" id="sharedOption" selected>Use shared service</option>
+                        <option value="byok">Use my own key (unlimited)</option>
+                    </select>
+                </span>
+            </div>
+
+            <!-- BYOK Section (conditionally visible) -->
+            <div id="byokSection" class="byok-section hidden">
+                <div class="option byok-option">
+                    <label class="label" for="apiKeyInput">
+                        <span class="label-title">OpenRouter API key</span>
+                        <span class="label-description">Enter your OpenRouter API key for unlimited scans. <a
+                                href="https://openrouter.ai/keys" target="_blank" rel="noopener">Get your key</a></span>
+                    </label>
+                    <div class="api-key-input-group">
+                        <div class="input-wrapper">
+                            <input type="password" id="apiKeyInput" class="api-key-input" placeholder="sk-or-...">
+                            <button type="button" id="toggleKeyVisibility" class="toggle-visibility-btn"
+                                aria-label="Toggle key visibility">
+                                <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg id="eyeOffIcon" class="hidden" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path
+                                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                                    </path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <button type="button" id="validateKeyBtn" class="validate-btn">Validate</button>
+
+                    </div>
+                    <div id="keyValidationStatus" class="validation-status"></div>
+                </div>
+                <div class="option byok-option model-option">
+                    <label class="label" for="modelSelect">
+                        <span class="label-title">Model</span>
+                        <span class="label-description">Choose an AI model. Models are loaded after validating your API
+                            key. <a href="https://openrouter.ai/models" target="_blank" rel="noopener">Browse all
+                                models</a></span>
+                    </label>
+                    <div class="model-input-wrapper">
+                        <select id="modelSelect" class="model-select">
+                            <option value="">Default (recommended)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Usage Stats Display -->
+            <div id="usageStats" class="usage-stats-box">
+                <div class="usage-header">
+                    <span class="usage-title">Usage today</span>
+                    <button type="button" id="refreshUsageBtn" class="refresh-btn" aria-label="Refresh usage stats">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="usage-content">
+                    <div class="usage-row">
+                        <span class="usage-label">Requests</span>
+                        <span class="usage-value"><span id="requestCount">-</span>/<span
+                                id="requestLimit">...</span></span>
+                    </div>
+                    <div class="usage-progress">
+                        <div id="requestProgress" class="usage-progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="usage-row reset-row">
+                        <span class="usage-label">Resets</span>
+                        <span id="resetTime" class="usage-value reset-time">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <header style="margin-top: 32px;">
+            <h1>Preferences</h1>
+        </header>
+
+        <div id="toggles">
+            <!-- Default event creation type option -->
+            <div class="option">
+                <label class="label" for="defaultCalendar">
+                    <span class="label-title">Default event creation type</span>
+                    <span class="label-description">Open events in Google Calendar or download .ics files for Outlook,
+                        Apple Calendar, etc.</span>
+                </label>
+                <span>
+                    <select id="defaultCalendar" class="option-select">
+                        <option value="google" selected>Google Calendar</option>
+                        <option value="icloud">iCalendar (.ics)</option>
+                    </select>
+                </span>
+            </div>
+
+            <!-- Dark mode settings option -->
+            <div class="option">
+                <label class="label" for="darkModeSettings">
+                    <span class="label-title">Dark mode settings</span>
+                    <span class="label-description">Switch between dark and light theme.</span>
+                </label>
+                <span>
+                    <select id="darkModeSettings" class="option-select">
+                        <option value="auto" selected>Use system setting</option>
+                        <option value="dark">Dark mode</option>
+                        <option value="light">Light mode</option>
+                    </select>
+                </span>
+            </div>
+
+            <!-- Time format option -->
+            <div class="option">
+                <label class="label" for="timeFormatSetting">
+                    <span class="label-title">Time format</span>
+                    <span class="label-description">Switch between 12h and 24h format.</span>
+                </label>
+                <span>
+                    <select id="timeFormatSetting" class="option-select">
+                        <option value="12" selected>12h</option>
+                        <option value="24">24h</option>
+                    </select>
+                </span>
+            </div>
+
+            <!-- Page markers option -->
+            <div class="option">
+                <label class="label" for="showPageMarkers">
+                    <span class="label-title">Show event markers on page (Experimental)</span>
+                    <span class="label-description">After a full page scan, small icons will appear beside each event on
+                        the webpage. Click them to quickly select events.</span>
+                </label>
+                <label class="switch">
+                    <input type="checkbox" id="showPageMarkers">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
+
+
+    </div>
+</body>
+
+</html>

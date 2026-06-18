@@ -1,0 +1,1 @@
+Injects a minimal content script to capture page HTML and text for AI processing. Also injects optional page markers to highlight detected events on the webpage. Does not inject remote code or modify page content.

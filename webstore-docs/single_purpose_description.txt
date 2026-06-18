@@ -1,0 +1,1 @@
+Scan the current page or selected text to extract event details with AI and open prefilled Google Calendar events. Runs only on user action; no background scraping. Sends the current page content/selection and URL to my proxy for AI parsing.

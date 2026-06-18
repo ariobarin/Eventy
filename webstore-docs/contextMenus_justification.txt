@@ -1,0 +1,1 @@
+Adds right-click menu items to scan selected text or images for events. Allows users to extract event data from highlighted content, posters, flyers, or screenshots without scanning the entire page.

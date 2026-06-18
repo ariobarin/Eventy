@@ -1,0 +1,1 @@
+Caches scan results locally (15-minute TTL) to avoid redundant API calls. Syncs user preferences across devices: theme (auto/dark/light), time format (12h/24h), and calendar settings. Stores optional BYOK API key locally for users who provide their own key.
