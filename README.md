@@ -57,6 +57,14 @@ webstore-docs/   Chrome Web Store submission notes
 npm test
 ```
 
+## Homepage Front
+
+The public product page is served from this repository's GitHub Pages output and fronted at `https://ariobarin.com/eventy-home/` by the Cloudflare Worker in [workers/eventyHome.js](workers/eventyHome.js).
+
+```bash
+npm run deploy:home
+```
+
 ## Legal
 
 - [Privacy Policy](https://ariobarin.github.io/Eventy/privacy.html)
