@@ -9,13 +9,18 @@
     <style>
         :root {
             color-scheme: light;
-            --ink: #141414;
-            --muted: #5f6570;
-            --line: #d9dde4;
-            --paper: #fbfaf7;
+            --ink: #111315;
+            --muted: #57606a;
+            --soft: #7b8490;
+            --paper: #f7f9fb;
             --panel: #ffffff;
-            --accent: #0b6bcb;
-            --accent-dark: #074f99;
+            --line: #d7dee7;
+            --line-strong: #b9c4d1;
+            --blue: #0a66d8;
+            --blue-dark: #084ea3;
+            --orange: #f36b16;
+            --green: #217a55;
+            --shadow: 0 28px 80px rgba(17, 19, 21, 0.16);
         }
 
         * {
@@ -25,72 +30,112 @@
         body {
             margin: 0;
             min-height: 100vh;
+            overflow-x: hidden;
             font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             color: var(--ink);
             background:
-                linear-gradient(135deg, rgba(11, 107, 203, 0.08), transparent 38%),
-                linear-gradient(315deg, rgba(20, 20, 20, 0.06), transparent 34%),
+                linear-gradient(90deg, rgba(17, 19, 21, 0.035) 1px, transparent 1px),
+                linear-gradient(180deg, rgba(17, 19, 21, 0.035) 1px, transparent 1px),
                 var(--paper);
+            background-size: 44px 44px;
         }
 
-        main {
-            width: min(980px, calc(100% - 40px));
-            min-height: 100vh;
+        a {
+            color: inherit;
+        }
+
+        .site-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: min(1120px, calc(100% - 40px));
             margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr;
-            align-content: center;
-            gap: 40px;
-            padding: 48px 0;
+            padding: 18px 0;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .brand img {
+            width: 30px;
+            height: 30px;
         }
 
         .hero {
+            position: relative;
+            min-height: 760px;
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 220px;
             align-items: center;
-            gap: 56px;
+            overflow: hidden;
+            padding: 112px 0 54px;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 170px;
+            background: linear-gradient(180deg, rgba(247, 249, 251, 0.98), rgba(247, 249, 251, 0));
+            pointer-events: none;
+        }
+
+        .hero-inner {
+            position: relative;
+            width: min(1120px, calc(100% - 40px));
+            margin: 0 auto;
+        }
+
+        .hero-copy {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 620px;
+            padding-top: 20px;
         }
 
         .eyebrow {
-            margin: 0 0 18px;
-            color: var(--accent);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 0 20px;
+            color: var(--blue);
             font-size: 0.78rem;
-            font-weight: 700;
+            font-weight: 850;
             letter-spacing: 0.12em;
             text-transform: uppercase;
         }
 
+        .eyebrow::before {
+            content: "";
+            width: 30px;
+            height: 2px;
+            background: var(--blue);
+        }
+
         h1 {
             margin: 0;
-            max-width: 680px;
-            font-size: clamp(3rem, 9vw, 7.2rem);
-            line-height: 0.9;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 9rem;
+            line-height: 0.78;
             letter-spacing: 0;
         }
 
-        .copy {
-            max-width: 560px;
-            margin: 26px 0 0;
-            color: var(--muted);
-            font-size: clamp(1.1rem, 2.5vw, 1.35rem);
-            line-height: 1.55;
-        }
-
-        .icon-wrap {
-            display: grid;
-            place-items: center;
-            width: 220px;
-            height: 220px;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            background: var(--panel);
-            box-shadow: 0 24px 70px rgba(20, 20, 20, 0.12);
-        }
-
-        .icon-wrap img {
-            width: 128px;
-            height: 128px;
-            image-rendering: auto;
+        .lede {
+            width: 100%;
+            max-width: 540px;
+            margin: 30px 0 0;
+            color: #364150;
+            font-size: 1.32rem;
+            line-height: 1.58;
+            overflow-wrap: break-word;
         }
 
         .actions {
@@ -100,101 +145,481 @@
             margin-top: 34px;
         }
 
-        a {
-            color: inherit;
-        }
-
         .button {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-height: 44px;
+            min-height: 46px;
             padding: 0 18px;
-            border: 1px solid var(--line);
-            border-radius: 6px;
-            background: var(--panel);
+            border: 1px solid var(--line-strong);
+            border-radius: 7px;
+            background: rgba(255, 255, 255, 0.82);
             color: var(--ink);
-            font-weight: 700;
+            font-weight: 800;
             text-decoration: none;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.85) inset;
         }
 
         .button.primary {
-            border-color: var(--accent);
-            background: var(--accent);
+            border-color: var(--blue);
+            background: var(--blue);
             color: #ffffff;
+            box-shadow: 0 10px 24px rgba(10, 102, 216, 0.22);
         }
 
         .button.primary:hover {
-            background: var(--accent-dark);
+            background: var(--blue-dark);
         }
 
-        .links {
+        .product-scene {
+            position: absolute;
+            z-index: 1;
+            right: -24px;
+            top: 30px;
+            width: min(560px, 48vw);
+            height: 520px;
+            pointer-events: none;
+        }
+
+        .product-scene::before {
+            content: "";
+            position: absolute;
+            left: 228px;
+            top: 268px;
+            width: 238px;
+            height: 82px;
+            border-top: 2px solid rgba(10, 102, 216, 0.24);
+            border-right: 2px solid rgba(10, 102, 216, 0.24);
+            border-radius: 0 18px 0 0;
+        }
+
+        .browser-panel,
+        .calendar-panel,
+        .scan-panel {
+            position: absolute;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: var(--shadow);
+        }
+
+        .browser-panel {
+            top: 36px;
+            right: 56px;
+            width: 430px;
+            height: 290px;
+            overflow: hidden;
+        }
+
+        .browser-bar {
+            height: 38px;
             display: flex;
-            flex-wrap: wrap;
-            gap: 18px;
-            padding-top: 28px;
-            border-top: 1px solid var(--line);
-            color: var(--muted);
+            align-items: center;
+            gap: 7px;
+            padding: 0 14px;
+            border-bottom: 1px solid var(--line);
+            background: #eef3f7;
+        }
+
+        .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #c8d1dc;
+        }
+
+        .url {
+            margin-left: 8px;
+            width: 220px;
+            height: 16px;
+            border-radius: 4px;
+            background: #ffffff;
+        }
+
+        .page-lines {
+            padding: 28px 28px 0;
+        }
+
+        .event-page-title {
+            margin: 0 0 16px;
+            font-size: 1.08rem;
+            font-weight: 850;
+        }
+
+        .event-meta {
+            display: grid;
+            gap: 9px;
+            margin-bottom: 22px;
+        }
+
+        .event-meta span {
+            display: inline-flex;
+            width: fit-content;
+            max-width: 100%;
+            padding: 7px 9px;
+            border-radius: 5px;
+            background: #eef3f7;
+            color: #26313f;
+            font-size: 0.82rem;
+            font-weight: 760;
+        }
+
+        .event-meta .date-mark {
+            border: 1px solid #f1c49d;
+            background: #fff1e5;
+            color: #743906;
+        }
+
+        .article-line {
+            height: 10px;
+            margin-bottom: 12px;
+            border-radius: 2px;
+            background: #d8e0ea;
+        }
+
+        .article-line.short {
+            width: 62%;
+        }
+
+        .scan-panel {
+            left: 0;
+            top: 220px;
+            width: 270px;
+            padding: 18px;
+        }
+
+        .scan-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            font-size: 0.82rem;
+            font-weight: 850;
+        }
+
+        .scan-head img {
+            width: 38px;
+            height: 38px;
+        }
+
+        .event-chip {
+            display: grid;
+            gap: 5px;
+            padding: 12px;
+            border: 1px solid #f1c49d;
+            border-radius: 6px;
+            background: #fff7ef;
+            color: #683006;
+            font-size: 0.86rem;
+            font-weight: 750;
+        }
+
+        .event-chip strong {
+            color: #3b1a03;
             font-size: 0.95rem;
         }
 
-        .links a {
+        .event-chip span {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .event-chip b {
+            min-width: 0;
+            overflow-wrap: break-word;
+        }
+
+        .calendar-panel {
+            right: 0;
+            bottom: 96px;
+            width: 310px;
+            padding: 18px;
+        }
+
+        .calendar-top {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 18px;
             color: var(--muted);
-            text-decoration-thickness: 1px;
+            font-size: 0.82rem;
+            font-weight: 750;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 6px;
+        }
+
+        .calendar-event {
+            margin-top: 12px;
+            padding: 9px 10px;
+            border-radius: 5px;
+            background: #eaf7f1;
+            color: var(--green);
+            font-size: 0.78rem;
+            font-weight: 820;
+        }
+
+        .day {
+            aspect-ratio: 1;
+            display: grid;
+            place-items: center;
+            border: 1px solid var(--line);
+            border-radius: 5px;
+            color: var(--soft);
+            font-size: 0.74rem;
+            font-weight: 700;
+        }
+
+        .day.active {
+            border-color: var(--green);
+            background: #eaf7f1;
+            color: var(--green);
+        }
+
+        footer {
+            width: min(1120px, calc(100% - 40px));
+            margin: 0 auto;
+            padding: 26px 0 34px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            color: var(--muted);
+            font-size: 0.94rem;
+        }
+
+        footer a {
             text-underline-offset: 4px;
         }
 
-        @media (max-width: 720px) {
-            main {
-                width: min(100% - 28px, 560px);
-                align-content: start;
-                padding-top: 42px;
+        @media (max-width: 1100px) {
+            .site-header {
+                position: static;
             }
 
             .hero {
+                min-height: auto;
+                padding-top: 22px;
+            }
+
+            .hero-copy {
+                padding-top: 0;
+            }
+
+            h1 {
+                font-size: 7rem;
+                line-height: 0.82;
+            }
+
+            .lede {
+                font-size: 1.22rem;
+            }
+
+            .product-scene {
+                position: relative;
+                right: auto;
+                top: auto;
+                display: grid;
+                grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr);
+                align-items: start;
+                gap: 14px;
+                width: 100%;
+                max-width: none;
+                height: auto;
+                margin-top: 42px;
+            }
+
+            .product-scene::before {
+                display: none;
+            }
+
+            .browser-panel,
+            .scan-panel,
+            .calendar-panel {
+                position: relative;
+                inset: auto;
+                width: 100%;
+                box-shadow: 0 18px 42px rgba(17, 19, 21, 0.1);
+            }
+
+            .browser-panel {
+                height: 300px;
+            }
+
+            .calendar-panel {
+                grid-column: 2;
+            }
+
+        }
+
+        @media (max-width: 560px) {
+            .site-header,
+            .hero-inner,
+            footer {
+                width: min(100% - 28px, 540px);
+            }
+
+            h1 {
+                font-size: 3.8rem;
+                line-height: 0.86;
+            }
+
+            .lede {
+                font-size: 1.14rem;
+                width: 320px;
+                max-width: 100%;
+            }
+
+            .actions {
+                gap: 10px;
+            }
+
+            .button {
+                min-height: 44px;
+                padding: 0 14px;
+            }
+
+            .product-scene {
+                display: grid;
                 grid-template-columns: 1fr;
-                gap: 34px;
+                gap: 12px;
+                width: 100%;
+                max-width: 348px;
+                height: auto;
+                margin-top: 34px;
             }
 
-            .icon-wrap {
-                order: -1;
-                width: 132px;
-                height: 132px;
+            .browser-panel,
+            .scan-panel,
+            .calendar-panel {
+                position: relative;
+                inset: auto;
+                width: 100%;
+                box-shadow: 0 18px 42px rgba(17, 19, 21, 0.1);
             }
 
-            .icon-wrap img {
-                width: 82px;
-                height: 82px;
+            .browser-panel {
+                height: 214px;
+            }
+
+            .scan-panel {
+                padding: 14px;
+            }
+
+            .event-chip {
+                padding: 11px;
+            }
+
+            .event-chip span {
+                grid-template-columns: 1fr;
+                gap: 3px;
+            }
+
+            .calendar-panel {
+                grid-column: auto;
+                padding: 14px;
+            }
+
+            .calendar-grid {
+                gap: 5px;
             }
         }
+
     </style>
 </head>
 
 <body>
+    <header class="site-header">
+        <a class="brand" href="./" aria-label="Eventy home">
+            <img src="./assets/icon128.png" alt="">
+        </a>
+    </header>
+
     <main>
         <section class="hero" aria-labelledby="eventy-title">
-            <div>
-                <p class="eyebrow">Chrome extension</p>
-                <h1 id="eventy-title">Eventy</h1>
-                <p class="copy">
-                    Turn pages, selected text, and event images into calendar entries with one scan.
-                </p>
-                <div class="actions" aria-label="Primary links">
-                    <a class="button primary" href="https://github.com/ariobarin/Eventy">View source</a>
-                    <a class="button" href="./privacy.html">Privacy</a>
-                    <a class="button" href="./terms.html">Terms</a>
+            <div class="hero-inner">
+                <div class="hero-copy">
+                    <p class="eyebrow">Chrome extension</p>
+                    <h1 id="eventy-title">Eventy</h1>
+                    <p class="lede">
+                        Turn event pages, pasted text, and flyer images into clean calendar entries without rebuilding
+                        the details by hand.
+                    </p>
+                    <div class="actions" aria-label="Primary links">
+                        <a class="button primary"
+                            href="https://chromewebstore.google.com/detail/eventy/kfancgcbhdkeohknmidbnioccmmoknjl">Install
+                            extension</a>
+                    </div>
                 </div>
-            </div>
-            <div class="icon-wrap" aria-hidden="true">
-                <img src="./assets/icon128.png" alt="">
+
+                <div class="product-scene" aria-label="Eventy scans a page and prepares a calendar event">
+                    <div class="browser-panel">
+                        <div class="browser-bar">
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                            <span class="url"></span>
+                        </div>
+                        <div class="page-lines">
+                            <p class="event-page-title">Rooftop Night Market</p>
+                            <div class="event-meta" aria-label="Event details found on page">
+                                <span class="date-mark">Friday, Aug 22</span>
+                                <span>Doors 7:30 PM</span>
+                                <span>Harbor Hall</span>
+                            </div>
+                            <div class="article-line"></div>
+                            <div class="article-line short"></div>
+                        </div>
+                    </div>
+
+                    <div class="scan-panel">
+                        <div class="scan-head">
+                            <img src="./assets/icon128.png" alt="">
+                            <span>Scan result</span>
+                        </div>
+                        <div class="event-chip">
+                            <strong>Rooftop Night Market</strong>
+                            <span><b>Fri Aug 22</b><b>7:30 PM</b></span>
+                        </div>
+                    </div>
+
+                    <div class="calendar-panel">
+                        <div class="calendar-top">
+                            <span>Calendar</span>
+                            <span>Ready</span>
+                        </div>
+                        <div class="calendar-grid" aria-hidden="true">
+                            <span class="day">1</span>
+                            <span class="day">2</span>
+                            <span class="day">3</span>
+                            <span class="day">4</span>
+                            <span class="day active">5</span>
+                            <span class="day">6</span>
+                            <span class="day">7</span>
+                            <span class="day">8</span>
+                            <span class="day">9</span>
+                            <span class="day">10</span>
+                            <span class="day active">11</span>
+                            <span class="day">12</span>
+                            <span class="day">13</span>
+                            <span class="day">14</span>
+                        </div>
+                        <div class="calendar-event">Rooftop Night Market</div>
+                    </div>
+                </div>
+
             </div>
         </section>
-        <nav class="links" aria-label="Documentation links">
-            <a href="https://github.com/ariobarin/Eventy">GitHub repository</a>
-            <a href="./privacy.html">Privacy policy</a>
-            <a href="./terms.html">Terms of service</a>
-        </nav>
     </main>
+
+    <footer>
+        <a href="https://github.com/ariobarin/Eventy">GitHub</a>
+        <a href="./privacy.html">Privacy policy</a>
+        <a href="./terms.html">Terms of service</a>
+    </footer>
 </body>
 
 </html>
