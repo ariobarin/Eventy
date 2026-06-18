@@ -1,0 +1,17 @@
+{
+    "$schema": "./node_modules/wrangler/config-schema.json",
+    "name": "eventy-home",
+    "main": "workers/eventyHome.js",
+    "compatibility_date": "2026-06-18",
+    "workers_dev": false,
+    "routes": [
+        {
+            "pattern": "ariobarin.com/eventy-home",
+            "zone_name": "ariobarin.com"
+        },
+        {
+            "pattern": "ariobarin.com/eventy-home/*",
+            "zone_name": "ariobarin.com"
+        }
+    ]
+}
