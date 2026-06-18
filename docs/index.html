@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Eventy</title>
+    <meta name="description" content="Turn pages, text, and images into calendar events.">
+    <style>
+        :root {
+            color-scheme: light;
+            --ink: #141414;
+            --muted: #5f6570;
+            --line: #d9dde4;
+            --paper: #fbfaf7;
+            --panel: #ffffff;
+            --accent: #0b6bcb;
+            --accent-dark: #074f99;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: var(--ink);
+            background:
+                linear-gradient(135deg, rgba(11, 107, 203, 0.08), transparent 38%),
+                linear-gradient(315deg, rgba(20, 20, 20, 0.06), transparent 34%),
+                var(--paper);
+        }
+
+        main {
+            width: min(980px, calc(100% - 40px));
+            min-height: 100vh;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            align-content: center;
+            gap: 40px;
+            padding: 48px 0;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 220px;
+            align-items: center;
+            gap: 56px;
+        }
+
+        .eyebrow {
+            margin: 0 0 18px;
+            color: var(--accent);
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+            max-width: 680px;
+            font-size: clamp(3rem, 9vw, 7.2rem);
+            line-height: 0.9;
+            letter-spacing: 0;
+        }
+
+        .copy {
+            max-width: 560px;
+            margin: 26px 0 0;
+            color: var(--muted);
+            font-size: clamp(1.1rem, 2.5vw, 1.35rem);
+            line-height: 1.55;
+        }
+
+        .icon-wrap {
+            display: grid;
+            place-items: center;
+            width: 220px;
+            height: 220px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel);
+            box-shadow: 0 24px 70px rgba(20, 20, 20, 0.12);
+        }
+
+        .icon-wrap img {
+            width: 128px;
+            height: 128px;
+            image-rendering: auto;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 34px;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            padding: 0 18px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: var(--panel);
+            color: var(--ink);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .button.primary {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: #ffffff;
+        }
+
+        .button.primary:hover {
+            background: var(--accent-dark);
+        }
+
+        .links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            padding-top: 28px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .links a {
+            color: var(--muted);
+            text-decoration-thickness: 1px;
+            text-underline-offset: 4px;
+        }
+
+        @media (max-width: 720px) {
+            main {
+                width: min(100% - 28px, 560px);
+                align-content: start;
+                padding-top: 42px;
+            }
+
+            .hero {
+                grid-template-columns: 1fr;
+                gap: 34px;
+            }
+
+            .icon-wrap {
+                order: -1;
+                width: 132px;
+                height: 132px;
+            }
+
+            .icon-wrap img {
+                width: 82px;
+                height: 82px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <section class="hero" aria-labelledby="eventy-title">
+            <div>
+                <p class="eyebrow">Chrome extension</p>
+                <h1 id="eventy-title">Eventy</h1>
+                <p class="copy">
+                    Turn pages, selected text, and event images into calendar entries with one scan.
+                </p>
+                <div class="actions" aria-label="Primary links">
+                    <a class="button primary" href="https://github.com/ariobarin/Eventy">View source</a>
+                    <a class="button" href="./privacy.html">Privacy</a>
+                    <a class="button" href="./terms.html">Terms</a>
+                </div>
+            </div>
+            <div class="icon-wrap" aria-hidden="true">
+                <img src="./assets/icon128.png" alt="">
+            </div>
+        </section>
+        <nav class="links" aria-label="Documentation links">
+            <a href="https://github.com/ariobarin/Eventy">GitHub repository</a>
+            <a href="./privacy.html">Privacy policy</a>
+            <a href="./terms.html">Terms of service</a>
+        </nav>
+    </main>
+</body>
+
+</html>
