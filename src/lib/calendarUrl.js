@@ -26,18 +26,33 @@ export function buildCalendarCreateUrl(event) {
         return `${y}${m}${d}T${hh}${mm}${ss}`;
     }
 
+    function formatGoogleAllDayDate(dt) {
+        const y = dt.getFullYear();
+        const m = padZero(dt.getMonth() + 1);
+        const d = padZero(dt.getDate());
+        return `${y}${m}${d}`;
+    }
+
     function resolveEndDate(startDate) {
         const explicitEnd = toDate(event.endDate || event.startDate, event.endTime);
         if (explicitEnd && explicitEnd > startDate) return explicitEnd;
         if (event.startTime && !event.endTime) {
             return new Date(startDate.getTime() + 60 * 60 * 1000);
         }
+        if (!event.startTime && !event.endTime) {
+            return new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+        }
         return explicitEnd;
     }
 
     const startDate = toDate(event.startDate, event.startTime);
     const endDate = startDate ? resolveEndDate(startDate) : null;
-    if (startDate && endDate) params.set("dates", `${formatGoogleDate(startDate)}/${formatGoogleDate(endDate)}`);
+    if (startDate && endDate) {
+        const dates = !event.startTime && !event.endTime
+            ? `${formatGoogleAllDayDate(startDate)}/${formatGoogleAllDayDate(endDate)}`
+            : `${formatGoogleDate(startDate)}/${formatGoogleDate(endDate)}`;
+        params.set("dates", dates);
+    }
 
     if (event.recurrence) {
         params.set("recur", `RRULE:${event.recurrence}`);

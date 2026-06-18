@@ -1124,6 +1124,7 @@ scanMediaBtn?.addEventListener("click", async () => {
             lang: "en", // Default to en
             url: url,
             imageUrls: imageUrls,
+            cacheResults: false,
         });
 
         if (!response?.success) {

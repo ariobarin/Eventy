@@ -2,6 +2,7 @@ import { extractEventsWithOpenRouter } from "./llm/client.js";
 import { openCalendarEventsInBackground } from "./background/openCalendar.js";
 import { DEBUG, MOCK_MODE, MOCK_EVENTS_PATH, MOCK_DELAY_MS } from "../config.js";
 import { preprocessForBackground, preprocessForPopup } from "./utils/scan.js";
+import { shouldCacheScanRequest } from "./utils/scanRequest.js";
 import { debug, error } from "./utils/logger.js";
 
 const HIGHLIGHT_RESULTS_KEY = "eventy-highlight-results";
@@ -303,7 +304,7 @@ async function handleScanFromImage(imageUrl, tab) {
     }
 }
 
-async function handleMockMode(url) {
+async function handleMockMode(url, shouldCache = true) {
     try {
         const delay = (ms) => new Promise((r) => setTimeout(r, ms));
         await delay(Number(MOCK_DELAY_MS) || 1200);
@@ -320,14 +321,15 @@ async function handleMockMode(url) {
             throw new Error("Invalid mock events JSON.");
         }
 
-        // Cache results
-        await chrome.storage.local.set({
-            [`eventy-scan:${url}`]: {
-                events: events || [],
-                selected: [],
-                ts: Date.now(),
-            },
-        });
+        if (shouldCache) {
+            await chrome.storage.local.set({
+                [`eventy-scan:${url}`]: {
+                    events: events || [],
+                    selected: [],
+                    ts: Date.now(),
+                },
+            });
+        }
 
         return { success: true, events: events || [] };
     } catch (e) {
@@ -342,6 +344,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         // Handle scan request asynchronously
         (async () => {
             const { html, text, title, lang, url, imageUrls } = request;
+            const shouldCache = shouldCacheScanRequest(request);
             let response = { success: false, error: "Unknown error" };
 
             // Validate inputs early - allow empty html if text or images are present
@@ -351,10 +354,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }
 
             try {
-                // Mark scan as in progress
-                await chrome.storage.local.set({
-                    [`eventy-scanning:${url}`]: { startTime: Date.now() },
-                });
+                if (shouldCache) {
+                    await chrome.storage.local.set({
+                        [`eventy-scanning:${url}`]: { startTime: Date.now() },
+                    });
+                }
 
                 DEBUG && debug("[Eventy][BG] Popup scan invoked", {
                     htmlLength: html?.length || 0,
@@ -370,7 +374,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
                 // Handle mock mode
                 if (MOCK_MODE) {
-                    response = await handleMockMode(url);
+                    response = await handleMockMode(url, shouldCache);
                     return;
                 }
 
@@ -402,14 +406,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     } catch (_) { }
                 }
 
-                // Cache results
-                await chrome.storage.local.set({
-                    [`eventy-scan:${url}`]: {
-                        events: events || [],
-                        selected: [],
-                        ts: Date.now(),
-                    },
-                });
+                if (shouldCache) {
+                    await chrome.storage.local.set({
+                        [`eventy-scan:${url}`]: {
+                            events: events || [],
+                            selected: [],
+                            ts: Date.now(),
+                        },
+                    });
+                }
 
                 response = { success: true, events: events || [] };
             } catch (err) {
@@ -420,9 +425,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     errorType: err.name === "RateLimitError" ? "RATE_LIMIT" : undefined
                 };
             } finally {
-                // Clear scanning flag to indicate scan completion
                 try {
-                    await chrome.storage.local.remove(`eventy-scanning:${url}`);
+                    if (shouldCache) {
+                        await chrome.storage.local.remove(`eventy-scanning:${url}`);
+                    }
                 } catch (_) { }
 
                 // Send response to complete the message handler

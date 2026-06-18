@@ -27,3 +27,12 @@ test("google calendar preserves explicit end time", () => {
 
     assert.equal(getDatesParam(url), "20251005T081500/20251005T104500");
 });
+
+test("google calendar uses all day range for date only events", () => {
+    const url = buildCalendarCreateUrl({
+        title: "Festival",
+        startDate: "2025-10-05",
+    });
+
+    assert.equal(getDatesParam(url), "20251005/20251006");
+});
