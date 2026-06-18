@@ -56,6 +56,7 @@ export class RateLimitError extends Error {
 
 const SYSTEM_PROMPT = `You extract calendar events from webpage HTML, text, and images (flyers, posters, schedules).
 Return ONLY a JSON object with an "events" array.
+Use null for any optional field when the information is not available.
 
 Core rules:
 - Preserve local dates/times exactly as written. Do NOT convert timezones.
@@ -70,7 +71,7 @@ Dates:
 
 Times:
 - Time ranges like "7:00 PM - 10:00 PM" map to startTime/endTime.
-- If end time is missing but a start time exists, infer a reasonable duration (1-2 hours). If no time is given, omit startTime/endTime.
+- If end time is missing but a start time exists, infer a reasonable duration (1-2 hours). If no time is given, set startTime/endTime to null.
 
 Tables/CSV:
 - If CSV/markdown tables are provided, treat the first row as headers and extract one event per row when sufficient fields exist.
@@ -85,24 +86,63 @@ const EVENT_SCHEMA = {
     properties: {
         title: { type: "string" },
         preview: {
-            type: "string",
+            type: ["string", "null"],
             description:
                 "Short label for picker UI (<=30 chars). Title is used if missing.",
         },
         startDate: { type: "string", description: "YYYY-MM-DD" },
-        startTime: { type: "string", description: "HH:MM or HH:MM TZ (include timezone if specified, e.g., '14:00 PST' or '2:00 PM EST' - note the space before TZ)" },
-        endDate: { type: "string", description: "YYYY-MM-DD" },
-        endTime: { type: "string", description: "HH:MM or HH:MM TZ (include timezone if specified)" },
-        location: { type: "string" },
-        description: { type: "string" },
+        startTime: { type: ["string", "null"], description: "HH:MM or HH:MM TZ (include timezone if specified, e.g., '14:00 PST' or '2:00 PM EST' - note the space before TZ)" },
+        endDate: { type: ["string", "null"], description: "YYYY-MM-DD" },
+        endTime: { type: ["string", "null"], description: "HH:MM or HH:MM TZ (include timezone if specified)" },
+        location: { type: ["string", "null"] },
+        description: { type: ["string", "null"] },
         recurrence: {
-            type: "string",
+            type: ["string", "null"],
             description: "RRULE fragment like FREQ=WEEKLY;BYDAY=MO",
         },
     },
-    required: ["title", "startDate"],
+    required: [
+        "title",
+        "preview",
+        "startDate",
+        "startTime",
+        "endDate",
+        "endTime",
+        "location",
+        "description",
+        "recurrence",
+    ],
     additionalProperties: false,
 };
+
+export function buildOpenRouterRequestBody(messages) {
+    return {
+        messages,
+        response_format: {
+            type: "json_schema",
+            json_schema: {
+                name: "calendar_events_extraction",
+                strict: true,
+                schema: {
+                    type: "object",
+                    properties: {
+                        events: {
+                            type: "array",
+                            items: EVENT_SCHEMA,
+                            description: "Array of extracted calendar events"
+                        }
+                    },
+                    required: ["events"],
+                    additionalProperties: false,
+                }
+            }
+        },
+        provider: {
+            require_parameters: true,
+        },
+        temperature: 0,
+    };
+}
 
 /**
  * Extract events from structured output response.
@@ -289,30 +329,7 @@ export async function extractEventsWithOpenRouter({
         response = await fetch(PROXY_URL, {
             method: "POST",
             headers,
-            body: JSON.stringify({
-                messages,
-                // Using structured outputs only - no function calling
-                response_format: {
-                    type: "json_schema",
-                    json_schema: {
-                        name: "calendar_events_extraction",
-                        strict: true,
-                        schema: {
-                            type: "object",
-                            properties: {
-                                events: {
-                                    type: "array",
-                                    items: EVENT_SCHEMA,
-                                    description: "Array of extracted calendar events"
-                                }
-                            },
-                            required: ["events"],
-                            additionalProperties: false,
-                        }
-                    }
-                },
-                temperature: 0,
-            }),
+            body: JSON.stringify(buildOpenRouterRequestBody(messages)),
             signal: controller.signal,
         });
     } catch (err) {
