@@ -296,16 +296,14 @@ function splitContentBlocks(text) {
 function clipBlock(content) {
     if (content.length <= MODEL_INPUT_MAX_BLOCK_CHARS) return content;
 
-    const clipped = content.slice(0, MODEL_INPUT_MAX_BLOCK_CHARS);
-    const sentenceBreak = clipped.lastIndexOf(". ");
-    const lineBreak = clipped.lastIndexOf("\n");
-    const breakAt = Math.max(sentenceBreak, lineBreak);
-    const trimmed =
-        breakAt > MODEL_INPUT_MAX_BLOCK_CHARS * 0.6
-            ? clipped.slice(0, breakAt + 1)
-            : clipped;
+    const marker = "\n...\n";
+    const availableChars = MODEL_INPUT_MAX_BLOCK_CHARS - marker.length;
+    const headChars = Math.floor(availableChars * 0.55);
+    const tailChars = availableChars - headChars;
+    const head = content.slice(0, headChars).trim();
+    const tail = content.slice(-tailChars).trim();
 
-    return `${trimmed.trim()}...`;
+    return `${head}${marker}${tail}`;
 }
 
 function trimToMaxChars(text, maxChars) {
@@ -402,6 +400,12 @@ function addSplitDateContext(candidates, blocks, index, priority) {
         isStandaloneMonthBlock(blocks[index - 2]?.content)
     ) {
         addCandidate(candidates, blocks, index - 2, priority);
+    }
+    if (
+        isStandaloneDayBlock(blocks[index - 2]?.content) &&
+        isStandaloneMonthBlock(blocks[index - 3]?.content)
+    ) {
+        addCandidate(candidates, blocks, index - 3, priority);
     }
 }
 

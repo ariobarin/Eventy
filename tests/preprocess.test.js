@@ -48,6 +48,28 @@ test("model input does not clip long text that is already under budget", () => {
     assert.match(output, /Community Market June 26, 2026 at 7:00 PM/);
 });
 
+test("model input preserves tail signals inside long selected blocks", () => {
+    const repeatedNoise = Array.from(
+        { length: 520 },
+        (_, index) => `Navigation item ${index} privacy policy subscribe`
+    ).join("\n\n");
+    const longEventBlock = [
+        "Community Planning Session",
+        "Background notes ".repeat(140),
+        "Friday June 26, 2026 at 7:00 PM in Main Hall",
+    ].join(" ");
+    const input = [repeatedNoise, longEventBlock, repeatedNoise].join("\n\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /Community Planning Session/);
+    assert.match(output, /Friday June 26, 2026/);
+    assert.match(output, /7:00 PM/);
+    assert.match(output, /Main Hall/);
+    assert.doesNotMatch(output, /Navigation item 519/);
+});
+
 test("model input keeps day-first dates with adjacent event context", () => {
     const repeatedNoise = Array.from(
         { length: 520 },
@@ -114,6 +136,32 @@ test("model input keeps month headers for split calendar dates", () => {
     assert.match(output, /26/);
     assert.match(output, /7:00 PM/);
     assert.match(output, /Community Market/);
+    assert.match(output, /Main Plaza/);
+    assert.doesNotMatch(output, /Navigation item 519/);
+});
+
+test("model input keeps month headers for month day title time cards", () => {
+    const repeatedNoise = Array.from(
+        { length: 520 },
+        (_, index) => `Navigation item ${index} privacy policy subscribe`
+    ).join("\n\n");
+    const input = [
+        repeatedNoise,
+        "June",
+        "26",
+        "Community Market",
+        "7:00 PM",
+        "Main Plaza",
+        repeatedNoise,
+    ].join("\n\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /June/);
+    assert.match(output, /26/);
+    assert.match(output, /Community Market/);
+    assert.match(output, /7:00 PM/);
     assert.match(output, /Main Plaza/);
     assert.doesNotMatch(output, /Navigation item 519/);
 });
