@@ -4,7 +4,7 @@ Eventy is a Chrome extension that finds event details on webpages, images, and p
 
 Version: v1.1.1
 
-Homepage: https://ariobarin.com/eventy-home/
+Homepage: https://eventy.ariobarin.com/
 
 ## What It Does
 
@@ -59,7 +59,7 @@ npm test
 
 ## Homepage Front
 
-The public product page is served from this repository's GitHub Pages output and fronted at `https://ariobarin.com/eventy-home/` by the Cloudflare Worker in [workers/eventyHome.js](workers/eventyHome.js).
+The public product page is served from this repository's GitHub Pages output and fronted at `https://eventy.ariobarin.com/` by the Cloudflare Worker in [workers/eventyHome.js](workers/eventyHome.js). The previous `https://ariobarin.com/eventy-home/` URL remains supported.
 
 ```bash
 npm run deploy:home
