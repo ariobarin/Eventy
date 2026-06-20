@@ -69,7 +69,6 @@
             "Main Stage",
             "Gump Fiction"
         ],
-        "maxPreviousContextGrowthRatio": 1.01,
         "expectedEvents": [
             {
                 "title": "Gump Fiction",

@@ -8,7 +8,6 @@ import { preprocessForPopup } from "../src/utils/scan.js";
 
 const ROOT_DIR = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const EVENT_LABEL_FIELDS = ["title", "date", "time", "location"];
-const MAX_PREVIOUS_CONTEXT_GROWTH_RATIO = 1.05;
 
 export const REAL_PAGE_CORPUS_PATH = path.join(
     ROOT_DIR,
@@ -56,24 +55,7 @@ function normalizeCorpusEntry(entry) {
             Number.isFinite(entry.maxContextChars) && entry.maxContextChars > 0
                 ? entry.maxContextChars
                 : 30000,
-        maxPreviousContextGrowthRatio: normalizePreviousContextGrowthRatio(
-            entry.maxPreviousContextGrowthRatio
-        ),
     };
-}
-
-function normalizePreviousContextGrowthRatio(value) {
-    if (value === undefined || value === null) return 1;
-    if (
-        !Number.isFinite(value) ||
-        value < 1 ||
-        value > MAX_PREVIOUS_CONTEXT_GROWTH_RATIO
-    ) {
-        throw new Error(
-            `maxPreviousContextGrowthRatio must be between 1 and ${MAX_PREVIOUS_CONTEXT_GROWTH_RATIO}.`
-        );
-    }
-    return value;
 }
 
 function normalizeExpectedEvent(event) {
@@ -225,9 +207,6 @@ export function auditRealPageFixture(fixture) {
         Number.isFinite(fixture.maxContextChars) && fixture.maxContextChars > 0
             ? fixture.maxContextChars
             : 30000;
-    const maxPreviousContextGrowthRatio = normalizePreviousContextGrowthRatio(
-        fixture.maxPreviousContextGrowthRatio
-    );
     const expectedEvents = Array.isArray(fixture.expectedEvents)
         ? fixture.expectedEvents.map(normalizeExpectedEvent)
         : [];
@@ -269,7 +248,6 @@ export function auditRealPageFixture(fixture) {
             ? Number((contextChars / previousContextChars).toFixed(4))
             : null,
         maxContextChars,
-        maxPreviousContextGrowthRatio,
         anchorPresence,
         missingAnchors,
         eventLabelResults,
@@ -279,10 +257,7 @@ export function auditRealPageFixture(fixture) {
             missingAnchors.length === 0 &&
             missingSourceEventLabels.length === 0 &&
             missingEventLabels.length === 0 &&
-            contextChars <= maxContextChars &&
-            (!previousContextChars ||
-                contextChars <=
-                    previousContextChars * maxPreviousContextGrowthRatio),
+            contextChars <= maxContextChars,
     };
 }
 

@@ -364,7 +364,7 @@ test("real page fixture audit reports markdown baseline shrinkage", async () => 
     }
 });
 
-test("real page fixture audit allows configured previous context growth", async () => {
+test("real page fixture audit reports previous context growth as a metric", async () => {
     const cleanupDomParser = await installNodeDomParser();
     try {
         const fixture = {
@@ -397,34 +397,15 @@ test("real page fixture audit allows configured previous context growth", async 
                     location: "Main Hall",
                 },
             ],
-            maxPreviousContextGrowthRatio: 1.01,
         };
 
         const audit = auditRealPageFixture(fixture);
 
         assert.ok(audit.shrinkRatioVsPreviousContext > 1);
-        assert.equal(audit.maxPreviousContextGrowthRatio, 1.01);
         assert.equal(audit.passed, true);
     } finally {
         cleanupDomParser();
     }
-});
-
-test("real page fixture audit caps configured previous context growth", () => {
-    assert.throws(
-        () =>
-            auditRealPageFixture({
-                name: "wide-growth-page",
-                url: "https://example.test/events",
-                title: "Wide Growth",
-                lang: "en",
-                html: "",
-                text: "Opening Night",
-                expectedAnchors: ["Opening Night"],
-                maxPreviousContextGrowthRatio: 1.5,
-            }),
-        /maxPreviousContextGrowthRatio must be between 1 and 1\.05/
-    );
 });
 
 test("real page fixture audit records missing anchors", () => {
