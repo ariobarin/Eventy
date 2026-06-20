@@ -241,6 +241,20 @@ export const MODEL_INPUT_MAX_CHARS = 18000;
 const MODEL_INPUT_MAX_BLOCK_CHARS = 1200;
 const MODEL_INPUT_SIGNAL_SCORE = 8;
 const MODEL_INPUT_LEAD_BLOCKS = 10;
+const MONTH_NAME_PATTERN = "(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\\.?";
+const ORDINAL_DAY_PATTERN = "\\d{1,2}(?:st|nd|rd|th)?";
+const EVENT_DATE_PATTERN = new RegExp(
+    [
+        "\\b(?:Mon|Tue|Tues|Wed|Thu|Thur|Thurs|Fri|Sat|Sun)(?:day)?\\b",
+        `\\b${MONTH_NAME_PATTERN}\\s+${ORDINAL_DAY_PATTERN}(?:,\\s*\\d{4})?\\b`,
+        `\\b${ORDINAL_DAY_PATTERN}\\s+${MONTH_NAME_PATTERN}(?:\\s+\\d{4})?\\b`,
+        "\\b\\d{4}-\\d{1,2}-\\d{1,2}\\b",
+        "\\b\\d{1,2}[/-]\\d{1,2}(?:[/-]\\d{2,4})?\\b",
+    ].join("|"),
+    "gi"
+);
+const STANDALONE_MONTH_PATTERN = new RegExp(`^${MONTH_NAME_PATTERN}$`, "i");
+const STANDALONE_DAY_PATTERN = new RegExp(`^${ORDINAL_DAY_PATTERN}$`, "i");
 
 function normalizeModelText(text) {
     return String(text || "")
@@ -309,11 +323,7 @@ function trimToMaxChars(text, maxChars) {
 function scoreBlock(text) {
     let score = 0;
     // Date patterns such as Jan 21, 26 June, Friday, 2025-01-21, or 12/25.
-    const dateMatches = (
-        text.match(
-            /\b(?:Mon|Tue|Tues|Wed|Thu|Thur|Thurs|Fri|Sat|Sun)(?:day)?\b|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}(?:,\s*\d{4})?\b|\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?(?:\s+\d{4})?\b|\b\d{4}-\d{1,2}-\d{1,2}\b|\b\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?\b/gi
-        ) || []
-    ).length;
+    const dateMatches = (text.match(EVENT_DATE_PATTERN) || []).length;
     score += dateMatches * 10;
 
     // Time patterns such as 7:00 PM, 14:00, or 7am.
@@ -378,6 +388,23 @@ function addCandidate(candidates, blocks, index, priority) {
     candidates.set(index, Math.max(candidates.get(index) || 0, priority));
 }
 
+function isStandaloneMonthBlock(text) {
+    return STANDALONE_MONTH_PATTERN.test(String(text || "").trim());
+}
+
+function isStandaloneDayBlock(text) {
+    return STANDALONE_DAY_PATTERN.test(String(text || "").trim());
+}
+
+function addSplitDateContext(candidates, blocks, index, priority) {
+    if (
+        isStandaloneDayBlock(blocks[index - 1]?.content) &&
+        isStandaloneMonthBlock(blocks[index - 2]?.content)
+    ) {
+        addCandidate(candidates, blocks, index - 2, priority);
+    }
+}
+
 function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
     const rawBlocks = splitContentBlocks(text);
 
@@ -399,8 +426,10 @@ function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
     for (const block of blocks) {
         if (block.score >= MODEL_INPUT_SIGNAL_SCORE) {
             addCandidate(candidates, blocks, block.index - 1, block.score + 8);
+            addSplitDateContext(candidates, blocks, block.index, block.score + 6);
             addCandidate(candidates, blocks, block.index, block.score + 20);
             addCandidate(candidates, blocks, block.index + 1, block.score + 8);
+            addCandidate(candidates, blocks, block.index + 2, block.score + 4);
         } else if (block.score > 0) {
             addCandidate(candidates, blocks, block.index, block.score);
         }

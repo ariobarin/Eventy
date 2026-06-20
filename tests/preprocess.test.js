@@ -68,6 +68,54 @@ test("model input keeps day-first dates with adjacent event context", () => {
     assert.doesNotMatch(output, /Navigation item 519/);
 });
 
+test("model input keeps ordinal dates during ranking", () => {
+    const repeatedNoise = Array.from(
+        { length: 520 },
+        (_, index) => `Navigation item ${index} privacy policy subscribe`
+    ).join("\n\n");
+    const input = [
+        repeatedNoise,
+        "Solstice Workshop",
+        "June 21st, 2026",
+        "Main Hall",
+        repeatedNoise,
+    ].join("\n\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /Solstice Workshop/);
+    assert.match(output, /June 21st, 2026/);
+    assert.match(output, /Main Hall/);
+    assert.doesNotMatch(output, /Navigation item 519/);
+});
+
+test("model input keeps month headers for split calendar dates", () => {
+    const repeatedNoise = Array.from(
+        { length: 520 },
+        (_, index) => `Navigation item ${index} privacy policy subscribe`
+    ).join("\n\n");
+    const input = [
+        repeatedNoise,
+        "June",
+        "26",
+        "7:00 PM",
+        "Community Market",
+        "Main Plaza",
+        repeatedNoise,
+    ].join("\n\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /June/);
+    assert.match(output, /26/);
+    assert.match(output, /7:00 PM/);
+    assert.match(output, /Community Market/);
+    assert.match(output, /Main Plaza/);
+    assert.doesNotMatch(output, /Navigation item 519/);
+});
+
 test("model input preserves repeated dates and locations for distinct events", () => {
     const input = [
         "Opening Night",
