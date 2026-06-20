@@ -1,7 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { buildOpenRouterRequestBody } from "../src/llm/client.js";
+import {
+    buildEventExtractionMessages,
+    buildOpenRouterRequestBody,
+    extractEventsFromStructuredOutput,
+} from "../src/llm/client.js";
 
 test("completion request uses strict structured outputs", () => {
     const body = buildOpenRouterRequestBody([
@@ -54,4 +58,49 @@ test("event schema uses required nullable optional fields", () => {
     assert.deepEqual(eventSchema.properties.endTime.type, ["string", "null"]);
     assert.deepEqual(eventSchema.properties.location.type, ["string", "null"]);
     assert.equal(eventSchema.additionalProperties, false);
+});
+
+test("event extraction messages include page context and compact inputs", () => {
+    const messages = buildEventExtractionMessages({
+        modelInput: "Opening Night\n\nJune 26, 2026",
+        url: "https://example.test/events",
+        context: { pageTitle: "Events", pageLang: "en" },
+        csvSnippets: ['"Title","Date"\n"Opening Night","June 26, 2026"'],
+    });
+
+    assert.equal(messages[0].role, "system");
+    assert.match(messages[1].content, /Current page URL: https:\/\/example\.test\/events/);
+    assert.match(messages[1].content, /"pageTitle":"Events"/);
+    assert.match(messages[2].content, /Preprocessed tables as CSV/);
+    assert.match(messages[3].content, /Opening Night/);
+    assert.match(messages.at(-1).content, /June 26, 2026/);
+});
+
+test("structured output parser extracts events from model responses", () => {
+    const events = extractEventsFromStructuredOutput({
+        choices: [
+            {
+                message: {
+                    content: JSON.stringify({
+                        events: [
+                            {
+                                title: "Opening Night",
+                                preview: null,
+                                startDate: "2026-06-26",
+                                startTime: "7:00 PM",
+                                endDate: null,
+                                endTime: null,
+                                location: "Main Hall",
+                                description: null,
+                                recurrence: null,
+                            },
+                        ],
+                    }),
+                },
+            },
+        ],
+    });
+
+    assert.equal(events.length, 1);
+    assert.equal(events[0].title, "Opening Night");
 });

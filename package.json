@@ -16,6 +16,7 @@
         "test": "node --test tests/*.test.js",
         "capture:real-pages": "node scripts/capture-real-pages.mjs",
         "audit:real-pages": "node scripts/audit-real-pages.mjs",
+        "eval:real-pages:llm": "node scripts/eval-real-pages-with-llm.mjs",
         "package": "node scripts/package-extension.mjs",
         "deploy:home": "npx wrangler@4.101.0 deploy --config wrangler.home.jsonc"
     },

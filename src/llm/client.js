@@ -148,7 +148,7 @@ export function buildOpenRouterRequestBody(messages) {
  * Extract events from structured output response.
  * With structured outputs, the response content is guaranteed to be valid JSON.
  */
-function extractEventsFromStructuredOutput(data) {
+export function extractEventsFromStructuredOutput(data) {
     const events = [];
 
     for (const choice of data.choices || []) {
@@ -217,21 +217,10 @@ function dedupeEvents(events) {
     }
 }
 
-export async function extractEventsWithOpenRouter({
-    modelInput, // Renamed from html, contains Markdown or Text or HTML
-    html, // Backward compatibility
-    url,
-    context = {},
-    csvSnippets = [],
-    imageUrls = [],
-}) {
-    const contentInput = modelInput || html || ""; // Use modelInput preferred
-
-
-
+export function buildEventContext({ url, context = {} } = {}) {
     const now = new Date();
 
-    const ctx = {
+    return {
         nowUtc: now.toISOString(),
         nowLocal: now.toString(),
         tz: (() => {
@@ -250,6 +239,64 @@ export async function extractEventsWithOpenRouter({
         pageLang: context.pageLang,
         ...context,
     };
+}
+
+export function buildEventExtractionMessages({
+    modelInput,
+    url,
+    context = {},
+    csvSnippets = [],
+    imageUrls = [],
+} = {}) {
+    const ctx = buildEventContext({ url, context });
+    const messages = [
+        { role: "system", content: SYSTEM_PROMPT },
+        {
+            role: "user",
+            content: `Current page URL: ${url}\nContext JSON (use for resolving relative dates like 'tomorrow', 'next Friday', etc.):\n${JSON.stringify(ctx)}\nExtract ALL distinct events from the provided inputs (Markdown/Text content and/or images). Return a valid JSON object with an "events" array.`
+        },
+        ...(csvSnippets.length
+            ? [
+                {
+                    role: "user",
+                    content:
+                        "Preprocessed tables as CSV (use to ensure table rows are not missed):",
+                },
+                ...csvSnippets.map((csv) => ({
+                    role: "user",
+                    content: "```csv\n" + csv + "\n```",
+                })),
+            ]
+            : []),
+        { role: "user", content: "Page Content (Markdown/Text):" },
+        { role: "user", content: modelInput || "" },
+    ];
+
+    if (Array.isArray(imageUrls) && imageUrls.length) {
+        const content = [
+            { type: "text", text: "Images to scan for events:" },
+            ...imageUrls.map((u) => ({
+                type: "image_url",
+                image_url: { url: String(u) },
+            })),
+        ];
+        messages.push({ role: "user", content });
+    }
+
+    return messages;
+}
+
+export async function extractEventsWithOpenRouter({
+    modelInput, // Renamed from html, contains Markdown or Text or HTML
+    html, // Backward compatibility
+    url,
+    context = {},
+    csvSnippets = [],
+    imageUrls = [],
+}) {
+    const contentInput = modelInput || html || ""; // Use modelInput preferred
+
+
 
     if (!PROXY_URL) throw new Error("Proxy not configured.");
 
@@ -272,7 +319,10 @@ export async function extractEventsWithOpenRouter({
         }
     }
 
-    DEBUG && debug("[Eventy][LLM] Prepared context:", ctx);
+    DEBUG && debug(
+        "[Eventy][LLM] Prepared context:",
+        buildEventContext({ url, context })
+    );
     DEBUG && debug("[Eventy][LLM] Request preview:", {
         url: PROXY_URL,
         headers: Object.keys(headers),
@@ -285,40 +335,14 @@ export async function extractEventsWithOpenRouter({
     });
 
     // Build messages with optional image content (OpenAI-style multimodal format)
-    const messages = [
-        { role: "system", content: SYSTEM_PROMPT },
-        {
-            role: "user",
-            content: `Current page URL: ${url}\nContext JSON (use for resolving relative dates like 'tomorrow', 'next Friday', etc.):\n${JSON.stringify(ctx)}\nExtract ALL distinct events from the provided inputs (Markdown/Text content and/or images). Return a valid JSON object with an "events" array.`
-        },
-        ...(csvSnippets.length
-            ? [
-                {
-                    role: "user",
-                    content:
-                        "Preprocessed tables as CSV (use to ensure table rows are not missed):",
-                },
-                ...csvSnippets.map((csv) => ({
-                    role: "user",
-                    content: "```csv\n" + csv + "\n```",
-                })),
-            ]
-            : []),
-        { role: "user", content: "Page Content (Markdown/Text):" },
-        { role: "user", content: contentInput },
-    ];
-
-    if (Array.isArray(imageUrls) && imageUrls.length) {
-        const content = [
-            { type: "text", text: "Images to scan for events:" },
-            ...imageUrls.map((u) => ({
-                type: "image_url",
-                image_url: { url: String(u) },
-            })),
-        ];
-        messages.push({ role: "user", content });
-        DEBUG && debug("[Eventy][LLM] Including image URLs:", imageUrls);
-    }
+    const messages = buildEventExtractionMessages({
+        modelInput: contentInput,
+        url,
+        context,
+        csvSnippets,
+        imageUrls,
+    });
+    DEBUG && debug("[Eventy][LLM] Including image URLs:", imageUrls);
 
     // Add timeout to prevent hanging (60 seconds)
     const controller = new AbortController();
