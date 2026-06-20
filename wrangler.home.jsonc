@@ -6,6 +6,10 @@
     "workers_dev": false,
     "routes": [
         {
+            "pattern": "eventy.ariobarin.com",
+            "custom_domain": true
+        },
+        {
             "pattern": "ariobarin.com/eventy-home",
             "zone_name": "ariobarin.com"
         },

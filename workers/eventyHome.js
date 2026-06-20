@@ -1,9 +1,20 @@
 const FRONT_BASE_PATH = "/eventy-home";
+const FRONT_CANONICAL_HOSTNAME = "eventy.ariobarin.com";
 const UPSTREAM_ORIGIN = "https://ariobarin.github.io";
 const UPSTREAM_BASE_PATH = "/Eventy";
 
+function upstreamUrlForSuffix(suffix, search) {
+    const upstream = new URL(`${UPSTREAM_BASE_PATH}${suffix}`, UPSTREAM_ORIGIN);
+    upstream.search = search;
+    return { upstreamUrl: upstream.toString() };
+}
+
 export function upstreamUrlForEventyHome(requestUrl) {
     const url = new URL(requestUrl);
+
+    if (url.hostname === FRONT_CANONICAL_HOSTNAME) {
+        return upstreamUrlForSuffix(url.pathname, url.search);
+    }
 
     if (url.pathname === FRONT_BASE_PATH) {
         url.pathname = `${FRONT_BASE_PATH}/`;
@@ -15,9 +26,7 @@ export function upstreamUrlForEventyHome(requestUrl) {
     }
 
     const suffix = url.pathname.slice(FRONT_BASE_PATH.length);
-    const upstream = new URL(`${UPSTREAM_BASE_PATH}${suffix}`, UPSTREAM_ORIGIN);
-    upstream.search = url.search;
-    return { upstreamUrl: upstream.toString() };
+    return upstreamUrlForSuffix(suffix, url.search);
 }
 
 export default {
