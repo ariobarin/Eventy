@@ -150,7 +150,23 @@ export function htmlToMarkdown(htmlInput) {
     }
 }
 
-export function tablesToCsvSnippets(htmlInput, maxTables = 3, maxRows = 30) {
+function trimCsvSnippet(snippet, maxChars) {
+    if (snippet.length <= maxChars) return snippet;
+
+    const clipped = snippet.slice(0, maxChars);
+    const lineBreak = clipped.lastIndexOf("\n");
+    const trimmed =
+        lineBreak > maxChars * 0.5 ? clipped.slice(0, lineBreak) : clipped;
+
+    return trimmed.trim();
+}
+
+export function tablesToCsvSnippets(
+    htmlInput,
+    maxTables = 3,
+    maxRows = 30,
+    maxCharsPerSnippet = 6000
+) {
     try {
         if (typeof DOMParser === 'undefined') return [];
 
@@ -161,13 +177,16 @@ export function tablesToCsvSnippets(htmlInput, maxTables = 3, maxRows = 30) {
         );
         const tables = Array.from(doc.querySelectorAll("table"));
         const snippets = [];
-        const quote = (s) =>
-            '"' +
-            String(s || "")
+        const cleanCell = (s) => {
+            const cleaned = String(s || "")
                 .replace(/"/g, '""')
                 .replace(/[\n\r]+/g, " ")
-                .trim() +
-            '"';
+                .trim();
+            return cleaned.length > 240
+                ? `${cleaned.slice(0, 237).trim()}...`
+                : cleaned;
+        };
+        const quote = (s) => '"' + cleanCell(s) + '"';
         for (let ti = 0; ti < Math.min(tables.length, maxTables); ti++) {
             const t = tables[ti];
             const rows = Array.from(t.querySelectorAll("tr"));
@@ -184,6 +203,7 @@ export function tablesToCsvSnippets(htmlInput, maxTables = 3, maxRows = 30) {
                 headerCells.length && rows[0]?.contains(headerCells[0]) ? 1 : 0;
             const csvLines = [];
             csvLines.push(headers.map(quote).join(","));
+            let csvLength = csvLines[0].length;
             for (
                 let ri = startIndex;
                 ri < Math.min(rows.length, startIndex + maxRows);
@@ -194,9 +214,21 @@ export function tablesToCsvSnippets(htmlInput, maxTables = 3, maxRows = 30) {
                 const values = headers.map((_, ci) =>
                     quote(cells[ci]?.textContent || "")
                 );
-                csvLines.push(values.join(","));
+                const line = values.join(",");
+                const nextLength = csvLength + 1 + line.length;
+                if (nextLength > maxCharsPerSnippet && csvLines.length > 1) {
+                    break;
+                }
+                csvLines.push(line);
+                csvLength = nextLength;
             }
-            if (csvLines.length > 1) snippets.push(csvLines.join("\n"));
+            if (csvLines.length > 1) {
+                const snippet = trimCsvSnippet(
+                    csvLines.join("\n"),
+                    maxCharsPerSnippet
+                );
+                if (snippet) snippets.push(snippet);
+            }
         }
         return snippets;
     } catch (_) {
@@ -204,79 +236,234 @@ export function tablesToCsvSnippets(htmlInput, maxTables = 3, maxRows = 30) {
     }
 }
 
+export const MODEL_INPUT_MAX_CHARS = 18000;
+
+const MODEL_INPUT_MAX_BLOCK_CHARS = 1200;
+const MODEL_INPUT_SIGNAL_SCORE = 8;
+const MODEL_INPUT_LEAD_BLOCKS = 10;
+
+function normalizeModelText(text) {
+    return String(text || "")
+        .replace(/\r\n?/g, "\n")
+        .replace(/[ \t\f\v]+/g, " ")
+        .replace(/\n[ \t]+/g, "\n")
+        .replace(/[ \t]+\n/g, "\n")
+        .replace(/\n{4,}/g, "\n\n\n")
+        .trim();
+}
+
+function splitContentBlocks(text) {
+    const normalized = normalizeModelText(text);
+    if (!normalized) return [];
+
+    const blocks = [];
+    for (const paragraph of normalized.split(/\n\s*\n/)) {
+        const trimmed = paragraph.trim();
+        if (!trimmed) continue;
+
+        const lines = trimmed
+            .split("\n")
+            .map((line) => line.trim())
+            .filter(Boolean);
+        const shouldSplitLines =
+            lines.length > 4 ||
+            (lines.length > 1 && lines.every((line) => line.length <= 180));
+
+        if (shouldSplitLines) {
+            blocks.push(...lines);
+        } else {
+            blocks.push(trimmed);
+        }
+    }
+
+    return blocks;
+}
+
+function clipBlock(content) {
+    if (content.length <= MODEL_INPUT_MAX_BLOCK_CHARS) return content;
+
+    const clipped = content.slice(0, MODEL_INPUT_MAX_BLOCK_CHARS);
+    const sentenceBreak = clipped.lastIndexOf(". ");
+    const lineBreak = clipped.lastIndexOf("\n");
+    const breakAt = Math.max(sentenceBreak, lineBreak);
+    const trimmed =
+        breakAt > MODEL_INPUT_MAX_BLOCK_CHARS * 0.6
+            ? clipped.slice(0, breakAt + 1)
+            : clipped;
+
+    return `${trimmed.trim()}...`;
+}
+
+function trimToMaxChars(text, maxChars) {
+    if (text.length <= maxChars) return text;
+
+    const clipped = text.slice(0, maxChars);
+    const blockBreak = clipped.lastIndexOf("\n\n");
+    const trimmed =
+        blockBreak > maxChars * 0.75 ? clipped.slice(0, blockBreak) : clipped;
+
+    return trimmed.trim();
+}
+
 // Heuristic scoring for event relevance
 function scoreBlock(text) {
     let score = 0;
-    // Date patterns (e.g., Jan 21, 2025-01-21, 12/25)
-    const dateMatches = (text.match(/(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}|(\d{1,4}[-/]\d{1,2}[-/]\d{1,4})/gi) || []).length;
+    // Date patterns such as Jan 21, 26 June, Friday, 2025-01-21, or 12/25.
+    const dateMatches = (
+        text.match(
+            /\b(?:Mon|Tue|Tues|Wed|Thu|Thur|Thurs|Fri|Sat|Sun)(?:day)?\b|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}(?:,\s*\d{4})?\b|\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?(?:\s+\d{4})?\b|\b\d{4}-\d{1,2}-\d{1,2}\b|\b\d{1,2}[/-]\d{1,2}(?:[/-]\d{2,4})?\b/gi
+        ) || []
+    ).length;
     score += dateMatches * 10;
 
-    // Time patterns (e.g., 7:00 PM, 14:00, 7am)
-    const timeMatches = (text.match(/\d{1,2}:\d{2}\s*(?:am|pm)?|\d{1,2}\s*(?:am|pm)/gi) || []).length;
+    // Time patterns such as 7:00 PM, 14:00, or 7am.
+    const timeMatches = (
+        text.match(/\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b|\b\d{1,2}:\d{2}\b/gi) ||
+        []
+    ).length;
     score += timeMatches * 10;
 
-    // Location/Event keywords
-    if (/venue|location|where|address|host|present|live|webinar/i.test(text)) score += 5;
+    if (
+        /\b(event|calendar|ticket|tickets|rsvp|registration|doors|admission|presented|live|webinar|workshop|concert|screening|festival|meetup|lecture|panel|class|session|conference|show|performance|tour)\b/i.test(
+            text
+        )
+    ) {
+        score += 5;
+    }
+
+    if (
+        /\b(venue|location|where|address|room|auditorium|hall|street|st\.|avenue|ave\.|road|rd\.)\b/i.test(
+            text
+        )
+    ) {
+        score += 5;
+    }
+
+    if (/^#{1,6}\s/.test(text)) score += 2;
+    if (/^\s*[-*]\s+/.test(text)) score += 1;
 
     // Penalty for likely noise (e.g. navigation links often have high link density relative to text length in markdown)
     // In markdown, links look like [text](url). High density of ]( relative to length suggests list of links.
     const linkCount = (text.match(/\]\(/g) || []).length;
     if (linkCount > 3 && text.length < 200) score -= 5;
+    if (
+        /\b(cookie|privacy policy|terms of use|terms and conditions|subscribe|newsletter|login|signin|signup|account|cart|copyright|all rights reserved|skip to content)\b/i.test(
+            text
+        )
+    ) {
+        score -= 8;
+    }
+    if (text.trim().length < 4) score -= 3;
 
     return score;
 }
 
-function condenseContent(text, maxChars = 80000) {
-    if (!text || text.length <= maxChars) return text;
+function isLikelyNoiseBlock(text, score) {
+    if (score >= MODEL_INPUT_SIGNAL_SCORE) return false;
 
-    // Split into blocks (paragraphs, headers, list items)
-    // We split by double newline to capture paragraphs, or by newline for lists if they are dense.
-    // Let's stick to double newline or major structural boundaries for markdown.
-    const blocks = text.split(/\n\s*\n/);
+    const linkCount = (text.match(/\]\(/g) || []).length;
+    return (
+        /\b(cookie|privacy policy|terms of use|terms and conditions|subscribe|newsletter|login|signin|signup|account|cart|copyright|all rights reserved|skip to content|navigation)\b/i.test(
+            text
+        ) ||
+        (linkCount > 2 && text.length < 220)
+    );
+}
 
-    // Map blocks to objects with score and original index
-    const scoredBlocks = blocks.map((content, index) => ({
-        content,
-        index,
-        score: scoreBlock(content),
-        length: content.length
-    }));
+function addCandidate(candidates, blocks, index, priority) {
+    if (index < 0 || index >= blocks.length) return;
+    const block = blocks[index];
+    if (!block || isLikelyNoiseBlock(block.content, block.score)) return;
 
-    // Sort by score descending
-    scoredBlocks.sort((a, b) => b.score - a.score);
+    candidates.set(index, Math.max(candidates.get(index) || 0, priority));
+}
 
-    let currentLength = 0;
-    const selectedBlocks = [];
+function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
+    const rawBlocks = splitContentBlocks(text);
 
-    // Select blocks until maxChars is reached
-    for (const block of scoredBlocks) {
-        if (currentLength + block.length > maxChars) {
-            // If this meaningful block is too big but we have space, maybe take a chunk?
-            // For now, simple inclusion/exclusion.
-            continue;
-        }
-        selectedBlocks.push(block);
-        currentLength += block.length;
-        if (currentLength >= maxChars) break;
+    if (!rawBlocks.length) return "";
+
+    const normalized = rawBlocks.join("\n\n");
+    if (normalized.length <= maxChars) {
+        return normalized;
     }
 
-    // Sort back to original order to preserve flow
-    selectedBlocks.sort((a, b) => a.index - b.index);
+    const blocks = rawBlocks.map((content, index) => ({
+        content: clipBlock(content),
+        index,
+        score: scoreBlock(content),
+    }));
 
-    return selectedBlocks.map(b => b.content).join("\n\n");
+    const candidates = new Map();
+
+    for (const block of blocks) {
+        if (block.score >= MODEL_INPUT_SIGNAL_SCORE) {
+            addCandidate(candidates, blocks, block.index - 1, block.score + 8);
+            addCandidate(candidates, blocks, block.index, block.score + 20);
+            addCandidate(candidates, blocks, block.index + 1, block.score + 8);
+        } else if (block.score > 0) {
+            addCandidate(candidates, blocks, block.index, block.score);
+        }
+    }
+
+    for (
+        let index = 0;
+        index < Math.min(MODEL_INPUT_LEAD_BLOCKS, blocks.length);
+        index++
+    ) {
+        addCandidate(candidates, blocks, index, 4);
+    }
+
+    if (!candidates.size) {
+        for (let index = 0; index < blocks.length; index++) {
+            addCandidate(candidates, blocks, index, 1);
+            if (candidates.size >= MODEL_INPUT_LEAD_BLOCKS) break;
+        }
+    }
+
+    const rankedCandidates = Array.from(candidates.entries()).sort(
+        ([indexA, priorityA], [indexB, priorityB]) =>
+            priorityB - priorityA || indexA - indexB
+    );
+    const selected = new Set();
+    let selectedLength = 0;
+
+    for (const [index] of rankedCandidates) {
+        const block = blocks[index];
+        const addition = block.content.length + (selected.size ? 2 : 0);
+        if (selectedLength + addition > maxChars && selected.size) continue;
+
+        selected.add(index);
+        selectedLength += addition;
+        if (selectedLength >= maxChars) break;
+    }
+
+    if (!selected.size) selected.add(0);
+
+    const compact = Array.from(selected)
+        .sort((a, b) => a - b)
+        .map((index) => blocks[index].content)
+        .join("\n\n");
+
+    return trimToMaxChars(compact, maxChars);
 }
 
 export function buildModelInput(text, html) {
     let rawContent = "";
+    const textContent = String(text || "");
 
     // Prefer HTML path when available, converting to Markdown
-    if (html && typeof html === "string" && html.trim()) {
+    if (
+        html &&
+        typeof html === "string" &&
+        html.trim() &&
+        typeof DOMParser !== "undefined"
+    ) {
         rawContent = htmlToMarkdown(html);
     } else {
-        // Fallback to text-only (simple pass-through)
-        rawContent = String(text || "");
+        // Fallback to text-only when parsing is unavailable.
+        rawContent = textContent || String(html || "");
     }
 
-    // Enforce token limit (approx 20k tokens ~ 80k chars)
-    return condenseContent(rawContent, 80000);
+    return condenseContent(rawContent, MODEL_INPUT_MAX_CHARS);
 }

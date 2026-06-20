@@ -1,0 +1,65 @@
+[
+    {
+        "name": "stanford-day",
+        "url": "https://events.stanford.edu/calendar/day/2026/6/21",
+        "expectedAnchors": [
+            "Moments in the History of East Asian Printing",
+            "Sun, Jun 21, 2026",
+            "Lathrop Library"
+        ]
+    },
+    {
+        "name": "stanford-live",
+        "url": "https://events.stanford.edu/department/stanford_live/calendar",
+        "expectedAnchors": [
+            "St. Lawrence Chamber Music Seminar",
+            "Tue, Jun 23, 2026",
+            "Braun Music Center"
+        ]
+    },
+    {
+        "name": "uc-berkeley-events",
+        "url": "https://events.berkeley.edu/",
+        "expectedAnchors": [
+            "June",
+            "Events",
+            "Time"
+        ]
+    },
+    {
+        "name": "southbank-whats-on",
+        "url": "https://www.southbankcentre.co.uk/whats-on/",
+        "expectedAnchors": [
+            "Harry Styles",
+            "Thu 11",
+            "Sun 21 Jun 2026"
+        ]
+    },
+    {
+        "name": "toronto-nathan-phillips",
+        "url": "https://www.toronto.ca/services-payments/venues-facilities-bookings/booking-city-facilities/city-squares/nathan-phillips-square/events-happening-on-nathan-phillips-square/",
+        "expectedAnchors": [
+            "TOgether 2026",
+            "June 5 to 6",
+            "Nathan Phillips Square"
+        ]
+    },
+    {
+        "name": "have-your-say-toronto",
+        "url": "https://haveyoursay.toronto.ca/events",
+        "expectedAnchors": [
+            "Milliken Regeneration Study",
+            "Jun 23, 2026",
+            "Online Event"
+        ]
+    },
+    {
+        "name": "berkeley-summer-sessions",
+        "url": "https://summer.berkeley.edu/courses/session-dates-deadlines",
+        "expectedAnchors": [
+            "2026 Academic Calendar",
+            "A - First Six-Week Session",
+            "May 26"
+        ]
+    }
+]

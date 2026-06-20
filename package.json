@@ -14,12 +14,15 @@
     "homepage": "https://eventy.ariobarin.com/",
     "scripts": {
         "test": "node --test tests/*.test.js",
+        "capture:real-pages": "node scripts/capture-real-pages.mjs",
+        "audit:real-pages": "node scripts/audit-real-pages.mjs",
         "package": "node scripts/package-extension.mjs",
         "deploy:home": "npx wrangler@4.101.0 deploy --config wrangler.home.jsonc"
     },
     "devDependencies": {
         "archiver": "^8.0.0",
         "chrome-types": "^0.1.429",
-        "jsdom": "^26.1.0"
+        "jsdom": "^26.1.0",
+        "puppeteer-core": "^24.31.0"
     }
 }

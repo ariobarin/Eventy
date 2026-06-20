@@ -47,6 +47,15 @@ npm run package
 
 For popup, settings, or extension behavior changes, also test manually in Chrome by loading the unpacked extension and scanning a representative page, selected text, pasted text, or image.
 
+For LLM preprocessing changes, use local real-page fixtures instead of repeatedly scanning live sites:
+
+```bash
+npm run capture:real-pages
+npm run audit:real-pages
+```
+
+The capture command renders URLs from `tests/real-pages/corpus.json` and writes ignored snapshots under `tests/fixtures/real-pages/`. The audit command replays those local snapshots through Eventy's preprocessing internals and checks that expected event anchors survive. If a live page changes, refresh that page's snapshot and update its anchors in the corpus instead of committing the captured DOM.
+
 ## Pull Requests
 
 - Open pull requests against `main`.
