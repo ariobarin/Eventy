@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
     buildErroredEvalPage,
@@ -8,6 +11,9 @@ import {
     resolveEvalTransport,
     summarizeJudgeVerdict,
 } from "../scripts/eval-real-pages-with-llm.mjs";
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const evalScriptPath = path.join(repoRoot, "scripts", "eval-real-pages-with-llm.mjs");
 
 test("LLM judge request uses strict structured output", () => {
     const body = buildEventJudgeRequestBody({
@@ -117,6 +123,28 @@ test("LLM eval can use a proxy transport without exposing OpenRouter auth", () =
     assert.equal(request.url, "https://example.test/api");
     assert.equal(request.headers["X-Eventy-Token"], "shared-token");
     assert.equal(Object.hasOwn(request.headers, "Authorization"), false);
+});
+
+test("LLM eval rejects proxy tokens in cli args", () => {
+    const result = spawnSync(
+        process.execPath,
+        [evalScriptPath, "--proxy-token=secret-token"],
+        {
+            cwd: repoRoot,
+            encoding: "utf8",
+            env: {
+                ...process.env,
+                EVENTY_EVAL_PROXY_URL: "",
+                EVENTY_EVAL_PROXY_TOKEN: "",
+                EVENTY_TOKEN: "",
+                EVENTY_EVAL_OPENROUTER_API_KEY: "",
+                OPENROUTER_API_KEY: "",
+            },
+        }
+    );
+
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Unknown option: --proxy-token/);
 });
 
 test("LLM eval records page-level errors", () => {

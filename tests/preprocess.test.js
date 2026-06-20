@@ -166,6 +166,31 @@ test("model input keeps month headers for month day title time cards", () => {
     assert.doesNotMatch(output, /Navigation item 519/);
 });
 
+test("model input keeps untimed month day title cards", () => {
+    const repeatedCopy = Array.from(
+        { length: 520 },
+        (_, index) =>
+            `Community resource section ${index} with general visitor information and local program summaries.`
+    ).join("\n\n");
+    const input = [
+        repeatedCopy,
+        "June",
+        "26",
+        "Community Market",
+        "Main Plaza",
+        repeatedCopy,
+    ].join("\n\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /June/);
+    assert.match(output, /26/);
+    assert.match(output, /Community Market/);
+    assert.match(output, /Main Plaza/);
+    assert.doesNotMatch(output, /Community resource section 519/);
+});
+
 test("model input keeps event titles two blocks before dates", () => {
     const repeatedNoise = Array.from(
         { length: 520 },
@@ -189,6 +214,33 @@ test("model input keeps event titles two blocks before dates", () => {
     assert.match(output, /7:00 PM/);
     assert.match(output, /Main Hall/);
     assert.doesNotMatch(output, /Navigation item 519/);
+});
+
+test("model input keeps event titles three blocks before dates", () => {
+    const repeatedCopy = Array.from(
+        { length: 520 },
+        (_, index) =>
+            `Community resource section ${index} with general visitor information and local program summaries.`
+    ).join("\n\n");
+    const input = [
+        repeatedCopy,
+        "Evening Gallery Walk",
+        "Tickets are available from the box office.",
+        "Doors open before the program begins.",
+        "Friday June 26, 2026",
+        "7:00 PM",
+        "Location: Main Hall",
+        repeatedCopy,
+    ].join("\n\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /Evening Gallery Walk/);
+    assert.match(output, /Friday June 26, 2026/);
+    assert.match(output, /7:00 PM/);
+    assert.match(output, /Main Hall/);
+    assert.doesNotMatch(output, /Community resource section 519/);
 });
 
 test("model input preserves repeated dates and locations for distinct events", () => {

@@ -409,6 +409,24 @@ function addSplitDateContext(candidates, blocks, index, priority) {
     }
 }
 
+function addStandaloneMonthDayCandidates(candidates, blocks) {
+    for (let index = 0; index < blocks.length - 1; index++) {
+        if (
+            !isStandaloneMonthBlock(blocks[index]?.content) ||
+            !isStandaloneDayBlock(blocks[index + 1]?.content)
+        ) {
+            continue;
+        }
+
+        const priority = MODEL_INPUT_SIGNAL_SCORE + 8;
+        addCandidate(candidates, blocks, index, priority);
+        addCandidate(candidates, blocks, index + 1, priority);
+        addCandidate(candidates, blocks, index + 2, priority - 1);
+        addCandidate(candidates, blocks, index + 3, priority - 2);
+        addCandidate(candidates, blocks, index + 4, priority - 3);
+    }
+}
+
 function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
     const rawBlocks = splitContentBlocks(text);
 
@@ -429,6 +447,7 @@ function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
 
     for (const block of blocks) {
         if (block.score >= MODEL_INPUT_SIGNAL_SCORE) {
+            addCandidate(candidates, blocks, block.index - 3, block.score + 3);
             addCandidate(candidates, blocks, block.index - 2, block.score + 4);
             addCandidate(candidates, blocks, block.index - 1, block.score + 8);
             addSplitDateContext(candidates, blocks, block.index, block.score + 6);
@@ -439,6 +458,7 @@ function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
             addCandidate(candidates, blocks, block.index, block.score);
         }
     }
+    addStandaloneMonthDayCandidates(candidates, blocks);
 
     for (
         let index = 0;

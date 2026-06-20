@@ -153,8 +153,6 @@ function parseArgs(argv) {
             args.judgeModel = arg.slice("--judge-model=".length);
         } else if (arg.startsWith("--proxy-url=")) {
             args.proxyUrl = arg.slice("--proxy-url=".length);
-        } else if (arg.startsWith("--proxy-token=")) {
-            args.proxyToken = arg.slice("--proxy-token=".length);
         } else if (arg.startsWith("--timeout-ms=")) {
             args.timeoutMs = Number(arg.slice("--timeout-ms=".length));
         } else if (arg.startsWith("--")) {
@@ -178,11 +176,7 @@ export function resolveEvalTransport({ env = process.env, args = {} } = {}) {
         return {
             mode: "proxy",
             proxyUrl,
-            proxyToken:
-                args.proxyToken ||
-                env.EVENTY_EVAL_PROXY_TOKEN ||
-                env.EVENTY_TOKEN ||
-                "",
+            proxyToken: env.EVENTY_EVAL_PROXY_TOKEN || env.EVENTY_TOKEN || "",
         };
     }
 
@@ -278,7 +272,6 @@ function selectFixtures(fixtures, names) {
 export async function runRealPageLLMEval({
     apiKey,
     proxyUrl,
-    proxyToken,
     transport,
     model,
     judgeModel = model,
@@ -287,7 +280,7 @@ export async function runRealPageLLMEval({
     reportPath = path.join(REAL_PAGE_FIXTURE_DIR, "llm-report.json"),
 } = {}) {
     const evalTransport =
-        transport || resolveEvalTransport({ args: { apiKey, proxyUrl, proxyToken } });
+        transport || resolveEvalTransport({ args: { apiKey, proxyUrl } });
     if (evalTransport.mode === "missing") {
         buildEvalTransportRequest({ transport: evalTransport, body: {} });
     }
@@ -394,7 +387,6 @@ async function main() {
         env: process.env,
         args: {
             proxyUrl: args.proxyUrl,
-            proxyToken: args.proxyToken,
         },
     });
     const model = args.model || process.env.EVENTY_EVAL_MODEL;
