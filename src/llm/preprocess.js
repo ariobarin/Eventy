@@ -425,6 +425,7 @@ function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
 
     for (const block of blocks) {
         if (block.score >= MODEL_INPUT_SIGNAL_SCORE) {
+            addCandidate(candidates, blocks, block.index - 2, block.score + 4);
             addCandidate(candidates, blocks, block.index - 1, block.score + 8);
             addSplitDateContext(candidates, blocks, block.index, block.score + 6);
             addCandidate(candidates, blocks, block.index, block.score + 20);

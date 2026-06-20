@@ -116,6 +116,31 @@ test("model input keeps month headers for split calendar dates", () => {
     assert.doesNotMatch(output, /Navigation item 519/);
 });
 
+test("model input keeps event titles two blocks before dates", () => {
+    const repeatedNoise = Array.from(
+        { length: 520 },
+        (_, index) => `Navigation item ${index} privacy policy subscribe`
+    ).join("\n\n");
+    const input = [
+        repeatedNoise,
+        "Blue Velvet",
+        "Tickets are available from the box office.",
+        "Friday June 26, 2026",
+        "7:00 PM",
+        "Location: Main Hall",
+        repeatedNoise,
+    ].join("\n\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /Blue Velvet/);
+    assert.match(output, /Friday June 26, 2026/);
+    assert.match(output, /7:00 PM/);
+    assert.match(output, /Main Hall/);
+    assert.doesNotMatch(output, /Navigation item 519/);
+});
+
 test("model input preserves repeated dates and locations for distinct events", () => {
     const input = [
         "Opening Night",
