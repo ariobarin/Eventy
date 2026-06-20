@@ -61,5 +61,78 @@
             "A - First Six-Week Session",
             "May 26"
         ]
+    },
+    {
+        "name": "sumter-iris-festival",
+        "url": "https://www.sumtersc.gov/tourism/things-do/festivals-events/iris-festival/2026-festival-schedule",
+        "expectedAnchors": [
+            "Main Stage",
+            "Gump Fiction"
+        ],
+        "maxPreviousContextGrowthRatio": 1.01,
+        "expectedEvents": [
+            {
+                "title": "Gump Fiction",
+                "time": "5-6 PM",
+                "location": "Main Stage"
+            }
+        ]
+    },
+    {
+        "name": "sydney-opera-great-opera-hits",
+        "url": "https://www.sydneyoperahouse.com/opera-australia/2026-season/great-opera-hits-2026",
+        "expectedAnchors": [
+            "Great Opera Hits 2026",
+            "5 July",
+            "26 October 2026",
+            "Joan Sutherland Theatre"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Great Opera Hits 2026",
+                "date": "5 July",
+                "location": "Joan Sutherland Theatre"
+            }
+        ]
+    },
+    {
+        "name": "winston-salem-summer-events",
+        "url": "https://www.cityofws.org/3696/Summer-2026-Events",
+        "expectedAnchors": [
+            "Youth Food Truck Festival",
+            "June 26, 2026",
+            "Quarry Park"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Youth Food Truck Festival",
+                "date": "June 26, 2026",
+                "time": "7:00 PM",
+                "location": "Quarry Park"
+            }
+        ]
+    },
+    {
+        "name": "portland-community-events",
+        "url": "https://www.portland.gov/transportation/permitting/portland-streets/upcoming-community-events",
+        "expectedAnchors": [
+            "Kenton Farmers Market",
+            "Every Wednesday between June 3 and September 30 in 2026",
+            "N McClellan and N Denver"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Kenton Farmers Market",
+                "date": "Every Wednesday between June 3 and September 30 in 2026",
+                "time": "3:00 PM",
+                "location": "N McClellan and N Denver"
+            },
+            {
+                "title": "South Waterfront Farmers Market",
+                "date": "Every Thursday from June to October in 2026",
+                "time": "12:00 PM",
+                "location": "S Moody Ave in Elizabeth Caruthers Park"
+            }
+        ]
     }
 ]

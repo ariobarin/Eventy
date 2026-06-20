@@ -5,14 +5,14 @@ import {
     auditRealPageFixtures,
     formatAuditLine,
     installNodeDomParser,
-    loadCapturedRealPageFixtures,
+    loadRealPageAuditFixtures,
     REAL_PAGE_FIXTURE_DIR,
 } from "./real-page-fixtures.mjs";
 
 async function main() {
     const cleanupDomParser = await installNodeDomParser();
     try {
-        const fixtures = await loadCapturedRealPageFixtures();
+        const fixtures = await loadRealPageAuditFixtures();
         if (!fixtures.length) {
             throw new Error(
                 "No real-page fixtures found. Run npm run capture:real-pages first."

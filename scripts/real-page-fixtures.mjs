@@ -7,6 +7,8 @@ import { htmlToMarkdown } from "../src/llm/preprocess.js";
 import { preprocessForPopup } from "../src/utils/scan.js";
 
 const ROOT_DIR = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
+const EVENT_LABEL_FIELDS = ["title", "date", "time", "location"];
+const MAX_PREVIOUS_CONTEXT_GROWTH_RATIO = 1.05;
 
 export const REAL_PAGE_CORPUS_PATH = path.join(
     ROOT_DIR,
@@ -41,16 +43,66 @@ export function fixturePathForEntry(entry, fixtureDir = REAL_PAGE_FIXTURE_DIR) {
 
 function normalizeCorpusEntry(entry) {
     const expectedAnchors = entry.expectedAnchors || entry.anchors || [];
+    const expectedEvents = Array.isArray(entry.expectedEvents)
+        ? entry.expectedEvents.map(normalizeExpectedEvent)
+        : [];
     return {
         ...entry,
         name: String(entry.name || "").trim(),
         url: String(entry.url || "").trim(),
         expectedAnchors: expectedAnchors.map((anchor) => String(anchor)),
+        expectedEvents,
         maxContextChars:
             Number.isFinite(entry.maxContextChars) && entry.maxContextChars > 0
                 ? entry.maxContextChars
                 : 30000,
+        maxPreviousContextGrowthRatio: normalizePreviousContextGrowthRatio(
+            entry.maxPreviousContextGrowthRatio
+        ),
     };
+}
+
+function normalizePreviousContextGrowthRatio(value) {
+    if (value === undefined || value === null) return 1;
+    if (
+        !Number.isFinite(value) ||
+        value < 1 ||
+        value > MAX_PREVIOUS_CONTEXT_GROWTH_RATIO
+    ) {
+        throw new Error(
+            `maxPreviousContextGrowthRatio must be between 1 and ${MAX_PREVIOUS_CONTEXT_GROWTH_RATIO}.`
+        );
+    }
+    return value;
+}
+
+function normalizeExpectedEvent(event) {
+    const normalized = {};
+    for (const field of EVENT_LABEL_FIELDS) {
+        const value = String(event?.[field] || "").trim();
+        if (value) normalized[field] = value;
+    }
+
+    const labels = [
+        ...EVENT_LABEL_FIELDS.map((field) => normalized[field]),
+        ...(Array.isArray(event?.labels) ? event.labels : []),
+    ]
+        .map((label) => String(label || "").trim())
+        .filter(Boolean);
+
+    return {
+        ...event,
+        ...normalized,
+        labels: [...new Set(labels)],
+    };
+}
+
+function normalizeSearchText(value) {
+    return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function contextIncludes(combinedContext, label) {
+    return normalizeSearchText(combinedContext).includes(normalizeSearchText(label));
 }
 
 export async function loadRealPageCorpus(corpusPath = REAL_PAGE_CORPUS_PATH) {
@@ -86,6 +138,51 @@ export async function loadCapturedRealPageFixtures(
     return fixtures;
 }
 
+export function mergeCorpusEntryIntoFixture(fixture, corpusEntry) {
+    return {
+        ...fixture,
+        ...corpusEntry,
+        html: fixture.html,
+        text: fixture.text,
+        title: fixture.title,
+        lang: fixture.lang,
+        finalUrl: fixture.finalUrl,
+        capturedAt: fixture.capturedAt,
+    };
+}
+
+export async function loadRealPageAuditFixtures(
+    corpusPath = REAL_PAGE_CORPUS_PATH,
+    fixtureDir = REAL_PAGE_FIXTURE_DIR
+) {
+    const corpus = await loadRealPageCorpus(corpusPath);
+    const corpusByName = new Map(corpus.map((entry) => [entry.name, entry]));
+    const fixtures = await loadCapturedRealPageFixtures(fixtureDir);
+    const fixtureNames = new Set(
+        fixtures.map((fixture) => String(fixture.name || "").trim())
+    );
+    const missingFixtureNames = corpus
+        .map((entry) => entry.name)
+        .filter((name) => !fixtureNames.has(name));
+    if (missingFixtureNames.length) {
+        throw new Error(
+            `Missing captured real-page fixtures for ${missingFixtureNames.join(
+                ", "
+            )}. Run npm run capture:real-pages.`
+        );
+    }
+
+    return fixtures.map((fixture) => {
+        const corpusEntry = corpusByName.get(String(fixture.name || "").trim());
+        if (!corpusEntry) {
+            throw new Error(
+                `Captured real-page fixture ${fixture.name} is not defined in tests/real-pages/corpus.json.`
+            );
+        }
+        return mergeCorpusEntryIntoFixture(fixture, corpusEntry);
+    });
+}
+
 export async function installNodeDomParser() {
     if (typeof globalThis.DOMParser !== "undefined") {
         return () => {};
@@ -119,7 +216,7 @@ export function auditRealPageFixture(fixture) {
         (anchor) => String(anchor)
     );
     const anchorPresence = Object.fromEntries(
-        expectedAnchors.map((anchor) => [anchor, combinedContext.includes(anchor)])
+        expectedAnchors.map((anchor) => [anchor, contextIncludes(combinedContext, anchor)])
     );
     const missingAnchors = expectedAnchors.filter(
         (anchor) => !anchorPresence[anchor]
@@ -128,6 +225,25 @@ export function auditRealPageFixture(fixture) {
         Number.isFinite(fixture.maxContextChars) && fixture.maxContextChars > 0
             ? fixture.maxContextChars
             : 30000;
+    const maxPreviousContextGrowthRatio = normalizePreviousContextGrowthRatio(
+        fixture.maxPreviousContextGrowthRatio
+    );
+    const expectedEvents = Array.isArray(fixture.expectedEvents)
+        ? fixture.expectedEvents.map(normalizeExpectedEvent)
+        : [];
+    const eventLabelResults = expectedEvents.map((event, index) =>
+        auditExpectedEventLabels(event, index, text, combinedContext)
+    );
+    const missingEventLabels = eventLabelResults.flatMap((event) =>
+        event.missingLabels.map(
+            (missing) => `${event.title}: ${missing.field}=${missing.label}`
+        )
+    );
+    const missingSourceEventLabels = eventLabelResults.flatMap((event) =>
+        event.missingSourceLabels.map(
+            (missing) => `${event.title}: ${missing.field}=${missing.label}`
+        )
+    );
 
     return {
         name: fixture.name,
@@ -153,12 +269,66 @@ export function auditRealPageFixture(fixture) {
             ? Number((contextChars / previousContextChars).toFixed(4))
             : null,
         maxContextChars,
+        maxPreviousContextGrowthRatio,
         anchorPresence,
         missingAnchors,
+        eventLabelResults,
+        missingSourceEventLabels,
+        missingEventLabels,
         passed:
             missingAnchors.length === 0 &&
+            missingSourceEventLabels.length === 0 &&
+            missingEventLabels.length === 0 &&
             contextChars <= maxContextChars &&
-            (!previousContextChars || contextChars <= previousContextChars),
+            (!previousContextChars ||
+                contextChars <=
+                    previousContextChars * maxPreviousContextGrowthRatio),
+    };
+}
+
+function auditExpectedEventLabels(event, index, sourceContext, combinedContext) {
+    const title = event.title || `event-${index + 1}`;
+    const fieldLabels = EVENT_LABEL_FIELDS.map((field) => ({
+        field,
+        label: String(event[field] || "").trim(),
+    })).filter((label) => label.label);
+    const sourceLabelPresence = Object.fromEntries(
+        fieldLabels.map(({ field, label }) => [
+            field,
+            contextIncludes(sourceContext, label),
+        ])
+    );
+    const contextLabelPresence = Object.fromEntries(
+        fieldLabels.map(({ field, label }) => [
+            field,
+            contextIncludes(combinedContext, label),
+        ])
+    );
+    const missingSourceLabels = fieldLabels.filter(
+        ({ field }) => !sourceLabelPresence[field]
+    );
+    const missingContextLabels = fieldLabels.filter(
+        ({ field }) => !contextLabelPresence[field]
+    );
+
+    return {
+        index,
+        title,
+        labels: fieldLabels,
+        sourceLabelPresence,
+        contextLabelPresence,
+        labelPresence: contextLabelPresence,
+        missingSourceFields: missingSourceLabels.map(({ field }) => field),
+        missingContextFields: missingContextLabels.map(({ field }) => field),
+        missingFields: missingContextLabels.map(({ field }) => field),
+        missingSourceLabels,
+        missingContextLabels,
+        missingLabels: missingContextLabels,
+        sourcePassed: missingSourceLabels.length === 0,
+        contextPassed: missingContextLabels.length === 0,
+        passed:
+            missingSourceLabels.length === 0 &&
+            missingContextLabels.length === 0,
     };
 }
 
@@ -187,8 +357,14 @@ export function formatAuditLine(page) {
     const missing = page.missingAnchors.length
         ? ` missing=${page.missingAnchors.join(" | ")}`
         : "";
+    const missingEvents = page.missingEventLabels?.length
+        ? ` missingEvents=${page.missingEventLabels.join(" | ")}`
+        : "";
+    const missingSourceEvents = page.missingSourceEventLabels?.length
+        ? ` missingSourceEvents=${page.missingSourceEventLabels.join(" | ")}`
+        : "";
 
-    return `${status} ${page.name} context=${page.contextChars} textRatio=${textRatio} markdownRatio=${markdownRatio} previousRatio=${previousRatio}${missing}`;
+    return `${status} ${page.name} context=${page.contextChars} textRatio=${textRatio} markdownRatio=${markdownRatio} previousRatio=${previousRatio}${missing}${missingSourceEvents}${missingEvents}`;
 }
 
 export function findChromeExecutable() {
