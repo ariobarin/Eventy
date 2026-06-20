@@ -275,6 +275,47 @@ test("real page fixture audit rejects snapshots outside the corpus", async () =>
     }
 });
 
+test("real page fixture audit ignores generated report files", async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "eventy-real-pages-"));
+    try {
+        const corpusPath = path.join(tempDir, "corpus.json");
+        const fixtureDir = path.join(tempDir, "fixtures");
+        const entry = {
+            name: "sample-events",
+            url: "https://example.test/events",
+            expectedAnchors: ["Opening Night"],
+            expectedEvents: [],
+        };
+        await fs.mkdir(fixtureDir);
+        await fs.writeFile(corpusPath, JSON.stringify([entry]));
+        await fs.writeFile(
+            path.join(fixtureDir, fixtureFileNameForEntry(entry)),
+            JSON.stringify({
+                ...entry,
+                html: "",
+                text: "Opening Night",
+                title: "Sample Events",
+                lang: "en",
+            })
+        );
+        await fs.writeFile(
+            path.join(fixtureDir, "report.json"),
+            JSON.stringify({ generatedAt: "2026-06-20T00:00:00.000Z" })
+        );
+        await fs.writeFile(
+            path.join(fixtureDir, "llm-report.json"),
+            JSON.stringify({ generatedAt: "2026-06-20T00:00:00.000Z" })
+        );
+
+        const fixtures = await loadRealPageAuditFixtures(corpusPath, fixtureDir);
+
+        assert.equal(fixtures.length, 1);
+        assert.equal(fixtures[0].name, "sample-events");
+    } finally {
+        await fs.rm(tempDir, { recursive: true, force: true });
+    }
+});
+
 test("real page fixture audit separates source labels from retained context", () => {
     const fixture = {
         name: "sample-hidden-event-page",
@@ -322,6 +363,30 @@ test("real page fixture audit matches event labels across typographic spacing", 
                 title: "Farmers Market",
                 time: "3:00 PM",
                 location: "Main Plaza",
+            },
+        ],
+    };
+
+    const audit = auditRealPageFixture(fixture);
+
+    assert.equal(audit.eventLabelResults[0].passed, true);
+});
+
+test("real page fixture audit matches event labels across case changes", () => {
+    const fixture = {
+        name: "sample-event-case-page",
+        url: "https://example.test/events",
+        title: "Sample Events",
+        lang: "en",
+        html: "",
+        text: "Saturday, May 16, 2026\n\nGump Fiction\n\n5-6 PM\n\nMain Stage",
+        expectedAnchors: ["Gump Fiction"],
+        expectedEvents: [
+            {
+                title: "Gump Fiction",
+                date: "SATURDAY, MAY 16, 2026",
+                time: "5-6 PM",
+                location: "Main Stage",
             },
         ],
     };

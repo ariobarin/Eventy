@@ -1,9 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import { JSDOM } from "jsdom";
 
 import {
     buildModelInput,
+    htmlToMarkdown,
     MODEL_INPUT_MAX_CHARS,
     tablesToCsvSnippets,
 } from "../src/llm/preprocess.js";
@@ -157,6 +159,37 @@ test("model input preserves repeated dates and locations for distinct events", (
     assert.equal((output.match(/26 June 2026/g) || []).length, 2);
     assert.equal((output.match(/Main Hall/g) || []).length, 2);
     assert.match(output, /Closing Night\n\n26 June 2026\n\nMain Hall/);
+});
+
+test("html conversion does not prefer generic content chrome over page content", () => {
+    const originalDomParser = globalThis.DOMParser;
+    globalThis.DOMParser = class {
+        parseFromString(html) {
+            return new JSDOM(html).window.document;
+        }
+    };
+
+    try {
+        const output = htmlToMarkdown([
+            "<body>",
+            "<div class=\"content\">Search Login Subscribe</div>",
+            "<div class=\"page-content\">",
+            "<h1>Community Film Night</h1>",
+            "<p>Friday June 26, 2026 at 7:00 PM</p>",
+            "</div>",
+            "</body>",
+        ].join(""));
+
+        assert.match(output, /Community Film Night/);
+        assert.match(output, /Friday June 26, 2026/);
+        assert.doesNotMatch(output, /^Search Login Subscribe$/);
+    } finally {
+        if (originalDomParser === undefined) {
+            delete globalThis.DOMParser;
+        } else {
+            globalThis.DOMParser = originalDomParser;
+        }
+    }
 });
 
 test("model input prefers text over raw html when html parsing is unavailable", () => {

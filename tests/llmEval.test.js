@@ -2,7 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+    buildErroredEvalPage,
+    buildEvalTransportRequest,
     buildEventJudgeRequestBody,
+    resolveEvalTransport,
     summarizeJudgeVerdict,
 } from "../scripts/eval-real-pages-with-llm.mjs";
 
@@ -35,6 +38,7 @@ test("LLM judge request uses strict structured output", () => {
     assert.equal(Object.hasOwn(body, "stream"), false);
     assert.match(body.messages[1].content, /Opening Night/);
     assert.match(body.messages[1].content, /extractedEvents/);
+    assert.match(body.messages[1].content, /expectedEventsAreExhaustive/);
 });
 
 test("LLM judge summary counts matches, misses, and hallucinations", () => {
@@ -51,4 +55,98 @@ test("LLM judge summary counts matches, misses, and hallucinations", () => {
         misses: 1,
         hallucinations: 1,
     });
+});
+
+test("LLM judge summary treats expected events as non-exhaustive labels", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [
+                { expectedTitle: "Pedalpalooza Kickoff Ride" },
+                { expectedTitle: "Big Pride Ride" },
+            ],
+            misses: [],
+            hallucinations: [
+                { extractedTitle: "Other source-visible event" },
+            ],
+        },
+        { expectedEventCount: 2 }
+    );
+
+    assert.deepEqual(summary, {
+        passed: true,
+        matches: 2,
+        misses: 0,
+        hallucinations: 1,
+    });
+});
+
+test("LLM judge summary passes complete match counts over stale verdicts", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [{ expectedTitle: "Gump Fiction" }],
+            misses: [],
+            hallucinations: [],
+        },
+        { expectedEventCount: 1 }
+    );
+
+    assert.deepEqual(summary, {
+        passed: true,
+        matches: 1,
+        misses: 0,
+        hallucinations: 0,
+    });
+});
+
+test("LLM eval can use a proxy transport without exposing OpenRouter auth", () => {
+    const transport = resolveEvalTransport({
+        env: {
+            EVENTY_EVAL_PROXY_URL: "https://example.test/api",
+            EVENTY_EVAL_PROXY_TOKEN: "shared-token",
+            OPENROUTER_API_KEY: "sk-or-v1-raw-key",
+        },
+    });
+    const request = buildEvalTransportRequest({
+        transport,
+        body: { model: "deepseek/deepseek-v4-flash", messages: [] },
+    });
+
+    assert.equal(transport.mode, "proxy");
+    assert.equal(request.url, "https://example.test/api");
+    assert.equal(request.headers["X-Eventy-Token"], "shared-token");
+    assert.equal(Object.hasOwn(request.headers, "Authorization"), false);
+});
+
+test("LLM eval records page-level errors", () => {
+    const page = buildErroredEvalPage({
+        fixture: {
+            name: "sample-page",
+            url: "https://example.test/events",
+            expectedEvents: [{ title: "Opening Night" }],
+        },
+        model: "deepseek/deepseek-v4-flash",
+        judgeModel: "deepseek/deepseek-v4-flash",
+        error: new Error("request timed out"),
+    });
+
+    assert.deepEqual(
+        {
+            name: page.name,
+            passed: page.passed,
+            matches: page.matches,
+            misses: page.misses,
+            hallucinations: page.hallucinations,
+            error: page.error,
+        },
+        {
+            name: "sample-page",
+            passed: false,
+            matches: 0,
+            misses: 1,
+            hallucinations: 0,
+            error: "request timed out",
+        }
+    );
 });

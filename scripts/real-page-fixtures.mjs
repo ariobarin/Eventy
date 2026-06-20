@@ -21,6 +21,10 @@ export const REAL_PAGE_FIXTURE_DIR = path.join(
     "fixtures",
     "real-pages"
 );
+const GENERATED_REAL_PAGE_REPORT_FILES = new Set([
+    "report.json",
+    "llm-report.json",
+]);
 
 export function fixtureFileNameForEntry(entry) {
     const safeName = String(entry?.name || "")
@@ -80,7 +84,7 @@ function normalizeExpectedEvent(event) {
 }
 
 function normalizeSearchText(value) {
-    return String(value || "").replace(/\s+/g, " ").trim();
+    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
 }
 
 function contextIncludes(combinedContext, label) {
@@ -110,7 +114,7 @@ export async function loadCapturedRealPageFixtures(
     const fixtures = [];
     for (const entry of entries) {
         if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
-        if (entry.name === "report.json") continue;
+        if (GENERATED_REAL_PAGE_REPORT_FILES.has(entry.name)) continue;
 
         const raw = await fs.readFile(path.join(fixtureDir, entry.name), "utf8");
         fixtures.push(JSON.parse(raw));

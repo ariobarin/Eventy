@@ -4,7 +4,7 @@ import { escapeHtml } from "../utils/string.js";
 function chooseContentRoot(doc) {
     return (
         doc.querySelector(
-            "main, article, [role='main'], #content, .content, .main-content, .page-content, .entry-content"
+            "main, article, [role='main'], #content, .main-content, .page-content, .entry-content"
         ) || doc.body || doc.documentElement
     );
 }
