@@ -82,6 +82,14 @@ body:not(.settings-page) {
     box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
 }
 
+.scan-section.scan-unavailable {
+    cursor: not-allowed;
+}
+
+.scan-section.scan-unavailable .primary-button {
+    pointer-events: none;
+}
+
 /* Results section - completely hidden by default */
 .results-section {
     display: grid;
@@ -267,13 +275,14 @@ body:not(.settings-page) {
 
 /* Toast notifications */
 #toast {
-    position: fixed;
-    left: 50%;
-    bottom: 16px;
-    transform: translateX(-50%);
+    position: relative;
+    width: calc(100% - 32px);
+    box-sizing: border-box;
+    margin: 0 16px 12px;
+    transform: translateY(6px);
     background: var(--bg);
     border: 1px solid var(--border);
-    padding: 10px 14px;
+    padding: 9px 11px;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
     z-index: 9999;
@@ -286,24 +295,24 @@ body:not(.settings-page) {
     pointer-events: none;
     transition: opacity 250ms cubic-bezier(0.4, 0, 0.2, 1),
         transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
-    max-width: calc(100% - 32px);
 }
 
 #toast.visible {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
     pointer-events: auto;
 }
 
 #toast:not(.visible) {
-    transform: translateX(-50%) translateY(8px);
+    transform: translateY(6px);
 }
 
 .toast-content {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
-    line-height: 1.4;
+    width: 100%;
+    line-height: 1.35;
 }
 
 .toast-icon {
@@ -314,8 +323,8 @@ body:not(.settings-page) {
 }
 
 .toast-icon svg {
-    width: 14px;
-    height: 14px;
+    width: 13px;
+    height: 13px;
 }
 
 /* Success toast - subtle green tint */

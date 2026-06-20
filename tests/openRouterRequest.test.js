@@ -16,6 +16,14 @@ test("completion request uses strict structured outputs", () => {
     );
 });
 
+test("completion request does not request streaming", () => {
+    const body = buildOpenRouterRequestBody([
+        { role: "user", content: "extract events" },
+    ]);
+
+    assert.equal(Object.hasOwn(body, "stream"), false);
+});
+
 test("completion request requires routed providers to support parameters", () => {
     const body = buildOpenRouterRequestBody([
         { role: "user", content: "extract events" },
