@@ -216,6 +216,35 @@ test("model input keeps titles before standalone month day cards", () => {
     assert.doesNotMatch(output, /Community resource section 519/);
 });
 
+test("model input keeps titles before labeled standalone month day cards", () => {
+    const repeatedCopy = Array.from(
+        { length: 520 },
+        (_, index) =>
+            `Community resource section ${index} with general visitor information and local program summaries.`
+    ).join("\n\n");
+    const input = [
+        repeatedCopy,
+        "Blue Velvet",
+        "Date",
+        "June",
+        "26",
+        "7:00 PM",
+        "Main Hall",
+        repeatedCopy,
+    ].join("\n\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /Blue Velvet/);
+    assert.match(output, /Date/);
+    assert.match(output, /June/);
+    assert.match(output, /26/);
+    assert.match(output, /7:00 PM/);
+    assert.match(output, /Main Hall/);
+    assert.doesNotMatch(output, /Community resource section 519/);
+});
+
 test("model input keeps event titles two blocks before dates", () => {
     const repeatedNoise = Array.from(
         { length: 520 },
@@ -284,6 +313,24 @@ test("model input preserves repeated dates and locations for distinct events", (
     assert.equal((output.match(/26 June 2026/g) || []).length, 2);
     assert.equal((output.match(/Main Hall/g) || []).length, 2);
     assert.match(output, /Closing Night\n\n26 June 2026\n\nMain Hall/);
+});
+
+test("model input marks shortened event-heavy pages", () => {
+    const input = Array.from({ length: 260 }, (_, index) =>
+        [
+            `Long Calendar Event ${index}`,
+            `Friday June ${(index % 28) + 1}, 2026`,
+            "7:00 PM",
+            `Location: Main Hall ${index}`,
+            "Tickets are available from the box office.",
+        ].join("\n\n")
+    ).join("\n\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /Context shortened/);
+    assert.match(output, /some events or details may be omitted/i);
 });
 
 test("html conversion does not prefer generic content chrome over page content", () => {

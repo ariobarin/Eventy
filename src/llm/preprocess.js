@@ -241,8 +241,12 @@ export const MODEL_INPUT_MAX_CHARS = 18000;
 const MODEL_INPUT_MAX_BLOCK_CHARS = 1200;
 const MODEL_INPUT_SIGNAL_SCORE = 8;
 const MODEL_INPUT_LEAD_BLOCKS = 10;
+const MODEL_INPUT_TRUNCATION_NOTICE =
+    "[Context shortened: source page exceeded the scan budget. Some events or details may be omitted.]";
 const MONTH_NAME_PATTERN = "(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\\.?";
 const ORDINAL_DAY_PATTERN = "\\d{1,2}(?:st|nd|rd|th)?";
+const CONTEXT_LABEL_PATTERN =
+    /^(?:date|time|when|where|venue|location|event date|event time|category|type|details|info|information)$/i;
 const EVENT_DATE_PATTERN = new RegExp(
     [
         "\\b(?:Mon|Tue|Tues|Wed|Thu|Thur|Thurs|Fri|Sat|Sun)(?:day)?\\b",
@@ -315,6 +319,21 @@ function trimToMaxChars(text, maxChars) {
         blockBreak > maxChars * 0.75 ? clipped.slice(0, blockBreak) : clipped;
 
     return trimmed.trim();
+}
+
+function prependTruncationNotice(text, maxChars) {
+    if (maxChars <= MODEL_INPUT_TRUNCATION_NOTICE.length) {
+        return MODEL_INPUT_TRUNCATION_NOTICE.slice(0, maxChars).trim();
+    }
+
+    const separator = "\n\n";
+    const bodyMaxChars =
+        maxChars - MODEL_INPUT_TRUNCATION_NOTICE.length - separator.length;
+    const body = trimToMaxChars(text, bodyMaxChars);
+
+    return body
+        ? `${MODEL_INPUT_TRUNCATION_NOTICE}${separator}${body}`
+        : MODEL_INPUT_TRUNCATION_NOTICE;
 }
 
 // Heuristic scoring for event relevance
@@ -394,14 +413,18 @@ function isStandaloneDayBlock(text) {
     return STANDALONE_DAY_PATTERN.test(String(text || "").trim());
 }
 
-function isLikelyTitleContextBlock(text) {
+function hasDateSignal(text) {
+    EVENT_DATE_PATTERN.lastIndex = 0;
+    const result = EVENT_DATE_PATTERN.test(text);
+    EVENT_DATE_PATTERN.lastIndex = 0;
+    return result;
+}
+
+function isCleanCompactContextBlock(text, maxLength) {
     const trimmed = String(text || "").trim();
-    if (!trimmed || trimmed.length > 140) return false;
+    if (!trimmed || trimmed.length > maxLength) return false;
     if (trimmed.includes("\n")) return false;
-    EVENT_DATE_PATTERN.lastIndex = 0;
-    const hasDateSignal = EVENT_DATE_PATTERN.test(trimmed);
-    EVENT_DATE_PATTERN.lastIndex = 0;
-    if (hasDateSignal) return false;
+    if (hasDateSignal(trimmed)) return false;
     if (isStandaloneMonthBlock(trimmed) || isStandaloneDayBlock(trimmed)) {
         return false;
     }
@@ -415,8 +438,24 @@ function isLikelyTitleContextBlock(text) {
         return false;
     }
 
+    return true;
+}
+
+function isLikelyTitleContextBlock(text) {
+    const trimmed = String(text || "").trim();
+    if (!isCleanCompactContextBlock(trimmed, 140)) return false;
+    if (CONTEXT_LABEL_PATTERN.test(trimmed)) return false;
+
     const words = trimmed.split(/\s+/).filter(Boolean);
-    return words.length >= 2 && words.length <= 14;
+    return words.length >= 1 && words.length <= 14 && /[a-z]/i.test(trimmed);
+}
+
+function isCompactContextBridgeBlock(text) {
+    const trimmed = String(text || "").trim();
+    if (!isCleanCompactContextBlock(trimmed, 80)) return false;
+
+    const words = trimmed.split(/\s+/).filter(Boolean);
+    return words.length >= 1 && words.length <= 6 && /[a-z]/i.test(trimmed);
 }
 
 function addSplitDateContext(candidates, blocks, index, priority) {
@@ -444,8 +483,15 @@ function addStandaloneMonthDayCandidates(candidates, blocks) {
         }
 
         const priority = MODEL_INPUT_SIGNAL_SCORE + 8;
-        if (isLikelyTitleContextBlock(blocks[index - 1]?.content)) {
+        const previousBlock = blocks[index - 1]?.content;
+        if (isLikelyTitleContextBlock(previousBlock)) {
             addCandidate(candidates, blocks, index - 1, priority - 1);
+        }
+        if (
+            isCompactContextBridgeBlock(previousBlock) &&
+            isLikelyTitleContextBlock(blocks[index - 2]?.content)
+        ) {
+            addCandidate(candidates, blocks, index - 2, priority - 1);
         }
         addCandidate(candidates, blocks, index, priority);
         addCandidate(candidates, blocks, index + 1, priority);
@@ -527,7 +573,7 @@ function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
         .map((index) => blocks[index].content)
         .join("\n\n");
 
-    return trimToMaxChars(compact, maxChars);
+    return prependTruncationNotice(compact, maxChars);
 }
 
 export function buildModelInput(text, html) {
