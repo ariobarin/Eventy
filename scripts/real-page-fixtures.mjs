@@ -139,15 +139,30 @@ export function mergeCorpusEntryIntoFixture(fixture, corpusEntry) {
 
 export async function loadRealPageAuditFixtures(
     corpusPath = REAL_PAGE_CORPUS_PATH,
-    fixtureDir = REAL_PAGE_FIXTURE_DIR
+    fixtureDir = REAL_PAGE_FIXTURE_DIR,
+    { names = [] } = {}
 ) {
     const corpus = await loadRealPageCorpus(corpusPath);
     const corpusByName = new Map(corpus.map((entry) => [entry.name, entry]));
+    const wantedNames = new Set(names.map((name) => String(name || "").trim()));
+    const requiredCorpus = wantedNames.size
+        ? corpus.filter((entry) => wantedNames.has(entry.name))
+        : corpus;
+    if (wantedNames.size && requiredCorpus.length !== wantedNames.size) {
+        const foundNames = new Set(requiredCorpus.map((entry) => entry.name));
+        const missingNames = [...wantedNames].filter((name) => !foundNames.has(name));
+        throw new Error(
+            `No real-page corpus entries matched ${missingNames.join(", ")}.`
+        );
+    }
+    const requiredCorpusByName = new Map(
+        requiredCorpus.map((entry) => [entry.name, entry])
+    );
     const fixtures = await loadCapturedRealPageFixtures(fixtureDir);
     const fixtureNames = new Set(
         fixtures.map((fixture) => String(fixture.name || "").trim())
     );
-    const missingFixtureNames = corpus
+    const missingFixtureNames = requiredCorpus
         .map((entry) => entry.name)
         .filter((name) => !fixtureNames.has(name));
     if (missingFixtureNames.length) {
@@ -158,14 +173,17 @@ export async function loadRealPageAuditFixtures(
         );
     }
 
-    return fixtures.map((fixture) => {
+    return fixtures.flatMap((fixture) => {
         const corpusEntry = corpusByName.get(String(fixture.name || "").trim());
         if (!corpusEntry) {
             throw new Error(
                 `Captured real-page fixture ${fixture.name} is not defined in tests/real-pages/corpus.json.`
             );
         }
-        return mergeCorpusEntryIntoFixture(fixture, corpusEntry);
+        if (wantedNames.size && !requiredCorpusByName.has(corpusEntry.name)) {
+            return [];
+        }
+        return [mergeCorpusEntryIntoFixture(fixture, corpusEntry)];
     });
 }
 

@@ -291,7 +291,10 @@ export async function runRealPageLLMEval({
     const cleanupDomParser = await installNodeDomParser();
     let pages = [];
     try {
-        const fixtures = selectFixtures(await loadRealPageAuditFixtures(), names);
+        const fixtures = selectFixtures(
+            await loadRealPageAuditFixtures(undefined, undefined, { names }),
+            names
+        );
         if (!fixtures.length) {
             throw new Error("No event-labeled real-page fixtures were available.");
         }

@@ -227,6 +227,54 @@ test("real page fixture audit requires snapshots for every corpus entry", async 
     }
 });
 
+test("real page fixture audit filters requested names before requiring snapshots", async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "eventy-real-pages-"));
+    try {
+        const corpusPath = path.join(tempDir, "corpus.json");
+        const fixtureDir = path.join(tempDir, "fixtures");
+        await fs.mkdir(fixtureDir);
+        await fs.writeFile(
+            corpusPath,
+            JSON.stringify(
+                [
+                    {
+                        name: "captured-page",
+                        url: "https://example.test/captured",
+                        expectedAnchors: ["Captured Event"],
+                        expectedEvents: [{ title: "Captured Event", labels: [] }],
+                    },
+                    {
+                        name: "missing-page",
+                        url: "https://example.test/missing",
+                        expectedAnchors: ["Missing Event"],
+                        expectedEvents: [{ title: "Missing Event", labels: [] }],
+                    },
+                ],
+                null,
+                2
+            )
+        );
+        await fs.writeFile(
+            fixturePathForEntry({ name: "captured-page" }, fixtureDir),
+            JSON.stringify({
+                name: "captured-page",
+                url: "https://example.test/captured",
+                html: "",
+                text: "Captured Event",
+            })
+        );
+
+        const fixtures = await loadRealPageAuditFixtures(corpusPath, fixtureDir, {
+            names: ["captured-page"],
+        });
+
+        assert.equal(fixtures.length, 1);
+        assert.equal(fixtures[0].name, "captured-page");
+    } finally {
+        await fs.rm(tempDir, { recursive: true, force: true });
+    }
+});
+
 test("real page fixture audit rejects snapshots outside the corpus", async () => {
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "eventy-real-pages-"));
     try {

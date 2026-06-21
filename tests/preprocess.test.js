@@ -70,6 +70,30 @@ test("model input preserves tail signals inside long selected blocks", () => {
     assert.doesNotMatch(output, /Navigation item 519/);
 });
 
+test("model input preserves middle signals inside long selected blocks", () => {
+    const repeatedNoise = Array.from(
+        { length: 520 },
+        (_, index) => `Navigation item ${index} privacy policy subscribe`
+    ).join("\n\n");
+    const longEventBlock = [
+        "Hidden Garden Workshop",
+        "Introductory background notes ".repeat(90),
+        "Friday June 26, 2026 at 7:00 PM",
+        "Location: Hidden Garden Room",
+        "Additional attendee guidance ".repeat(90),
+    ].join(" ");
+    const input = [repeatedNoise, longEventBlock, repeatedNoise].join("\n\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /Hidden Garden Workshop/);
+    assert.match(output, /Friday June 26, 2026/);
+    assert.match(output, /7:00 PM/);
+    assert.match(output, /Hidden Garden Room/);
+    assert.doesNotMatch(output, /Navigation item 519/);
+});
+
 test("model input keeps day-first dates with adjacent event context", () => {
     const repeatedNoise = Array.from(
         { length: 520 },

@@ -247,6 +247,10 @@ const MONTH_NAME_PATTERN = "(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|
 const ORDINAL_DAY_PATTERN = "\\d{1,2}(?:st|nd|rd|th)?";
 const CONTEXT_LABEL_PATTERN =
     /^(?:date|time|when|where|venue|location|event date|event time|category|type|details|info|information)$/i;
+const EVENT_TIME_PATTERN =
+    /\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b|\b\d{1,2}:\d{2}\b/gi;
+const EVENT_DETAIL_SIGNAL_PATTERN =
+    /\b(event|calendar|ticket|tickets|rsvp|registration|doors|admission|presented|live|webinar|workshop|concert|screening|festival|meetup|lecture|panel|class|session|conference|show|performance|tour|venue|location|where|address|room|auditorium|hall|street|st\.|avenue|ave\.|road|rd\.)\b/gi;
 const EVENT_DATE_PATTERN = new RegExp(
     [
         "\\b(?:Mon|Tue|Tues|Wed|Thu|Thur|Thurs|Fri|Sat|Sun)(?:day)?\\b",
@@ -297,17 +301,89 @@ function splitContentBlocks(text) {
     return blocks;
 }
 
+function collectSignalOffsets(content) {
+    const offsets = [];
+    for (const pattern of [
+        EVENT_DATE_PATTERN,
+        EVENT_TIME_PATTERN,
+        EVENT_DETAIL_SIGNAL_PATTERN,
+    ]) {
+        pattern.lastIndex = 0;
+        let match;
+        while ((match = pattern.exec(content)) && offsets.length < 24) {
+            offsets.push(match.index);
+            if (match.index === pattern.lastIndex) pattern.lastIndex++;
+        }
+        pattern.lastIndex = 0;
+    }
+
+    return Array.from(new Set(offsets)).sort((a, b) => a - b);
+}
+
+function addClipSegment(segments, contentLength, start, end) {
+    const safeStart = Math.max(0, Math.min(contentLength, start));
+    const safeEnd = Math.max(safeStart, Math.min(contentLength, end));
+    if (safeEnd > safeStart) {
+        segments.push({ start: safeStart, end: safeEnd });
+    }
+}
+
+function mergeClipSegments(segments) {
+    const sorted = [...segments].sort((a, b) => a.start - b.start || a.end - b.end);
+    const merged = [];
+
+    for (const segment of sorted) {
+        const previous = merged[merged.length - 1];
+        if (previous && segment.start <= previous.end + 20) {
+            previous.end = Math.max(previous.end, segment.end);
+        } else {
+            merged.push({ ...segment });
+        }
+    }
+
+    return merged;
+}
+
 function clipBlock(content) {
     if (content.length <= MODEL_INPUT_MAX_BLOCK_CHARS) return content;
 
     const marker = "\n...\n";
-    const availableChars = MODEL_INPUT_MAX_BLOCK_CHARS - marker.length;
-    const headChars = Math.floor(availableChars * 0.55);
-    const tailChars = availableChars - headChars;
-    const head = content.slice(0, headChars).trim();
-    const tail = content.slice(-tailChars).trim();
+    const signalOffsets = collectSignalOffsets(content);
+    if (!signalOffsets.length) {
+        const availableChars = MODEL_INPUT_MAX_BLOCK_CHARS - marker.length;
+        const headChars = Math.floor(availableChars * 0.55);
+        const tailChars = availableChars - headChars;
+        const head = content.slice(0, headChars).trim();
+        const tail = content.slice(-tailChars).trim();
 
-    return `${head}${marker}${tail}`;
+        return `${head}${marker}${tail}`;
+    }
+
+    const segments = [];
+    addClipSegment(segments, content.length, 0, 220);
+    for (const offset of signalOffsets.slice(0, 8)) {
+        addClipSegment(segments, content.length, offset - 160, offset + 260);
+    }
+    addClipSegment(segments, content.length, content.length - 180, content.length);
+
+    const selected = [];
+    let usedChars = 0;
+    for (const segment of mergeClipSegments(segments)) {
+        const separatorChars = selected.length ? marker.length : 0;
+        const remainingChars =
+            MODEL_INPUT_MAX_BLOCK_CHARS - usedChars - separatorChars;
+        if (remainingChars <= 80) continue;
+
+        const segmentEnd = Math.min(segment.end, segment.start + remainingChars);
+        selected.push({ start: segment.start, end: segmentEnd });
+        usedChars += separatorChars + (segmentEnd - segment.start);
+        if (usedChars >= MODEL_INPUT_MAX_BLOCK_CHARS) break;
+    }
+
+    return selected
+        .map((segment) => content.slice(segment.start, segment.end).trim())
+        .filter(Boolean)
+        .join(marker);
 }
 
 function trimToMaxChars(text, maxChars) {
@@ -344,10 +420,7 @@ function scoreBlock(text) {
     score += dateMatches * 10;
 
     // Time patterns such as 7:00 PM, 14:00, or 7am.
-    const timeMatches = (
-        text.match(/\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b|\b\d{1,2}:\d{2}\b/gi) ||
-        []
-    ).length;
+    const timeMatches = (text.match(EVENT_TIME_PATTERN) || []).length;
     score += timeMatches * 10;
 
     if (
