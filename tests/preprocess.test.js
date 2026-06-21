@@ -191,6 +191,31 @@ test("model input keeps untimed month day title cards", () => {
     assert.doesNotMatch(output, /Community resource section 519/);
 });
 
+test("model input keeps untimed day month title cards", () => {
+    const repeatedCopy = Array.from(
+        { length: 520 },
+        (_, index) =>
+            `Community resource section ${index} with general visitor information and local program summaries.`
+    ).join("\n\n");
+    const input = [
+        repeatedCopy,
+        "26",
+        "June",
+        "Community Market",
+        "Main Plaza",
+        repeatedCopy,
+    ].join("\n\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /26/);
+    assert.match(output, /June/);
+    assert.match(output, /Community Market/);
+    assert.match(output, /Main Plaza/);
+    assert.doesNotMatch(output, /Community resource section 519/);
+});
+
 test("model input keeps titles before standalone month day cards", () => {
     const repeatedCopy = Array.from(
         { length: 520 },

@@ -475,10 +475,14 @@ function addSplitDateContext(candidates, blocks, index, priority) {
 
 function addStandaloneMonthDayCandidates(candidates, blocks) {
     for (let index = 0; index < blocks.length - 1; index++) {
-        if (
-            !isStandaloneMonthBlock(blocks[index]?.content) ||
-            !isStandaloneDayBlock(blocks[index + 1]?.content)
-        ) {
+        const isMonthThenDay =
+            isStandaloneMonthBlock(blocks[index]?.content) &&
+            isStandaloneDayBlock(blocks[index + 1]?.content);
+        const isDayThenMonth =
+            isStandaloneDayBlock(blocks[index]?.content) &&
+            isStandaloneMonthBlock(blocks[index + 1]?.content);
+
+        if (!isMonthThenDay && !isDayThenMonth) {
             continue;
         }
 
