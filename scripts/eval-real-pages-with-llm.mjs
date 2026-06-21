@@ -114,11 +114,12 @@ export function summarizeJudgeVerdict(
         : 0;
     const hasCompleteMatchCount =
         expectedEventCount > 0 && matches >= expectedEventCount;
+    const hasExpectedEvents = expectedEventCount > 0;
     return {
         passed:
             misses === 0 &&
             (!groundTruthExhaustive || hallucinations === 0) &&
-            (hasCompleteMatchCount || Boolean(verdict?.passed)),
+            (hasExpectedEvents ? hasCompleteMatchCount : Boolean(verdict?.passed)),
         matches,
         misses,
         hallucinations,

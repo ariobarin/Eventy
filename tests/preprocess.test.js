@@ -94,6 +94,30 @@ test("model input preserves middle signals inside long selected blocks", () => {
     assert.doesNotMatch(output, /Navigation item 519/);
 });
 
+test("model input prioritizes date and time signals when clipping long blocks", () => {
+    const repeatedNoise = Array.from(
+        { length: 520 },
+        (_, index) => `Navigation item ${index} privacy policy subscribe`
+    ).join("\n\n");
+    const longEventBlock = [
+        "Deep Context Workshop",
+        "event ticket registration venue ".repeat(90),
+        "Friday June 26, 2026 at 7:00 PM",
+        "Location: Main Hall",
+        "Additional attendee guidance ".repeat(90),
+    ].join(" ");
+    const input = [repeatedNoise, longEventBlock, repeatedNoise].join("\n\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /Deep Context Workshop/);
+    assert.match(output, /Friday June 26, 2026/);
+    assert.match(output, /7:00 PM/);
+    assert.match(output, /Main Hall/);
+    assert.doesNotMatch(output, /Navigation item 519/);
+});
+
 test("model input keeps day-first dates with adjacent event context", () => {
     const repeatedNoise = Array.from(
         { length: 520 },

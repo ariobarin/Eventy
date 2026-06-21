@@ -307,22 +307,33 @@ function splitContentBlocks(text) {
 }
 
 function collectSignalOffsets(content) {
-    const offsets = [];
-    for (const pattern of [
-        EVENT_DATE_PATTERN,
-        EVENT_TIME_PATTERN,
-        EVENT_DETAIL_SIGNAL_PATTERN,
-    ]) {
+    const collectPatternOffsets = (pattern, limit) => {
+        const offsets = [];
         pattern.lastIndex = 0;
         let match;
-        while ((match = pattern.exec(content)) && offsets.length < 24) {
+        while ((match = pattern.exec(content)) && offsets.length < limit) {
             offsets.push(match.index);
             if (match.index === pattern.lastIndex) pattern.lastIndex++;
         }
         pattern.lastIndex = 0;
+        return offsets;
+    };
+
+    const prioritizedOffsets = [
+        ...collectPatternOffsets(EVENT_DATE_PATTERN, 16),
+        ...collectPatternOffsets(EVENT_TIME_PATTERN, 12),
+        ...collectPatternOffsets(EVENT_DETAIL_SIGNAL_PATTERN, 8),
+    ];
+    const seen = new Set();
+    const offsets = [];
+    for (const offset of prioritizedOffsets) {
+        if (!seen.has(offset)) {
+            seen.add(offset);
+            offsets.push(offset);
+        }
     }
 
-    return Array.from(new Set(offsets)).sort((a, b) => a - b);
+    return offsets;
 }
 
 function addClipSegment(segments, contentLength, start, end) {

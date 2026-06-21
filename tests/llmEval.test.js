@@ -106,6 +106,25 @@ test("LLM judge summary passes complete match counts over stale verdicts", () =>
     });
 });
 
+test("LLM judge summary fails incomplete expected matches", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: true,
+            matches: [{ expectedTitle: "Opening Night" }],
+            misses: [],
+            hallucinations: [],
+        },
+        { expectedEventCount: 2 }
+    );
+
+    assert.deepEqual(summary, {
+        passed: false,
+        matches: 1,
+        misses: 0,
+        hallucinations: 0,
+    });
+});
+
 test("LLM eval can use a proxy transport without exposing OpenRouter auth", () => {
     const transport = resolveEvalTransport({
         env: {
