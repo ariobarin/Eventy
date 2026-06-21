@@ -394,6 +394,31 @@ function isStandaloneDayBlock(text) {
     return STANDALONE_DAY_PATTERN.test(String(text || "").trim());
 }
 
+function isLikelyTitleContextBlock(text) {
+    const trimmed = String(text || "").trim();
+    if (!trimmed || trimmed.length > 140) return false;
+    if (trimmed.includes("\n")) return false;
+    EVENT_DATE_PATTERN.lastIndex = 0;
+    const hasDateSignal = EVENT_DATE_PATTERN.test(trimmed);
+    EVENT_DATE_PATTERN.lastIndex = 0;
+    if (hasDateSignal) return false;
+    if (isStandaloneMonthBlock(trimmed) || isStandaloneDayBlock(trimmed)) {
+        return false;
+    }
+    if (/[\]\[]\(|https?:\/\//i.test(trimmed)) return false;
+    if (/[.!?]$/.test(trimmed)) return false;
+    if (
+        /\b(cookie|privacy policy|terms of use|subscribe|newsletter|login|account|copyright|navigation)\b/i.test(
+            trimmed
+        )
+    ) {
+        return false;
+    }
+
+    const words = trimmed.split(/\s+/).filter(Boolean);
+    return words.length >= 2 && words.length <= 14;
+}
+
 function addSplitDateContext(candidates, blocks, index, priority) {
     if (
         isStandaloneDayBlock(blocks[index - 1]?.content) &&
@@ -419,6 +444,9 @@ function addStandaloneMonthDayCandidates(candidates, blocks) {
         }
 
         const priority = MODEL_INPUT_SIGNAL_SCORE + 8;
+        if (isLikelyTitleContextBlock(blocks[index - 1]?.content)) {
+            addCandidate(candidates, blocks, index - 1, priority - 1);
+        }
         addCandidate(candidates, blocks, index, priority);
         addCandidate(candidates, blocks, index + 1, priority);
         addCandidate(candidates, blocks, index + 2, priority - 1);
