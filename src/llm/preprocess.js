@@ -245,6 +245,7 @@ const MODEL_INPUT_TRUNCATION_NOTICE =
     "[Context shortened: source page exceeded the scan budget. Some events or details may be omitted.]";
 const MONTH_NAME_PATTERN = "(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\\.?";
 const ORDINAL_DAY_PATTERN = "\\d{1,2}(?:st|nd|rd|th)?";
+const STANDALONE_DAY_WITH_YEAR_PATTERN = `${ORDINAL_DAY_PATTERN}(?:,?\\s*\\d{4})?`;
 const CONTEXT_LABEL_PATTERN =
     /^(?:date|time|when|where|venue|location|event date|event time|category|type|details|info|information)$/i;
 const EVENT_TIME_PATTERN =
@@ -263,7 +264,10 @@ const EVENT_DATE_PATTERN = new RegExp(
     "gi"
 );
 const STANDALONE_MONTH_PATTERN = new RegExp(`^${MONTH_NAME_PATTERN}$`, "i");
-const STANDALONE_DAY_PATTERN = new RegExp(`^${ORDINAL_DAY_PATTERN}$`, "i");
+const STANDALONE_DAY_PATTERN = new RegExp(
+    `^${STANDALONE_DAY_WITH_YEAR_PATTERN}$`,
+    "i"
+);
 
 function normalizeModelText(text) {
     return String(text || "")
