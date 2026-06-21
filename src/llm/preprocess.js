@@ -420,7 +420,7 @@ function hasDateSignal(text) {
     return result;
 }
 
-function isCleanCompactContextBlock(text, maxLength) {
+function isCleanCompactContextBlock(text, maxLength, allowTerminalPunctuation = false) {
     const trimmed = String(text || "").trim();
     if (!trimmed || trimmed.length > maxLength) return false;
     if (trimmed.includes("\n")) return false;
@@ -429,7 +429,7 @@ function isCleanCompactContextBlock(text, maxLength) {
         return false;
     }
     if (/[\]\[]\(|https?:\/\//i.test(trimmed)) return false;
-    if (/[.!?]$/.test(trimmed)) return false;
+    if (!allowTerminalPunctuation && /[.!?]$/.test(trimmed)) return false;
     if (
         /\b(cookie|privacy policy|terms of use|subscribe|newsletter|login|account|copyright|navigation)\b/i.test(
             trimmed
@@ -443,11 +443,18 @@ function isCleanCompactContextBlock(text, maxLength) {
 
 function isLikelyTitleContextBlock(text) {
     const trimmed = String(text || "").trim();
-    if (!isCleanCompactContextBlock(trimmed, 140)) return false;
+    if (!isCleanCompactContextBlock(trimmed, 140, true)) return false;
     if (CONTEXT_LABEL_PATTERN.test(trimmed)) return false;
 
     const words = trimmed.split(/\s+/).filter(Boolean);
-    return words.length >= 1 && words.length <= 14 && /[a-z]/i.test(trimmed);
+    if (words.length < 1 || words.length > 14 || !/[a-z]/i.test(trimmed)) {
+        return false;
+    }
+
+    if (/[!?]$/.test(trimmed)) return true;
+    if (/\.$/.test(trimmed)) return words.length <= 4;
+
+    return true;
 }
 
 function isCompactContextBridgeBlock(text) {

@@ -241,6 +241,41 @@ test("model input keeps titles before standalone month day cards", () => {
     assert.doesNotMatch(output, /Community resource section 519/);
 });
 
+test("model input keeps punctuated titles before standalone date cards", () => {
+    const repeatedCopy = Array.from(
+        { length: 520 },
+        (_, index) =>
+            `Community resource section ${index} with general visitor information and local program summaries.`
+    ).join("\n\n");
+    const input = [
+        repeatedCopy,
+        "Mamma Mia!",
+        "June",
+        "26",
+        "Online",
+        "What Now?",
+        "26",
+        "June",
+        "Main Hall",
+        "Dr. Strangelove.",
+        "July",
+        "3",
+        "Cinema 2",
+        repeatedCopy,
+    ].join("\n\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /Mamma Mia!/);
+    assert.match(output, /What Now\?/);
+    assert.match(output, /Dr\. Strangelove\./);
+    assert.match(output, /Online/);
+    assert.match(output, /Main Hall/);
+    assert.match(output, /Cinema 2/);
+    assert.doesNotMatch(output, /Community resource section 519/);
+});
+
 test("model input keeps titles before labeled standalone month day cards", () => {
     const repeatedCopy = Array.from(
         { length: 520 },
