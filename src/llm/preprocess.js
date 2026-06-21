@@ -254,6 +254,7 @@ const EVENT_DETAIL_SIGNAL_PATTERN =
 const EVENT_DATE_PATTERN = new RegExp(
     [
         "\\b(?:Mon|Tue|Tues|Wed|Thu|Thur|Thurs|Fri|Sat|Sun)(?:day)?\\b",
+        "\\b(?:today|tonight|tomorrow|yesterday|this\\s+(?:morning|afternoon|evening|week|weekend)|next\\s+(?:week|weekend))\\b",
         `\\b${MONTH_NAME_PATTERN}\\s+${ORDINAL_DAY_PATTERN}(?:,\\s*\\d{4})?\\b`,
         `\\b${ORDINAL_DAY_PATTERN}\\s+${MONTH_NAME_PATTERN}(?:\\s+\\d{4})?\\b`,
         "\\b\\d{4}-\\d{1,2}-\\d{1,2}\\b",

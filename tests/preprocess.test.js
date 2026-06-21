@@ -138,6 +138,28 @@ test("model input keeps ordinal dates during ranking", () => {
     assert.doesNotMatch(output, /Navigation item 519/);
 });
 
+test("model input keeps relative-date event cards", () => {
+    const repeatedNoise = Array.from(
+        { length: 520 },
+        (_, index) => `Navigation item ${index} privacy policy subscribe`
+    ).join("\n\n");
+    const input = [
+        repeatedNoise,
+        "Midnight Gallery Opening",
+        "Tonight",
+        "Main Hall",
+        repeatedNoise,
+    ].join("\n\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /Midnight Gallery Opening/);
+    assert.match(output, /Tonight/);
+    assert.match(output, /Main Hall/);
+    assert.doesNotMatch(output, /Navigation item 519/);
+});
+
 test("model input keeps month headers for split calendar dates", () => {
     const repeatedNoise = Array.from(
         { length: 520 },
