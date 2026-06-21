@@ -1,45 +1,41 @@
 import { openCalendarEventsInBackground } from "./background/openCalendar.js";
 import { DEBUG } from "../config.js";
 import { escapeHtml } from "./utils/string.js";
-import { isFreshScanResult } from "./utils/cache.js";
 import { applyTheme } from "./ui/theme.js";
 import { debug, warn, error } from "./utils/logger.js";
 import { htmlToMarkdown, tablesToCsvSnippets, buildModelInput } from "./llm/preprocess.js";
+import { getRequiredTabScanBlockReason, isTabScanAccessError } from "./utils/tabAccess.js";
 import {
-    createTabScanAccessError,
-    getScriptInjectionFailureMessage,
-    getRequiredTabScanBlockReason,
-    isTabScanAccessError,
-} from "./utils/tabAccess.js";
-
-// ============================================================================
-// ANIMATION TIMING CONSTANTS - Centralized animation parameters
-// ============================================================================
-
-// Card fade-out animation (when transitioning to scan)
-const CARD_FADE_DURATION_MS = 150;
-const CARD_STAGGER_DELAY_MS = 20;
-
-// Skeleton fade-out animation (when displaying results)
-const SKELETON_FADE_DURATION_MS = 200;
-const SKELETON_STAGGER_DELAY_MS = 30;
-
-// Skeleton appearance animation stagger
-const SKELETON_APPEARANCE_STAGGER_MS = 80;
-
-// Other transition timings
-const RESULTS_BUTTON_APPEAR_DELAY_MS = 50;
-const IDLE_STATE_CLEANUP_DELAY_MS = 400;
-
-const HIGHLIGHT_RESULTS_KEY = "eventy-highlight-results";
-const IMAGE_RESULTS_KEY = "eventy-image-results";
-
-// Polling configuration with exponential backoff
-const SCAN_POLL_INITIAL_INTERVAL_MS = 200;
-const SCAN_POLL_MAX_INTERVAL_MS = 1000;
-const SCAN_POLL_BACKOFF_MULTIPLIER = 1.5;
-const SCAN_POLL_MAX_ATTEMPTS = 150; // Max 150 attempts (~30 seconds with backoff)
-const SCAN_POLL_TIMEOUT_MS = 30000; // 30 second absolute timeout
+    CARD_FADE_DURATION_MS,
+    CARD_STAGGER_DELAY_MS,
+    HIGHLIGHT_RESULTS_KEY,
+    IDLE_STATE_CLEANUP_DELAY_MS,
+    IMAGE_RESULTS_KEY,
+    KEY_CUSTOM_FILES,
+    KEY_CUSTOM_TEXT,
+    KEY_CUSTOM_VIEW_ACTIVE,
+    RESULTS_BUTTON_APPEAR_DELAY_MS,
+    SCAN_AVAILABILITY_CHECKING_MESSAGE,
+    SKELETON_APPEARANCE_STAGGER_MS,
+    SKELETON_FADE_DURATION_MS,
+    SKELETON_STAGGER_DELAY_MS,
+    UI_STATE,
+} from "./popup/constants.js";
+import { loadCache, saveCache } from "./popup/cacheStore.js";
+import {
+    formatDateTime as formatPopupDateTime,
+    isEventPast as isPopupEventPast,
+} from "./popup/dateTime.js";
+import {
+    createEventCard,
+    renderEventLists,
+    restoreSelection as restoreEventSelection,
+    scrollToCard,
+} from "./popup/eventCards.js";
+import { createScanPoller } from "./popup/scanPolling.js";
+import { createPopupSettingsStore } from "./popup/settingsStore.js";
+import { captureActiveTabHtml, getActiveTab } from "./popup/tabCapture.js";
+import { hideToast, showToast } from "./popup/toast.js";
 
 const scanBtn = document.getElementById("scanBtn");
 const upcomingEventsListEl = document.getElementById("upcomingEventsList");
@@ -54,48 +50,12 @@ const scanSection = document.getElementById("scanSection");
 const customInput = document.getElementById("customInput");
 const scanMediaBtn = document.getElementById("scanMediaBtn");
 
-const DEFAULT_POPUP_SETTINGS = Object.freeze({
-    timeFormat: "12",
-    darkModeSettings: "auto",
-});
+const popupSettingsStore = createPopupSettingsStore();
+const ensureSettingsLoaded = popupSettingsStore.ensureSettingsLoaded;
+const getTimeFormatPreference = popupSettingsStore.getTimeFormatPreference;
 
-let cachedSettings = { ...DEFAULT_POPUP_SETTINGS };
-let settingsReadyPromise = null;
-
-function ensureSettingsLoaded() {
-    if (!settingsReadyPromise) {
-        settingsReadyPromise = loadSettingsFromStorage();
-    }
-    return settingsReadyPromise;
-}
-
-async function loadSettingsFromStorage() {
-    try {
-        const result = await chrome.storage.sync.get("settings");
-        cachedSettings = {
-            ...DEFAULT_POPUP_SETTINGS,
-            ...(result.settings || {}),
-        };
-        return cachedSettings;
-    } catch (err) {
-        error("Error loading settings:", err);
-        cachedSettings = { ...DEFAULT_POPUP_SETTINGS };
-        return cachedSettings;
-    }
-}
-
-function getTimeFormatPreference() {
-    return cachedSettings.timeFormat === "24" ? "24" : "12";
-}
-
-// Kick off settings load early to minimize race conditions for UI rendering
 // Kick off settings load early to minimize race conditions for UI rendering
 ensureSettingsLoaded();
-
-// Persistence Keys
-const KEY_CUSTOM_VIEW_ACTIVE = "eventy-custom-view-active";
-const KEY_CUSTOM_TEXT = "eventy-custom-text";
-const KEY_CUSTOM_FILES = "eventy-custom-files";
 
 // Restore persistent state
 async function restoreCustomContextState() {
@@ -143,18 +103,6 @@ async function restoreCustomContextState() {
 
 // Call restore
 restoreCustomContextState();
-
-// UI STATE MANAGEMENT - Centralized state machine for all UI transitions
-// ============================================================================
-
-const UI_STATE = {
-    IDLE: "idle",
-    SCANNING: "scanning",
-    RESULTS_LOADED: "results_loaded",
-    QUOTA_EXCEEDED: "quota_exceeded",
-};
-
-const SCAN_AVAILABILITY_CHECKING_MESSAGE = "Checking page scan availability.";
 
 let currentState = UI_STATE.IDLE;
 let stateCleanupTimeout = null; // Track cleanup timeout to prevent race conditions
@@ -372,85 +320,12 @@ const themeReadyPromise = (async () => {
     }
 })();
 
-// Check if an event has ended (is in the past)
 function isEventPast(event) {
-    const now = new Date();
+    return isPopupEventPast(event, { warn, error });
+}
 
-    // Parse end date and time
-    let endDate = event.endDate || event.startDate;
-    let endTime = event.endTime || event.startTime || "";
-
-    if (!endDate) return false; // If no date info, consider it upcoming
-
-    try {
-        // Parse the date string - handle various formats
-        let eventEndDateTime;
-
-        // Try to parse as ISO date first
-        if (endDate.includes('T') || endDate.includes('Z')) {
-            eventEndDateTime = new Date(endDate);
-        } else {
-            // Parse as YYYY-MM-DD or similar format
-            eventEndDateTime = new Date(endDate + 'T00:00:00');
-        }
-
-        // Check if date is valid
-        if (isNaN(eventEndDateTime.getTime())) {
-            warn('Invalid event date:', endDate);
-            return false;
-        }
-
-        // If there's an end time, parse and apply it
-        if (endTime) {
-            const timeParts = endTime.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/i);
-            if (timeParts) {
-                let hours = parseInt(timeParts[1]);
-                const minutes = parseInt(timeParts[2]);
-                const seconds = timeParts[3] ? parseInt(timeParts[3]) : 0;
-                const ampm = timeParts[4];
-
-                // Convert to 24-hour format if needed
-                if (ampm) {
-                    const meridiem = ampm.toUpperCase();
-                    if (meridiem === 'PM' && hours !== 12) {
-                        hours += 12;
-                    } else if (meridiem === 'AM' && hours === 12) {
-                        hours = 0;
-                    }
-                }
-
-                // Set the time on the event date (preserving the date)
-                eventEndDateTime.setHours(hours, minutes, seconds, 0);
-            } else {
-                // If time format is unrecognized but time exists, try parsing as time string
-                const timeStr = endTime.trim();
-                const timeParts = timeStr.split(':');
-                let h = NaN, m = NaN;
-                if (timeParts.length === 1) {
-                    h = parseInt(timeParts[0]);
-                    m = 0;
-                } else if (timeParts.length >= 2) {
-                    h = parseInt(timeParts[0]);
-                    m = parseInt(timeParts[1]);
-                }
-                if (!isNaN(h) && !isNaN(m)) {
-                    eventEndDateTime.setHours(h, m, 0, 0);
-                } else {
-                    // Can't parse time, set to end of day to be safe
-                    eventEndDateTime.setHours(23, 59, 59, 999);
-                }
-            }
-        } else {
-            // If no end time specified, set to end of day
-            eventEndDateTime.setHours(23, 59, 59, 999);
-        }
-
-        // Compare with current time
-        return eventEndDateTime < now;
-    } catch (err) {
-        error('Error parsing event date:', err, event);
-        return false; // On error, consider it upcoming
-    }
+function formatDateTime(dateStr, timeStr) {
+    return formatPopupDateTime(dateStr, timeStr, getTimeFormatPreference());
 }
 
 // Helper to create skeleton loading cards
@@ -478,90 +353,6 @@ function showSkeletonCards(count = 3) {
     }
 }
 
-const CACHE_TTL_MS = 15 * 60 * 1000;
-
-
-function makeCacheKey(url) {
-    return `eventy-scan:${url || ""}`;
-}
-
-// Load cached results from chrome.storage.local
-async function loadCache(url) {
-    try {
-        const key = makeCacheKey(url);
-        const result = await chrome.storage.local.get(key);
-        const cached = result[key];
-        if (!cached || !Array.isArray(cached.events)) return null;
-        if (
-            typeof cached.ts !== "number" ||
-            Date.now() - cached.ts > CACHE_TTL_MS
-        )
-            return null;
-        return cached;
-    } catch (_) {
-        return null;
-    }
-}
-
-// Save cached results to chrome.storage.local
-async function saveCache(url, events, selectedIdxs) {
-    try {
-        const key = makeCacheKey(url);
-        const payload = { events, selected: selectedIdxs, ts: Date.now() };
-        await chrome.storage.local.set({ [key]: payload });
-    } catch (_) { }
-}
-
-function formatDateTime(dateStr, timeStr) {
-    try {
-        if (!dateStr) return "";
-        const iso = `${dateStr}${timeStr ? `T${timeStr}` : ""}`;
-        const d = new Date(iso);
-        if (Number.isNaN(d.getTime())) {
-            return `${dateStr}${timeStr ? ` ${timeStr}` : ""}`;
-        }
-        const MONTHS = [
-            "Jan",
-            "Feb",
-            "Mar",
-            "Apr",
-            "May",
-            "Jun",
-            "Jul",
-            "Aug",
-            "Sep",
-            "Oct",
-            "Nov",
-            "Dec",
-        ];
-        const month = MONTHS[d.getMonth()];
-        const day = String(d.getDate()).padStart(2, "0");
-        const year = d.getFullYear();
-        const rawHours = d.getHours();
-        const minutes = String(d.getMinutes()).padStart(2, "0");
-
-        const timeFormat = getTimeFormatPreference();
-        let timePart = "";
-
-        if (timeStr) {
-            if (timeFormat === "12") {
-                const period = rawHours >= 12 ? "PM" : "AM";
-                let hours12 = rawHours % 12;
-                if (hours12 === 0) hours12 = 12;
-                const hours12Str = String(hours12);
-                timePart = `${hours12Str}:${minutes} ${period}`;
-            } else {
-                const hours = String(rawHours).padStart(2, "0");
-                timePart = `${hours}:${minutes}`;
-            }
-        }
-        const datePart = `${month} ${day}, ${year}`;
-        return timeStr ? `${datePart} ${timePart}` : datePart;
-    } catch (_) {
-        return `${dateStr}${timeStr ? ` ${timeStr}` : ""}`;
-    }
-}
-
 // Ensure Settings button works immediately on popup load
 settingsBtn?.addEventListener(
     "click",
@@ -585,11 +376,7 @@ quotaSettingsBtn?.addEventListener("click", () => {
 
 // Clean up timeouts when popup closes
 window.addEventListener("unload", () => {
-    // Clear all polling timeouts
-    for (const timeout of pollTimeouts.values()) {
-        if (timeout) clearTimeout(timeout);
-    }
-    pollTimeouts.clear();
+    scanPoller.clearAll();
 
     // Clear state cleanup timeout
     if (stateCleanupTimeout) {
@@ -610,54 +397,6 @@ function updateButtonStates() {
     }
 }
 
-async function getActiveTab() {
-    const [tab] = await chrome.tabs.query({
-        active: true,
-        currentWindow: true,
-    });
-    return tab;
-}
-
-async function captureActiveTabHtml(activeTab = null) {
-    const tab = activeTab || await getActiveTab();
-    if (!tab?.id) throw new Error("No active tab");
-
-    const blockReason = getRequiredTabScanBlockReason(tab.url);
-    if (blockReason) {
-        throw createTabScanAccessError(blockReason);
-    }
-
-    let injection;
-    try {
-        [injection] = await chrome.scripting.executeScript({
-            target: { tabId: tab.id },
-            func: () => ({
-                html: document.documentElement.outerHTML,
-                text: document.body ? document.body.innerText : "",
-                title: document.title,
-                lang: document.documentElement && document.documentElement.lang,
-            }),
-        });
-    } catch (err) {
-        const message = getScriptInjectionFailureMessage(tab.url, err);
-        if (message) {
-            throw createTabScanAccessError(message);
-        }
-        throw err;
-    }
-
-    const result = injection?.result;
-    if (!result) throw new Error("No page content available");
-
-    return {
-        html: result.html,
-        text: result.text,
-        title: result.title,
-        lang: result.lang,
-        url: tab.url || "",
-    };
-}
-
 async function handleScan() {
     try {
         const tab = await getActiveTab();
@@ -670,11 +409,7 @@ async function handleScan() {
         const { html, text, title, lang, url } = await captureActiveTabHtml(tab);
 
         // Clear any existing poll timeout for this URL before starting new scan
-        const existingTimeout = pollTimeouts.get(url);
-        if (existingTimeout) {
-            clearTimeout(existingTimeout);
-            pollTimeouts.delete(url);
-        }
+        scanPoller.clearForUrl(url);
 
         DEBUG && debug("[Eventy][Popup] Scan started", { url });
 
@@ -776,37 +511,20 @@ async function renderEvents(events) {
     // Store events globally for event handlers
     currentEvents = events;
 
-    if (!upcomingEventsListEl || !pastEventsListEl) return;
-
-    // Clear both lists
-    upcomingEventsListEl.innerHTML = "";
-    pastEventsListEl.innerHTML = "";
-
-    // Separate events into upcoming and past
-    const upcomingEvents = [];
-    const pastEvents = [];
-
-    events.forEach((ev, idx) => {
-        if (isEventPast(ev)) {
-            pastEvents.push({ event: ev, originalIndex: idx });
-        } else {
-            upcomingEvents.push({ event: ev, originalIndex: idx });
-        }
+    await renderEventLists(events, {
+        upcomingEventsListEl,
+        pastEventsListEl,
+        isEventPast,
+        createCard: (ev, idx) => createEventCard(ev, idx, {
+            escapeHtml,
+            formatDateTime,
+            onToggle: () => {
+                updateButtonStates();
+                persistSelection(currentEvents);
+            },
+        }),
+        updateButtonStates,
     });
-
-    // Render upcoming events
-    upcomingEvents.forEach(({ event: ev, originalIndex: idx }) => {
-        const wrapper = createEventCard(ev, idx);
-        upcomingEventsListEl.appendChild(wrapper);
-    });
-
-    // Render past events
-    pastEvents.forEach(({ event: ev, originalIndex: idx }) => {
-        const wrapper = createEventCard(ev, idx);
-        pastEventsListEl.appendChild(wrapper);
-    });
-
-    updateButtonStates();
 }
 
 /**
@@ -859,103 +577,19 @@ function persistSelection(events) {
 }
 
 let currentEvents = [];
-// Track polling timeouts per URL to avoid race conditions with multiple popup instances
-const pollTimeouts = new Map();
-
-function createEventCard(ev, idx) {
-    const wrapper = document.createElement("div");
-    wrapper.className = "event-card";
-    wrapper.dataset.idx = String(idx);
-
-    const startStr = formatDateTime(ev.startDate || "", ev.startTime || "");
-    const endStr = formatDateTime(
-        ev.endDate || ev.startDate || "",
-        ev.endTime || ""
-    );
-    const previewText = ev.preview || ev.title || "Untitled";
-    const fullTitle = ev.title || "Untitled";
-    const location = ev.location || "";
-    const locationHtml = location
-        ? `<div class="event-location" title="${escapeHtml(
-            location
-        )}">${escapeHtml(location)}</div>`
-        : "";
-
-    const recurrenceHtml = ev.recurrence
-        ? `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="recurrence-icon" title="Recurring event"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>`
-        : "";
-
-    wrapper.innerHTML = `
-        <div class="event-row">
-            <div class="event-title" title="${escapeHtml(
-        fullTitle
-    )}">${escapeHtml(previewText)}</div>
-            <div class="event-bottom">
-                <div class="event-times">
-                    <div class="event-time start">
-                        ${recurrenceHtml}
-                        ${escapeHtml(startStr)}
-                    </div>
-                    ${endStr
-            ? `<div class="event-time end">${escapeHtml(
-                endStr
-            )}</div>`
-            : ""
-        }
-                </div>
-                ${locationHtml}
-            </div>
-        </div>
-    `;
-
-    wrapper.addEventListener("click", () => {
-        wrapper.classList.toggle("selected");
-        updateButtonStates();
-        persistSelection(currentEvents);
-    });
-
-    return wrapper;
-}
-
-// Helper to scroll a card into the center of the view
-function scrollToCard(card) {
-    const scrollContainer = card.closest(".events-list");
-    if (scrollContainer) {
-        requestAnimationFrame(() => {
-            setTimeout(() => {
-                const containerRect = scrollContainer.getBoundingClientRect();
-                const cardRect = card.getBoundingClientRect();
-                const currentScroll = scrollContainer.scrollTop;
-
-                const cardCenter = cardRect.top + (cardRect.height / 2);
-                const containerCenter = containerRect.top + (containerRect.height / 2);
-                const diff = cardCenter - containerCenter;
-
-                scrollContainer.scrollTo({
-                    top: Math.max(0, currentScroll + diff),
-                    behavior: "smooth"
-                });
-            }, 200);
-        });
-    }
-}
+const scanPoller = createScanPoller({
+    warn,
+    error,
+    onQuotaExceeded: () => setState(UI_STATE.QUOTA_EXCEEDED),
+});
+const pollForResults = scanPoller.pollForResults;
 
 // Helper to restore selected event indices
 function restoreSelection(selectedIdxs) {
-    if (!selectedIdxs?.length) return;
-    const cards = resultsEl?.querySelectorAll(".event-card");
-    let firstSelected = null;
-    if (cards) {
-        cards.forEach((el) => el.classList.remove("selected"));
-        selectedIdxs.forEach((i) => {
-            const el = resultsEl?.querySelector(`.event-card[data-idx="${i}"]`);
-            if (el) {
-                el.classList.add("selected");
-                if (!firstSelected) firstSelected = el;
-            }
-        });
-    }
-    updateButtonStates();
+    const firstSelected = restoreEventSelection(selectedIdxs, {
+        resultsEl,
+        updateButtonStates,
+    });
 
     if (firstSelected) {
         scrollToCard(firstSelected);
@@ -1109,81 +743,6 @@ const fileToBase64 = (file) => {
     });
 };
 
-function showToast(message, type = "success") {
-    const toast = document.getElementById("toast");
-    if (!toast) return;
-
-    const content = toast.querySelector(".toast-content");
-    if (content) {
-        content.innerHTML = "";
-
-        const icon = document.createElement("span");
-        icon.className = "toast-icon";
-
-        // Clean, minimal icons without circle borders
-        const icons = {
-            error: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
-            success: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
-            info: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`
-        };
-
-        icon.innerHTML = icons[type] || icons.success;
-
-        content.appendChild(icon);
-        content.appendChild(document.createTextNode(message));
-    }
-
-    // Reset classes but keep base toast class
-    toast.className = "toast";
-    const toastTypeClass = {
-        error: "toast-error",
-        success: "toast-success",
-        info: "toast-info"
-    };
-    toast.classList.add(toastTypeClass[type] || "toast-success");
-
-    // Force reflow to restart transition if needed
-    void toast.offsetWidth;
-
-    toast.classList.add("visible");
-
-    // Clear any existing timeout
-    if (toast.dataset.timeoutId) {
-        clearTimeout(Number(toast.dataset.timeoutId));
-    }
-    if (toast.dataset.hideTimeoutId) {
-        clearTimeout(Number(toast.dataset.hideTimeoutId));
-    }
-
-    const timeoutId = setTimeout(() => {
-        toast.classList.remove("visible");
-        toast.dataset.hideTimeoutId = String(setTimeout(() => {
-            toast.classList.add("hidden");
-            delete toast.dataset.hideTimeoutId;
-        }, 250));
-        delete toast.dataset.timeoutId;
-    }, 3000);
-
-    toast.dataset.timeoutId = String(timeoutId);
-}
-
-function hideToast() {
-    const toast = document.getElementById("toast");
-    if (!toast) return;
-
-    if (toast.dataset.timeoutId) {
-        clearTimeout(Number(toast.dataset.timeoutId));
-        delete toast.dataset.timeoutId;
-    }
-    if (toast.dataset.hideTimeoutId) {
-        clearTimeout(Number(toast.dataset.hideTimeoutId));
-        delete toast.dataset.hideTimeoutId;
-    }
-
-    toast.classList.remove("visible");
-    toast.classList.add("hidden");
-}
-
 scanMediaBtn?.addEventListener("click", async () => {
     const text = customInput.value.trim();
     const files = currentImageFiles;
@@ -1305,118 +864,6 @@ addSelectedBtn?.addEventListener("click", async () => {
         error(e);
     }
 });
-
-
-
-// Generic polling function
-async function pollForResults(url, storageKey, onComplete, onError, options = {}) {
-    let currentInterval = SCAN_POLL_INITIAL_INTERVAL_MS;
-    let attempts = 0;
-    const startTime = Date.now();
-    const isDeferred = !url; // If no URL, we are polling a specific key (deferred)
-
-    // Helper to cleanup
-    const cleanup = () => {
-        if (url) pollTimeouts.delete(url);
-    };
-
-    const poll = async () => {
-        try {
-            attempts++;
-            const elapsedTime = Date.now() - startTime;
-
-            // Check limits
-            if (attempts >= SCAN_POLL_MAX_ATTEMPTS || elapsedTime >= SCAN_POLL_TIMEOUT_MS) {
-                warn(`[Eventy] Polling timeout after ${attempts} attempts (${elapsedTime}ms)`);
-                cleanup();
-                if (isDeferred) {
-                    await chrome.storage.local.remove(storageKey);
-                }
-                onError();
-                return;
-            }
-
-            // Check storage
-            // For URL-based scans, we check both scanning flag and result key
-            // For deferred scans, we check the specific key
-
-            let isReady = false;
-            let resultData = null;
-
-            if (isDeferred) {
-                const result = await chrome.storage.local.get(storageKey);
-                const stored = result[storageKey];
-
-                if (!stored) {
-                    onError(); // Disappeared
-                    return;
-                }
-
-                if (stored.status === "complete") {
-                    isReady = true;
-                    resultData = stored;
-                    await chrome.storage.local.remove(storageKey);
-                } else if (stored.status === "error") {
-                    await chrome.storage.local.remove(storageKey);
-                    // Check if rate limit error and handle specially
-                    if (stored.errorType === "RATE_LIMIT" ||
-                        (stored.error && (
-                            stored.error.toLowerCase().includes("rate limit") ||
-                            stored.error.toLowerCase().includes("quota") ||
-                            stored.error.toLowerCase().includes("daily limit")
-                        ))) {
-                        setState(UI_STATE.QUOTA_EXCEEDED);
-                        cleanup();
-                        return;
-                    }
-                    onError();
-                    return;
-                }
-            } else {
-                // URL based scan
-                const key = `eventy-scan:${url}`;
-                const scanningKey = `eventy-scanning:${url}`;
-                const checkResult = await chrome.storage.local.get([key, scanningKey]);
-                const cached = checkResult[key];
-                const scanning = checkResult[scanningKey];
-                const minimumResultTs = options.minimumResultTs;
-
-                if (isFreshScanResult(cached, minimumResultTs)) {
-                    isReady = true;
-                    resultData = cached;
-                } else if (!scanning) {
-                    cleanup();
-                    onError();
-                    return;
-                }
-            }
-
-            if (isReady) {
-                cleanup();
-                onComplete(resultData);
-                return;
-            }
-
-            // Not ready, schedule next poll
-            currentInterval = Math.min(
-                currentInterval * SCAN_POLL_BACKOFF_MULTIPLIER,
-                SCAN_POLL_MAX_INTERVAL_MS
-            );
-
-            const timeoutId = setTimeout(poll, currentInterval);
-            if (url) pollTimeouts.set(url, timeoutId);
-
-        } catch (e) {
-            error(e);
-            cleanup();
-            onError();
-        }
-    };
-
-    // Start polling
-    const initialTimeoutId = setTimeout(poll, currentInterval);
-    if (url) pollTimeouts.set(url, initialTimeoutId);
-}
 
 // Check if a scan is in progress and show skeleton cards while waiting
 async function checkForInProgressScan() {

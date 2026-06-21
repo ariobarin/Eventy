@@ -24,7 +24,7 @@ test("package metadata is ready for public release work", () => {
 });
 
 test("model listing does not send the user api key", () => {
-    const settingsSource = fs.readFileSync(new URL("../src/ui/settings.js", import.meta.url), "utf8");
+    const settingsSource = fs.readFileSync(new URL("../src/ui/settings/api.js", import.meta.url), "utf8");
     assert.equal(settingsSource.includes('postProxyJson("/models", { apiKey })'), false);
     assert.match(settingsSource, /postProxyJson\("\/models"\)/);
 });

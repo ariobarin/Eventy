@@ -1,8 +1,12 @@
 import { applyTheme } from "./theme.js";
 import { attachApiKeyAutoValidation } from "./autoValidate.js";
 import { error } from "../utils/logger.js";
-import { PROXY_URL } from "../../config.js";
-import { getInstallationId } from "../utils/storage.js";
+import {
+    fetchAvailableModels,
+    fetchUsageStats,
+    formatProviderName,
+    validateApiKey,
+} from "./settings/api.js";
 
 // Settings page functionality
 
@@ -12,53 +16,6 @@ const defaultSettings = {
     showPageMarkers: false,
     apiKeyMode: "shared",
 };
-
-// getInstallationId imported from utils/storage.js
-
-async function postProxyJson(path, body) {
-    const response = await fetch(`${PROXY_URL}${path}`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body || {}),
-    });
-
-    const payload = await response.json().catch(() => null);
-    if (!response.ok) {
-        const message = payload?.error?.message || payload?.error || `Request failed: ${response.status}`;
-        throw new Error(message);
-    }
-
-    return payload;
-}
-
-/**
- * Fetch available BYOK models through the Eventy proxy.
- * Only returns models that support structured_outputs.
- */
-async function fetchAvailableModels() {
-    try {
-        const data = await postProxyJson("/models");
-        if (!data.data || !Array.isArray(data.data)) {
-            return null;
-        }
-
-        // Filter for models that support structured_outputs
-        const structuredModels = data.data.filter(model =>
-            model.supported_parameters &&
-            model.supported_parameters.includes("structured_outputs")
-        );
-
-        // Sort by name and group by provider
-        structuredModels.sort((a, b) => a.name.localeCompare(b.name));
-
-        return structuredModels;
-    } catch (err) {
-        error("Error fetching models:", err);
-        return null;
-    }
-}
 
 /**
  * Populate the model dropdown with fetched models using Choices.js.
@@ -122,25 +79,6 @@ function populateModelDropdown(models) {
     });
 }
 
-/**
- * Format provider name for display.
- */
-function formatProviderName(provider) {
-    const names = {
-        "anthropic": "Anthropic",
-        "openai": "OpenAI",
-        "google": "Google",
-        "meta-llama": "Meta Llama",
-        "mistralai": "Mistral AI",
-        "deepseek": "DeepSeek",
-        "cohere": "Cohere",
-        "microsoft": "Microsoft",
-        "amazon": "Amazon",
-        "qwen": "Qwen",
-    };
-    return names[provider] || provider.charAt(0).toUpperCase() + provider.slice(1);
-}
-
 // Choices.js instance for model selector
 let modelChoices = null;
 
@@ -173,91 +111,6 @@ function initModelSelect() {
     const container = selectEl.closest(".choices");
     if (container) {
         container.classList.add("model-choices");
-    }
-}
-
-/**
- * Validate an OpenRouter API key through the Eventy proxy.
- */
-async function validateApiKey(apiKey) {
-    const parseNumber = (value) => {
-        if (value === null || value === undefined) return null;
-        const num = Number(value);
-        return Number.isFinite(num) ? num : null;
-    };
-
-    const getBalanceStatus = (data) => {
-        const limit = parseNumber(data?.limit);
-        const usage = parseNumber(data?.usage) ?? 0;
-        const limitRemaining = parseNumber(data?.limit_remaining);
-
-        if (limitRemaining !== null) {
-            return { hasBalance: limitRemaining > 0, limit, usage, remaining: limitRemaining };
-        }
-
-        if (limit !== null) {
-            const remaining = limit - usage;
-            return { hasBalance: remaining > 0, limit, usage, remaining };
-        }
-
-        return { hasBalance: true, limit, usage, remaining: null };
-    };
-
-    try {
-        const payload = await postProxyJson("/validate-key", { apiKey });
-        const data = payload?.data;
-        if (!data) {
-            return { valid: false, error: "Invalid API key" };
-        }
-
-        const balance = getBalanceStatus(data);
-        if (!balance.hasBalance) {
-            return { valid: false, error: "No balance remaining on this key" };
-        }
-
-        return { valid: true, data };
-    } catch (err) {
-        if (err.name === "TypeError" && err.message.includes("fetch")) {
-            return { valid: false, error: "Network error - check proxy connectivity" };
-        }
-        return { valid: false, error: err.message || "Failed to validate key" };
-    }
-}
-
-/**
- * Fetch usage stats from the proxy.
- */
-async function fetchUsageStats() {
-    try {
-        const installationId = await getInstallationId();
-        if (!installationId) {
-            return null;
-        }
-
-        // Check if BYOK mode
-        const localData = await chrome.storage.local.get("apiKey");
-        const syncData = await chrome.storage.sync.get("settings");
-        const isByok = syncData.settings?.apiKeyMode === "byok" && localData.apiKey;
-
-        const headers = {};
-        if (isByok) {
-            headers["X-User-Api-Key"] = localData.apiKey;
-        }
-
-        const usageUrl = `${PROXY_URL}/usage?id=${encodeURIComponent(installationId)}`;
-        const response = await fetch(usageUrl, {
-            method: "GET",
-            headers,
-        });
-
-        if (!response.ok) {
-            return null;
-        }
-
-        return await response.json();
-    } catch (err) {
-        error("Error fetching usage stats:", err);
-        return null;
     }
 }
 
