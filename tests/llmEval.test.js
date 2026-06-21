@@ -66,7 +66,7 @@ test("LLM judge summary counts matches, misses, and hallucinations", () => {
 test("LLM judge summary treats expected events as non-exhaustive labels", () => {
     const summary = summarizeJudgeVerdict(
         {
-            passed: false,
+            passed: true,
             matches: [
                 { expectedTitle: "Pedalpalooza Kickoff Ride" },
                 { expectedTitle: "Big Pride Ride" },
@@ -87,7 +87,7 @@ test("LLM judge summary treats expected events as non-exhaustive labels", () => 
     });
 });
 
-test("LLM judge summary passes complete match counts over stale verdicts", () => {
+test("LLM judge summary honors failed judge verdicts", () => {
     const summary = summarizeJudgeVerdict(
         {
             passed: false,
@@ -99,7 +99,7 @@ test("LLM judge summary passes complete match counts over stale verdicts", () =>
     );
 
     assert.deepEqual(summary, {
-        passed: true,
+        passed: false,
         matches: 1,
         misses: 0,
         hallucinations: 0,

@@ -521,6 +521,52 @@ test("real page fixture audit reports previous context growth as a metric", asyn
     }
 });
 
+test("real page fixture audit enforces previous context growth caps", async () => {
+    const cleanupDomParser = await installNodeDomParser();
+    try {
+        const fixture = {
+            name: "capped-table-growth-page",
+            url: "https://example.test/events",
+            title: "Capped Table Growth",
+            lang: "en",
+            html: [
+                "<main>",
+                "<table>",
+                "<tr><th>Name</th><th>Date</th><th>Venue</th></tr>",
+                "<tr><td>Opening Night</td><td>26 June 2026</td><td>Main Hall</td></tr>",
+                "<tr><td>Closing Talk</td><td>27 June 2026</td><td>Side Room</td></tr>",
+                "</table>",
+                "</main>",
+            ].join(""),
+            text: [
+                "Opening Night",
+                "26 June 2026",
+                "Main Hall",
+                "Closing Talk",
+                "27 June 2026",
+                "Side Room",
+            ].join("\n"),
+            expectedAnchors: ["Opening Night"],
+            expectedEvents: [
+                {
+                    title: "Opening Night",
+                    date: "26 June 2026",
+                    location: "Main Hall",
+                },
+            ],
+            maxPreviousContextGrowthRatio: 0.1,
+        };
+
+        const audit = auditRealPageFixture(fixture);
+
+        assert.ok(audit.shrinkRatioVsPreviousContext > 0.1);
+        assert.equal(audit.maxPreviousContextGrowthRatio, 0.1);
+        assert.equal(audit.passed, false);
+    } finally {
+        cleanupDomParser();
+    }
+});
+
 test("real page fixture audit records missing anchors", () => {
     const fixture = {
         name: "missing-anchor-page",

@@ -59,6 +59,11 @@ function normalizeCorpusEntry(entry) {
             Number.isFinite(entry.maxContextChars) && entry.maxContextChars > 0
                 ? entry.maxContextChars
                 : 30000,
+        maxPreviousContextGrowthRatio:
+            Number.isFinite(entry.maxPreviousContextGrowthRatio) &&
+            entry.maxPreviousContextGrowthRatio > 0
+                ? entry.maxPreviousContextGrowthRatio
+                : null,
     };
 }
 
@@ -229,6 +234,18 @@ export function auditRealPageFixture(fixture) {
         Number.isFinite(fixture.maxContextChars) && fixture.maxContextChars > 0
             ? fixture.maxContextChars
             : 30000;
+    const maxPreviousContextGrowthRatio =
+        Number.isFinite(fixture.maxPreviousContextGrowthRatio) &&
+        fixture.maxPreviousContextGrowthRatio > 0
+            ? fixture.maxPreviousContextGrowthRatio
+            : null;
+    const shrinkRatioVsPreviousContext = previousContextChars
+        ? Number((contextChars / previousContextChars).toFixed(4))
+        : null;
+    const previousContextGrowthPassed =
+        maxPreviousContextGrowthRatio === null ||
+        shrinkRatioVsPreviousContext === null ||
+        shrinkRatioVsPreviousContext <= maxPreviousContextGrowthRatio;
     const expectedEvents = Array.isArray(fixture.expectedEvents)
         ? fixture.expectedEvents.map(normalizeExpectedEvent)
         : [];
@@ -266,10 +283,9 @@ export function auditRealPageFixture(fixture) {
         shrinkRatioVsMarkdown: baselineMarkdown.length
             ? Number((contextChars / baselineMarkdown.length).toFixed(4))
             : null,
-        shrinkRatioVsPreviousContext: previousContextChars
-            ? Number((contextChars / previousContextChars).toFixed(4))
-            : null,
+        shrinkRatioVsPreviousContext,
         maxContextChars,
+        maxPreviousContextGrowthRatio,
         anchorPresence,
         missingAnchors,
         eventLabelResults,
@@ -279,7 +295,8 @@ export function auditRealPageFixture(fixture) {
             missingAnchors.length === 0 &&
             missingSourceEventLabels.length === 0 &&
             missingEventLabels.length === 0 &&
-            contextChars <= maxContextChars,
+            contextChars <= maxContextChars &&
+            previousContextGrowthPassed,
     };
 }
 
