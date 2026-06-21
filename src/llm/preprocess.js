@@ -238,7 +238,7 @@ export function tablesToCsvSnippets(
 
 export const MODEL_INPUT_MAX_CHARS = 18000;
 
-const MODEL_INPUT_MAX_BLOCK_CHARS = 1200;
+const MODEL_INPUT_MAX_BLOCK_CHARS = 4000;
 const MODEL_INPUT_SIGNAL_SCORE = 8;
 const MODEL_INPUT_LEAD_BLOCKS = 10;
 const MODEL_INPUT_TRUNCATION_NOTICE =
@@ -360,6 +360,19 @@ function mergeClipSegments(segments) {
     return merged;
 }
 
+function spreadSignalOffsets(offsets, maxCount) {
+    if (offsets.length <= maxCount) return offsets;
+    if (maxCount <= 1) return [offsets[0]];
+
+    const selected = [];
+    const lastIndex = offsets.length - 1;
+    for (let index = 0; index < maxCount; index++) {
+        selected.push(offsets[Math.round((index * lastIndex) / (maxCount - 1))]);
+    }
+
+    return Array.from(new Set(selected));
+}
+
 function clipBlock(content) {
     if (content.length <= MODEL_INPUT_MAX_BLOCK_CHARS) return content;
 
@@ -377,8 +390,8 @@ function clipBlock(content) {
 
     const segments = [];
     addClipSegment(segments, content.length, 0, 220);
-    for (const offset of signalOffsets.slice(0, 8)) {
-        addClipSegment(segments, content.length, offset - 160, offset + 260);
+    for (const offset of spreadSignalOffsets(signalOffsets, 5)) {
+        addClipSegment(segments, content.length, offset - 50, offset + 95);
     }
     addClipSegment(segments, content.length, content.length - 180, content.length);
 

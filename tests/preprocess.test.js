@@ -118,6 +118,32 @@ test("model input prioritizes date and time signals when clipping long blocks", 
     assert.doesNotMatch(output, /Navigation item 519/);
 });
 
+test("model input preserves later signals inside serialized event blocks", () => {
+    const repeatedNoise = Array.from(
+        { length: 520 },
+        (_, index) => `Navigation item ${index} privacy policy subscribe`
+    ).join("\n\n");
+    const serializedEventBlock = Array.from({ length: 18 }, (_, index) =>
+        [
+            `Serialized Event ${index}`,
+            `Friday June ${(index % 28) + 1}, 2026`,
+            "7:00 PM",
+            `Location: Room ${index}`,
+            "Tickets and registration details are available now.",
+        ].join(" ")
+    ).join(" ");
+    const input = [repeatedNoise, serializedEventBlock, repeatedNoise].join("\n\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /Serialized Event 0/);
+    assert.match(output, /Serialized Event 12/);
+    assert.match(output, /Friday June 13, 2026/);
+    assert.match(output, /Room 12/);
+    assert.doesNotMatch(output, /Navigation item 519/);
+});
+
 test("model input keeps day-first dates with adjacent event context", () => {
     const repeatedNoise = Array.from(
         { length: 520 },
