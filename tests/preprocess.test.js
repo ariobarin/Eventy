@@ -745,6 +745,67 @@ test("table csv snippets keep truncated quoted cells valid", () => {
     }
 });
 
+test("table csv snippets clip oversized first rows before adding them", () => {
+    const originalDomParser = globalThis.DOMParser;
+    const wideQuotedCell = `${'quote "inside" value '.repeat(30)} final event detail`;
+
+    class FakeRow {
+        constructor(cells) {
+            this.cells = cells.map((textContent) => ({ textContent }));
+        }
+
+        querySelectorAll(selector) {
+            return selector === "td,th" ? this.cells : [];
+        }
+
+        contains(cell) {
+            return this.cells.includes(cell);
+        }
+    }
+
+    class FakeTable {
+        constructor(rows) {
+            this.rows = rows;
+        }
+
+        querySelectorAll(selector) {
+            if (selector === "tr") return this.rows;
+            if (selector === "thead tr th") return this.rows[0].cells;
+            return [];
+        }
+    }
+
+    globalThis.DOMParser = class {
+        parseFromString() {
+            const table = new FakeTable([
+                new FakeRow(["Title", "Details"]),
+                new FakeRow(["Wide Quoted Event", wideQuotedCell]),
+            ]);
+            return {
+                querySelectorAll(selector) {
+                    return selector === "table" ? [table] : [];
+                },
+            };
+        }
+    };
+
+    try {
+        const [csv] = tablesToCsvSnippets("<table></table>", 1, 5, 180);
+        const lines = csv.split("\n");
+
+        assert.ok(csv.length <= 180);
+        assert.equal(lines.length, 2);
+        assert.match(lines[1], /^"(?:[^"]|"")*","(?:[^"]|"")*"$/);
+        assert.match(lines[1], /\.\.\./);
+    } finally {
+        if (originalDomParser === undefined) {
+            delete globalThis.DOMParser;
+        } else {
+            globalThis.DOMParser = originalDomParser;
+        }
+    }
+});
+
 test("popup page scans use compact preprocessing before messaging background", () => {
     const js = fs.readFileSync(new URL("../src/popup.js", import.meta.url), "utf8");
     const start = js.indexOf("async function handleScan()");

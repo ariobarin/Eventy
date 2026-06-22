@@ -150,15 +150,49 @@ export function htmlToMarkdown(htmlInput) {
     }
 }
 
-function trimCsvSnippet(snippet, maxChars) {
-    if (snippet.length <= maxChars) return snippet;
+const MAX_TABLE_CELL_CHARS = 240;
 
-    const clipped = snippet.slice(0, maxChars);
-    const lineBreak = clipped.lastIndexOf("\n");
-    const trimmed =
-        lineBreak > maxChars * 0.5 ? clipped.slice(0, lineBreak) : clipped;
+function normalizeTableCell(s) {
+    return String(s || "")
+        .replace(/[\n\r]+/g, " ")
+        .trim();
+}
 
-    return trimmed.trim();
+function truncateTableCell(raw, maxChars = MAX_TABLE_CELL_CHARS) {
+    const cleaned = normalizeTableCell(raw);
+    if (cleaned.length <= maxChars) return cleaned;
+    if (maxChars <= 0) return "";
+    if (maxChars <= 3) return ".".repeat(maxChars);
+    return `${cleaned.slice(0, maxChars - 3).trim()}...`;
+}
+
+function quoteCsvCell(raw, maxChars = MAX_TABLE_CELL_CHARS) {
+    return `"${truncateTableCell(raw, maxChars).replace(/"/g, '""')}"`;
+}
+
+function buildCsvLine(values, maxChars = Infinity) {
+    const lineForCellLimit = (cellLimit) =>
+        values.map((value) => quoteCsvCell(value, cellLimit)).join(",");
+    const fullLine = lineForCellLimit(MAX_TABLE_CELL_CHARS);
+    if (fullLine.length <= maxChars || !Number.isFinite(maxChars)) {
+        return fullLine;
+    }
+
+    let low = 0;
+    let high = MAX_TABLE_CELL_CHARS;
+    let best = null;
+    while (low <= high) {
+        const mid = Math.floor((low + high) / 2);
+        const line = lineForCellLimit(mid);
+        if (line.length <= maxChars) {
+            best = line;
+            low = mid + 1;
+        } else {
+            high = mid - 1;
+        }
+    }
+
+    return best;
 }
 
 export function tablesToCsvSnippets(
@@ -177,16 +211,6 @@ export function tablesToCsvSnippets(
         );
         const tables = Array.from(doc.querySelectorAll("table"));
         const snippets = [];
-        const cleanCell = (s) => {
-            const cleaned = String(s || "")
-                .replace(/[\n\r]+/g, " ")
-                .trim();
-            const truncated = cleaned.length > 240
-                ? `${cleaned.slice(0, 237).trim()}...`
-                : cleaned;
-            return truncated.replace(/"/g, '""');
-        };
-        const quote = (s) => '"' + cleanCell(s) + '"';
         for (let ti = 0; ti < Math.min(tables.length, maxTables); ti++) {
             const t = tables[ti];
             const rows = Array.from(t.querySelectorAll("tr"));
@@ -202,7 +226,9 @@ export function tablesToCsvSnippets(
             const startIndex =
                 headerCells.length && rows[0]?.contains(headerCells[0]) ? 1 : 0;
             const csvLines = [];
-            csvLines.push(headers.map(quote).join(","));
+            const headerLine = buildCsvLine(headers, maxCharsPerSnippet);
+            if (!headerLine) continue;
+            csvLines.push(headerLine);
             let csvLength = csvLines[0].length;
             for (
                 let ri = startIndex;
@@ -211,22 +237,22 @@ export function tablesToCsvSnippets(
             ) {
                 const cells = Array.from(rows[ri].querySelectorAll("td,th"));
                 if (!cells.length) continue;
-                const values = headers.map((_, ci) =>
-                    quote(cells[ci]?.textContent || "")
-                );
-                const line = values.join(",");
+                const values = headers.map((_, ci) => cells[ci]?.textContent || "");
+                let line = buildCsvLine(values);
                 const nextLength = csvLength + 1 + line.length;
-                if (nextLength > maxCharsPerSnippet && csvLines.length > 1) {
-                    break;
+                if (nextLength > maxCharsPerSnippet) {
+                    if (csvLines.length > 1) break;
+                    line = buildCsvLine(
+                        values,
+                        Math.max(0, maxCharsPerSnippet - csvLength - 1)
+                    );
+                    if (!line) break;
                 }
                 csvLines.push(line);
-                csvLength = nextLength;
+                csvLength += 1 + line.length;
             }
             if (csvLines.length > 1) {
-                const snippet = trimCsvSnippet(
-                    csvLines.join("\n"),
-                    maxCharsPerSnippet
-                );
+                const snippet = csvLines.join("\n");
                 if (snippet) snippets.push(snippet);
             }
         }
