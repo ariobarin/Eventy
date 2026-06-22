@@ -304,9 +304,9 @@ const STANDALONE_DAY_PATTERN = new RegExp(
 function normalizeModelText(text) {
     return String(text || "")
         .replace(/\r\n?/g, "\n")
-        .replace(/[ \t\f\v]+/g, " ")
-        .replace(/\n[ \t]+/g, "\n")
-        .replace(/[ \t]+\n/g, "\n")
+        .replace(/[ \f\v]+/g, " ")
+        .replace(/\n[ \f\v]+/g, "\n")
+        .replace(/[ \f\v]+\n/g, "\n")
         .replace(/\n{4,}/g, "\n\n\n")
         .trim();
 }
@@ -705,11 +705,11 @@ function isCleanCompactContextBlock(text, maxLength, allowTerminalPunctuation = 
 
 function isLikelyTitleContextBlock(text) {
     const trimmed = String(text || "").trim();
-    if (!isCleanCompactContextBlock(trimmed, 140, true)) return false;
+    if (!isCleanCompactContextBlock(trimmed, 220, true)) return false;
     if (CONTEXT_LABEL_PATTERN.test(trimmed)) return false;
 
     const words = trimmed.split(/\s+/).filter(Boolean);
-    if (words.length < 1 || words.length > 14 || !/[a-z]/i.test(trimmed)) {
+    if (words.length < 1 || words.length > 28 || !/[a-z]/i.test(trimmed)) {
         return false;
     }
 
@@ -775,7 +775,13 @@ function addStandaloneMonthDayCandidates(candidates, blocks) {
 }
 
 function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
-    const rawBlocks = splitContentBlocks(text);
+    const normalizedInput = normalizeModelText(text);
+    if (!normalizedInput) return "";
+    if (normalizedInput.includes("\t") && normalizedInput.length <= maxChars) {
+        return normalizedInput;
+    }
+
+    const rawBlocks = splitContentBlocks(normalizedInput);
 
     if (!rawBlocks.length) return "";
 
@@ -872,8 +878,8 @@ export function buildModelInput(text, html) {
     }
 
     const rawContent = chooseRawModelContent(
-        textContent || String(html || ""),
-        htmlContent
+        textContent,
+        htmlContent || String(html || "")
     );
 
     return condenseContent(rawContent, MODEL_INPUT_MAX_CHARS);

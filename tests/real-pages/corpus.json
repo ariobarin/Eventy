@@ -1911,5 +1911,167 @@
         ],
         "labelingNotes": "Checked rendered lines after the redirect; selected featured cards had title, date range, location, and short description lines.",
         "risk": "The starting URL redirects to a destination events site, and the high-density seasonal listing can change."
+    },
+    {
+        "name": "chicago-park-district-event-finder",
+        "category": "civic",
+        "url": "https://www.chicagoparkdistrict.com/events",
+        "reasonForInclusion": "Chicago Park District exposes a large civic recreation event finder with recurring installations, date ranges, park addresses, and similar titles.",
+        "expectedAnchors": [
+            "Community Climb at Steelworkers",
+            "Pianos in the Parks at Bessemer",
+            "Pianos in the Parks at Gill",
+            "Pianos in the Parks at Margate"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Community Climb at Steelworkers",
+                "date": "April 25, 2026 - October 31, 2026",
+                "location": "87th at S. Lake Shore Dr. Chicago, IL 60617"
+            },
+            {
+                "title": "Pianos in the Parks at Bessemer",
+                "date": "Jun 21 - Jul 31",
+                "time": "during field house hours",
+                "location": "8930 S. Muskegon Ave. Chicago, IL 60617"
+            },
+            {
+                "title": "Pianos in the Parks at Gill",
+                "date": "Jun 21 - Jul 31",
+                "time": "during field house hours",
+                "location": "825 W. Sheridan Rd. Chicago, IL 60613"
+            },
+            {
+                "title": "Pianos in the Parks at Margate",
+                "date": "Jun 21 - Jul 31",
+                "time": "during field house hours",
+                "location": "4921 N. Marine Drive Chicago, IL 60640"
+            }
+        ],
+        "labelingNotes": "Dense-worker candidate with neutral critic acceptance; selected labels intentionally include near-duplicate recurring events with distinct parks.",
+        "risk": "Near-duplicate titles test dedupe and location separation."
+    },
+    {
+        "name": "library-of-congress-events",
+        "category": "museum",
+        "url": "https://www.loc.gov/events/",
+        "reasonForInclusion": "The Library of Congress event list has grouped dates, exhibition records, webinars, films, venues, and repeated multi-day exhibits.",
+        "expectedAnchors": [
+            "Treasures from the Stephen Sondheim Collection",
+            "American Independence in Newspapers",
+            "Fashion at the Library of Congress",
+            "Preview: Our History in the Headlines"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Treasures from the Stephen Sondheim Collection",
+                "date": "Monday, June 22, 2026",
+                "time": "8:30 am-5:00 pm EDT",
+                "location": "James Madison Building, Performing Arts Reading Room"
+            },
+            {
+                "title": "American Independence in Newspapers",
+                "date": "Tuesday, June 23, 2026",
+                "time": "10:00 am-5:00 pm EDT",
+                "location": "Thomas Jefferson Building, Great Hall - 2nd Floor (LJ-200-E)"
+            },
+            {
+                "title": "Fashion at the Library of Congress: The Threads That Connect Us",
+                "date": "Tuesday, June 23, 2026",
+                "time": "10:00 am-5:00 pm EDT",
+                "location": "Thomas Jefferson Building, Great Hall - 2nd Floor (LJ-200-E)"
+            },
+            {
+                "title": "Preview: Our History in the Headlines",
+                "date": "Wednesday, June 24, 2026",
+                "time": "12:00 pm-2:00 pm EDT",
+                "location": "James Madison Building, Newspaper & Current Periodical Reading Room"
+            }
+        ],
+        "labelingNotes": "Dense-worker candidate with neutral critic acceptance; labels cover recurring exhibits and a timed special display.",
+        "risk": "Recurring exhibit rows may need instance-level interpretation."
+    },
+    {
+        "name": "boston-gov-events",
+        "category": "civic",
+        "url": "https://www.boston.gov/events",
+        "reasonForInclusion": "Boston.gov mixes civic meetings, fitness classes, cancellations, virtual locations, prices, and physical addresses in one official calendar.",
+        "expectedAnchors": [
+            "Parks Fitness: Yoga with Carlos",
+            "Parks Fitness: Ritmo (Rhythm) and Power with Joanna",
+            "Canceled: June 22 Summer Family Bike Ride at Moakley",
+            "Jamaica Plain: 431 Pond Street Abutters Meeting"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Parks Fitness: Yoga with Carlos",
+                "date": "JUNE 22, 2026",
+                "time": "5:30pm-6:30pm"
+            },
+            {
+                "title": "Parks Fitness: Ritmo (Rhythm) and Power with Joanna",
+                "date": "JUNE 22, 2026",
+                "time": "6:00pm-7:00pm"
+            },
+            {
+                "title": "Canceled: June 22 Summer Family Bike Ride at Moakley",
+                "date": "JUNE 22, 2026",
+                "time": "6:00pm-8:00pm"
+            },
+            {
+                "title": "Jamaica Plain: 431 Pond Street Abutters Meeting",
+                "date": "JUNE 22, 2026",
+                "time": "6:00pm-7:00pm"
+            }
+        ],
+        "labelingNotes": "Dense-worker candidate with neutral critic acceptance; labels cover physical, virtual, and canceled city events.",
+        "risk": "Canceled and virtual events affect extraction policy expectations."
+    },
+    {
+        "name": "do512-family-free-events",
+        "category": "community",
+        "url": "https://family.do512.com/freethingstodothismonth",
+        "reasonForInclusion": "Do512 has a dense community calendar with free and recurring family events, external ticket links, venue names, and compact times.",
+        "expectedAnchors": [
+            "Paws to the Polls: The Great Austin Pet Election",
+            "Dungeons & Dragons Night",
+            "Kitchen Time @ The Central Library - Homemade Whole Wheat Tortillas",
+            "The Coffee Tour Run Club",
+            "Texas Farmers' Market - Mueller"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Paws to the Polls: The Great Austin Pet Election",
+                "date": "FREE - THROUGH SEP 12",
+                "time": "11:00AM",
+                "location": "Various"
+            },
+            {
+                "title": "Dungeons & Dragons Night",
+                "date": "FREE - EVERY MON",
+                "time": "6:00PM",
+                "location": "Pinballz Lake Creek"
+            },
+            {
+                "title": "Kitchen Time @ The Central Library - Homemade Whole Wheat Tortillas",
+                "date": "TODAY JUN 22",
+                "time": "6:00PM",
+                "location": "Austin Public Library Central Library"
+            },
+            {
+                "title": "The Coffee Tour Run Club",
+                "date": "SUNDAY JUN 28",
+                "time": "8:00AM",
+                "location": "Multiple Locations, Austin"
+            },
+            {
+                "title": "Texas Farmers' Market - Mueller",
+                "date": "EVERY SUN",
+                "time": "10:00AM",
+                "location": "Texas Farmers' Market at Mueller"
+            }
+        ],
+        "labelingNotes": "Dense-worker candidate marked for controller review; included only if live capture confirms labels and audit retention.",
+        "risk": "The page includes ads, ticket links, widgets, and relative dates."
     }
 ]

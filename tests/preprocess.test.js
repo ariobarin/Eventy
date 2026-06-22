@@ -420,6 +420,33 @@ test("model input keeps titles before standalone month day cards", () => {
     assert.doesNotMatch(output, /Community resource section 519/);
 });
 
+test("model input keeps long titles before standalone month day cards", () => {
+    const repeatedCopy = Array.from(
+        { length: 520 },
+        (_, index) =>
+            `Community resource section ${index} with general visitor information and local program summaries.`
+    ).join("\n\n");
+    const longTitle =
+        "An evening of new voices sharing stories from the neighborhood through memory food photography and conversation";
+    const input = [
+        repeatedCopy,
+        longTitle,
+        "June",
+        "26",
+        "Online",
+        repeatedCopy,
+    ].join("\n\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, new RegExp(longTitle));
+    assert.match(output, /June/);
+    assert.match(output, /26/);
+    assert.match(output, /Online/);
+    assert.doesNotMatch(output, /Community resource section 519/);
+});
+
 test("model input keeps punctuated titles before standalone date cards", () => {
     const repeatedCopy = Array.from(
         { length: 520 },
@@ -749,6 +776,61 @@ test("model input prefers complete rendered text when it fits budget", () => {
             globalThis.DOMParser = originalDomParser;
         }
     }
+});
+
+test("model input uses cleaned markdown for html-only fallback", () => {
+    const originalDomParser = globalThis.DOMParser;
+    globalThis.DOMParser = class {
+        parseFromString(html) {
+            return new JSDOM(html).window.document;
+        }
+    };
+
+    try {
+        const html = [
+            "<html>",
+            "<head>",
+            "<style>.hidden{display:none}</style>",
+            "<script>console.log('tracking')</script>",
+            "</head>",
+            "<body>",
+            "<main>",
+            "<h1>Community Market</h1>",
+            "<p>June 26, 2026 at 7:00 PM</p>",
+            "<p>Main Hall</p>",
+            "</main>",
+            "</body>",
+            "</html>",
+        ].join("");
+
+        const output = buildModelInput("", html);
+
+        assert.match(output, /Community Market/);
+        assert.match(output, /June 26, 2026/);
+        assert.match(output, /Main Hall/);
+        assert.doesNotMatch(output, /<main>/);
+        assert.doesNotMatch(output, /console\.log/);
+        assert.doesNotMatch(output, /\.hidden/);
+    } finally {
+        if (originalDomParser === undefined) {
+            delete globalThis.DOMParser;
+        } else {
+            globalThis.DOMParser = originalDomParser;
+        }
+    }
+});
+
+test("model input preserves tab delimiters in custom table text", () => {
+    const input = [
+        "Title\tDate\tTime\tLocation",
+        "Community Market\tJune 26, 2026\t7:00 PM\tMain Hall",
+        "Open Studio Night\tJune 27, 2026\t6:30 PM\tStudio 4",
+    ].join("\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.equal(output, input);
+    assert.match(output, /Community Market\tJune 26, 2026\t7:00 PM\tMain Hall/);
 });
 
 test("table csv snippets cap large table context", () => {
