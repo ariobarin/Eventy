@@ -311,6 +311,31 @@ function normalizeModelText(text) {
         .trim();
 }
 
+function isMarkdownTableSeparator(line) {
+    return /^\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?$/.test(line);
+}
+
+function hasDelimitedTableRows(text) {
+    const rows = String(text || "")
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+    if (rows.length < 2) return false;
+
+    const tabRows = rows.filter((line) => line.includes("\t")).length;
+    if (tabRows >= 2) return true;
+
+    const pipeRows = rows.filter(
+        (line) => (line.match(/\|/g) || []).length >= 2
+    ).length;
+    if (pipeRows >= 2 && rows.some(isMarkdownTableSeparator)) return true;
+
+    const commaRows = rows.filter(
+        (line) => (line.match(/,/g) || []).length >= 2
+    ).length;
+    return commaRows >= 2;
+}
+
 function findSignalChunkBreak(text, minEnd, maxEnd) {
     const breakWindow = text.slice(minEnd, maxEnd);
     const sentenceBreakPattern = /[.!?]\s+(?=[A-Z0-9#*])/g;
@@ -777,7 +802,10 @@ function addStandaloneMonthDayCandidates(candidates, blocks) {
 function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
     const normalizedInput = normalizeModelText(text);
     if (!normalizedInput) return "";
-    if (normalizedInput.includes("\t") && normalizedInput.length <= maxChars) {
+    if (
+        normalizedInput.length <= maxChars &&
+        hasDelimitedTableRows(normalizedInput)
+    ) {
         return normalizedInput;
     }
 

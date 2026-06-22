@@ -833,6 +833,33 @@ test("model input preserves tab delimiters in custom table text", () => {
     assert.match(output, /Community Market\tJune 26, 2026\t7:00 PM\tMain Hall/);
 });
 
+test("model input preserves csv row newlines in custom table text", () => {
+    const input = [
+        "Title,Date,Time,Location",
+        "Community Market,June 26, 2026,7:00 PM,Main Hall",
+        "Open Studio Night,June 27, 2026,6:30 PM,Studio 4",
+    ].join("\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.equal(output, input);
+    assert.doesNotMatch(output, /Title,Date,Time,Location\n\nCommunity Market/);
+});
+
+test("model input preserves markdown table row newlines in custom table text", () => {
+    const input = [
+        "| Title | Date | Time | Location |",
+        "| --- | --- | --- | --- |",
+        "| Community Market | June 26, 2026 | 7:00 PM | Main Hall |",
+        "| Open Studio Night | June 27, 2026 | 6:30 PM | Studio 4 |",
+    ].join("\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.equal(output, input);
+    assert.doesNotMatch(output, /\| --- \| --- \| --- \| --- \|\n\n\| Community Market/);
+});
+
 test("table csv snippets cap large table context", () => {
     const originalDomParser = globalThis.DOMParser;
     const longCell = "Long event detail ".repeat(40);
