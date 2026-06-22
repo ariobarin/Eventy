@@ -268,23 +268,26 @@ const MODEL_INPUT_MAX_BLOCK_CHARS = 4000;
 const MODEL_INPUT_SIGNAL_CHUNK_CHARS = 1400;
 const MODEL_INPUT_SIGNAL_CHUNK_MIN_SIGNALS = 8;
 const MODEL_INPUT_SIGNAL_SCORE = 8;
-const MODEL_INPUT_LEAD_BLOCKS = 10;
+const MODEL_INPUT_PRIORITY_LEAD_BLOCKS = 3;
+const MODEL_INPUT_LEAD_BLOCKS = 18;
 const MODEL_INPUT_TRUNCATION_NOTICE =
     "[Context shortened: source page exceeded the scan budget. Some events or details may be omitted.]";
 const MODEL_INPUT_TRUNCATION_SEPARATOR = "\n\n";
 const MONTH_NAME_PATTERN = "(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\\.?";
 const ORDINAL_DAY_PATTERN = "\\d{1,2}(?:st|nd|rd|th)?";
 const STANDALONE_DAY_WITH_YEAR_PATTERN = `${ORDINAL_DAY_PATTERN}(?:,?\\s*\\d{4})?`;
+const MONTH_DATE_RANGE_PATTERN = `${MONTH_NAME_PATTERN}\\s+${ORDINAL_DAY_PATTERN}\\s*(?:-|\\u2013|\\u2014|to|through)\\s*${MONTH_NAME_PATTERN}\\s+${ORDINAL_DAY_PATTERN}(?:,\\s*\\d{4})?`;
 const CONTEXT_LABEL_PATTERN =
     /^(?:date|time|when|where|venue|location|event date|event time|category|type|details|info|information)$/i;
 const EVENT_TIME_PATTERN =
     /\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b|\b\d{1,2}:\d{2}\b/gi;
 const EVENT_DETAIL_SIGNAL_PATTERN =
-    /\b(event|calendar|ticket|tickets|rsvp|registration|doors|admission|presented|live|webinar|workshop|concert|screening|festival|meetup|lecture|panel|class|session|conference|show|performance|tour|venue|location|where|address|room|auditorium|hall|street|st\.|avenue|ave\.|road|rd\.)\b/gi;
+    /\b(event|calendar|ticket|tickets|rsvp|registration|doors|admission|presented|live|music|webinar|workshop|concert|screening|festival|meetup|lecture|panel|class|session|conference|show|performance|tour|venue|location|where|address|room|auditorium|hall|street|st\.|avenue|ave\.|road|rd\.)\b/gi;
 const EVENT_DATE_PATTERN = new RegExp(
     [
         "\\b(?:Mon|Tue|Tues|Wed|Thu|Thur|Thurs|Fri|Sat|Sun)(?:day)?\\b",
         "\\b(?:today|tonight|tomorrow|yesterday|this\\s+(?:morning|afternoon|evening|week|weekend)|next\\s+(?:week|weekend))\\b",
+        `\\b${MONTH_DATE_RANGE_PATTERN}\\b`,
         `\\b${MONTH_NAME_PATTERN}\\s+${ORDINAL_DAY_PATTERN}(?:,\\s*\\d{4})?\\b`,
         `\\b${ORDINAL_DAY_PATTERN}\\s+${MONTH_NAME_PATTERN}(?:\\s+\\d{4})?\\b`,
         "\\b\\d{4}-\\d{1,2}-\\d{1,2}\\b",
@@ -502,6 +505,78 @@ function trimToMaxChars(text, maxChars) {
     return trimmed.trim();
 }
 
+function sourceQualityScore(text) {
+    const normalized = normalizeModelText(text);
+    if (!normalized) return 0;
+
+    const lengthScore = Math.min(12, Math.floor(normalized.length / 1200));
+    const signalScore = Math.min(40, collectSignalOffsets(normalized).length * 3);
+    const blockScore = Math.min(
+        30,
+        Math.max(0, scoreBlock(normalized.slice(0, 12000)))
+    );
+
+    return lengthScore + signalScore + blockScore;
+}
+
+function hasDelimitedLeadDate(text) {
+    return normalizeModelText(text)
+        .slice(0, 700)
+        .split("\n")
+        .slice(0, 8)
+        .some((line) => line.includes("|") && hasDateSignal(line));
+}
+
+function chooseRawModelContent(textContent, htmlContent) {
+    if (!htmlContent) return textContent;
+    if (!textContent) return htmlContent;
+
+    const normalizedText = normalizeModelText(textContent);
+    const normalizedHtml = normalizeModelText(htmlContent);
+    if (!normalizedHtml) return normalizedText;
+    if (!normalizedText) return normalizedHtml;
+
+    const htmlScore = sourceQualityScore(normalizedHtml);
+    const textScore = sourceQualityScore(normalizedText);
+    const textLeadScore = sourceQualityScore(normalizedText.slice(0, 2200));
+    const htmlLeadScore = sourceQualityScore(normalizedHtml.slice(0, 2200));
+    const textFitsScanBudget =
+        normalizedText.length <= MODEL_INPUT_MAX_CHARS &&
+        textScore >= Math.max(8, htmlScore - 10);
+    const textLeadIsClearlyBetter =
+        normalizedText.length <= normalizedHtml.length &&
+        textLeadScore >= 16 &&
+        textLeadScore >= htmlLeadScore + 12;
+    const textHasDelimitedLeadDate =
+        normalizedText.length <= normalizedHtml.length &&
+        hasDelimitedLeadDate(normalizedText) &&
+        !hasDelimitedLeadDate(normalizedHtml);
+    const htmlIsSparse =
+        normalizedHtml.length < 1200 &&
+        normalizedText.length > normalizedHtml.length * 3 &&
+        textScore >= htmlScore;
+    const textIsClearlyRicher =
+        normalizedText.length > normalizedHtml.length * 1.6 &&
+        textScore >= htmlScore + 12;
+    const textIsBroaderRenderedView =
+        normalizedText.length > normalizedHtml.length * 2.5 &&
+        textScore >= Math.max(10, htmlScore - 6);
+    const htmlIsBulkyDuplicate =
+        normalizedHtml.length > MODEL_INPUT_MAX_CHARS &&
+        normalizedHtml.length > normalizedText.length * 2.5 &&
+        textScore >= 12;
+
+    return textFitsScanBudget ||
+        textLeadIsClearlyBetter ||
+        textHasDelimitedLeadDate ||
+        htmlIsSparse ||
+        textIsClearlyRicher ||
+        textIsBroaderRenderedView ||
+        htmlIsBulkyDuplicate
+        ? normalizedText
+        : normalizedHtml;
+}
+
 function prependTruncationNotice(text, maxChars) {
     if (maxChars <= MODEL_INPUT_TRUNCATION_NOTICE.length) {
         return MODEL_INPUT_TRUNCATION_NOTICE.slice(0, maxChars).trim();
@@ -538,7 +613,7 @@ function scoreBlock(text) {
     score += timeMatches * 10;
 
     if (
-        /\b(event|calendar|ticket|tickets|rsvp|registration|doors|admission|presented|live|webinar|workshop|concert|screening|festival|meetup|lecture|panel|class|session|conference|show|performance|tour)\b/i.test(
+        /\b(event|calendar|ticket|tickets|rsvp|registration|doors|admission|presented|live|music|webinar|workshop|concert|screening|festival|meetup|lecture|panel|class|session|conference|show|performance|tour)\b/i.test(
             text
         )
     ) {
@@ -740,7 +815,12 @@ function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
         index < Math.min(MODEL_INPUT_LEAD_BLOCKS, blocks.length);
         index++
     ) {
-        addCandidate(candidates, blocks, index, 4);
+        const block = blocks[index];
+        const priority =
+            index < MODEL_INPUT_PRIORITY_LEAD_BLOCKS || block.score > 0
+                ? MODEL_INPUT_SIGNAL_SCORE + 36
+                : 4;
+        addCandidate(candidates, blocks, index, priority);
     }
 
     if (!candidates.size) {
@@ -778,8 +858,8 @@ function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
 }
 
 export function buildModelInput(text, html) {
-    let rawContent = "";
     const textContent = String(text || "");
+    let htmlContent = "";
 
     // Prefer HTML path when available, converting to Markdown
     if (
@@ -788,11 +868,13 @@ export function buildModelInput(text, html) {
         html.trim() &&
         typeof DOMParser !== "undefined"
     ) {
-        rawContent = htmlToMarkdown(html);
-    } else {
-        // Fallback to text-only when parsing is unavailable.
-        rawContent = textContent || String(html || "");
+        htmlContent = htmlToMarkdown(html);
     }
+
+    const rawContent = chooseRawModelContent(
+        textContent || String(html || ""),
+        htmlContent
+    );
 
     return condenseContent(rawContent, MODEL_INPUT_MAX_CHARS);
 }

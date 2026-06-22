@@ -171,6 +171,29 @@ test("model input preserves dense serialized event feeds over block budget", () 
     assert.doesNotMatch(output, /Navigation item 519/);
 });
 
+test("model input preserves leading page-level event context", () => {
+    const leadingContext = [
+        "DATE 2026",
+        "20 - 22 April 2026",
+        "Verona, Italy",
+    ].join("\n\n");
+    const denseEvents = Array.from({ length: 360 }, (_, index) =>
+        [
+            `Dense Agenda Session ${index}`,
+            `Friday June ${(index % 28) + 1}, 2026`,
+            `${(index % 12) + 1}:00 PM`,
+            `Room ${index}`,
+            "Conference session workshop details.",
+        ].join("\n\n")
+    ).join("\n\n");
+
+    const output = buildModelInput(`${leadingContext}\n\n${denseEvents}`, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /DATE 2026/);
+    assert.match(output, /20 - 22 April 2026/);
+});
+
 test("model input keeps day-first dates with adjacent event context", () => {
     const repeatedNoise = Array.from(
         { length: 520 },
@@ -617,6 +640,115 @@ test("model input prefers text over raw html when html parsing is unavailable", 
     assert.match(output, /June 29, 2026/);
     assert.doesNotMatch(output, /<main>/);
     assert.doesNotMatch(output, /largeTrackingPayload/);
+});
+
+test("model input falls back to captured text when parsed html is sparse", () => {
+    const originalDomParser = globalThis.DOMParser;
+    globalThis.DOMParser = class {
+        parseFromString(html) {
+            return new JSDOM(html).window.document;
+        }
+    };
+
+    try {
+        const output = buildModelInput(
+            [
+                "Community Market",
+                "June 24, 2026",
+                "5:00 PM",
+                "Main Plaza",
+                "Live music and local vendors",
+            ].join("\n\n"),
+            "<main><a href=\"#mainContent\">Skip to main content</a></main>"
+        );
+
+        assert.match(output, /Community Market/);
+        assert.match(output, /June 24, 2026/);
+        assert.match(output, /Main Plaza/);
+    } finally {
+        if (originalDomParser === undefined) {
+            delete globalThis.DOMParser;
+        } else {
+            globalThis.DOMParser = originalDomParser;
+        }
+    }
+});
+
+test("model input prefers rendered text over bulky duplicate html", () => {
+    const originalDomParser = globalThis.DOMParser;
+    const noisyHtml = Array.from(
+        { length: 700 },
+        (_, index) =>
+            `<p>Archive listing ${index} privacy account repeated navigation copy</p>`
+    ).join("");
+    globalThis.DOMParser = class {
+        parseFromString(html) {
+            return new JSDOM(html).window.document;
+        }
+    };
+
+    try {
+        const output = buildModelInput(
+            [
+                "Opening Panel",
+                "June 24, 2026",
+                "10:00 AM",
+                "Room 101",
+                "Closing Workshop",
+                "June 25, 2026",
+                "2:00 PM",
+                "Room 202",
+            ].join("\n\n"),
+            `<main>${noisyHtml}</main>`
+        );
+
+        assert.match(output, /Opening Panel/);
+        assert.match(output, /Closing Workshop/);
+        assert.doesNotMatch(output, /Archive listing 699/);
+    } finally {
+        if (originalDomParser === undefined) {
+            delete globalThis.DOMParser;
+        } else {
+            globalThis.DOMParser = originalDomParser;
+        }
+    }
+});
+
+test("model input prefers complete rendered text when it fits budget", () => {
+    const originalDomParser = globalThis.DOMParser;
+    globalThis.DOMParser = class {
+        parseFromString(html) {
+            return new JSDOM(html).window.document;
+        }
+    };
+
+    try {
+        const text = [
+            "All Upcoming Events",
+            "June 27, 2026",
+            "Visible Rendered Event",
+            "Main Theater",
+        ].join("\n\n");
+        const html = [
+            "<main>",
+            "<h1>All Upcoming Events</h1>",
+            "<p>June 27, 2026</p>",
+            "<p>Generic HTML Event</p>",
+            "<p>Main Theater</p>",
+            "</main>",
+        ].join("");
+
+        const output = buildModelInput(text, html);
+
+        assert.match(output, /Visible Rendered Event/);
+        assert.doesNotMatch(output, /Generic HTML Event/);
+    } finally {
+        if (originalDomParser === undefined) {
+            delete globalThis.DOMParser;
+        } else {
+            globalThis.DOMParser = originalDomParser;
+        }
+    }
 });
 
 test("table csv snippets cap large table context", () => {

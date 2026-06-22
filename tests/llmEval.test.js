@@ -42,6 +42,7 @@ test("LLM judge request uses strict structured output", () => {
     assert.equal(body.response_format.type, "json_schema");
     assert.equal(body.response_format.json_schema.strict, true);
     assert.equal(Object.hasOwn(body, "stream"), false);
+    assert.match(body.messages[0].content, /every supplied expected field/);
     assert.match(body.messages[0].content, /venue suffix/i);
     assert.match(body.messages[1].content, /Opening Night/);
     assert.match(body.messages[1].content, /extractedEvents/);

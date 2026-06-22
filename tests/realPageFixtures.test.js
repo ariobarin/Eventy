@@ -354,6 +354,10 @@ test("real page fixture audit ignores generated report files", async () => {
             path.join(fixtureDir, "llm-report.json"),
             JSON.stringify({ generatedAt: "2026-06-20T00:00:00.000Z" })
         );
+        await fs.writeFile(
+            path.join(fixtureDir, "old-new-llm-report.json"),
+            JSON.stringify({ generatedAt: "2026-06-20T00:00:00.000Z" })
+        );
 
         const fixtures = await loadRealPageAuditFixtures(corpusPath, fixtureDir);
 
@@ -444,6 +448,64 @@ test("real page fixture audit matches event labels across case changes", () => {
     assert.equal(audit.eventLabelResults[0].passed, true);
 });
 
+test("real page fixture audit matches labels across punctuation spacing", () => {
+    const fixture = {
+        name: "sample-event-punctuation-spacing-page",
+        url: "https://example.test/events",
+        title: "Sample Events",
+        lang: "en",
+        html: "",
+        text: "Sample Event\n\nJune 27 , 2026 Doors: 6:00 PM\n\nMain Theater",
+        expectedAnchors: ["June 27, 2026 Doors: 6:00 PM"],
+        expectedEvents: [
+            {
+                title: "Sample Event",
+                date: "June 27, 2026",
+                time: "Doors: 6:00 PM",
+                location: "Main Theater",
+            },
+        ],
+    };
+
+    const audit = auditRealPageFixture(fixture);
+
+    assert.equal(audit.anchorPresence["June 27, 2026 Doors: 6:00 PM"], true);
+    assert.equal(audit.eventLabelResults[0].contextLabelPresence.date, true);
+    assert.equal(audit.eventLabelResults[0].contextLabelPresence.time, true);
+});
+
+test("real page fixture audit matches labels across typographic punctuation", () => {
+    const fixture = {
+        name: "sample-event-typographic-punctuation-page",
+        url: "https://example.test/events",
+        title: "Sample Events",
+        lang: "en",
+        html: "",
+        text: [
+            "Dance Night",
+            "6:00 PM \u2013 8:00 PM",
+            "Cain\u2019s Ballroom",
+            "Theatre Jean-Duceppe",
+            "Cinquieme Salle",
+        ].join("\n\n"),
+        expectedAnchors: ["6:00 PM - 8:00 PM"],
+        expectedEvents: [
+            {
+                title: "Dance Night",
+                time: "6:00 PM - 8:00 PM",
+                location: "Cain's Ballroom",
+                description: "Theatre Jean-Duceppe",
+                labels: ["Cinqui\u00e8me Salle"],
+            },
+        ],
+    };
+
+    const audit = auditRealPageFixture(fixture);
+
+    assert.equal(audit.missingSourceEventLabels.length, 0);
+    assert.equal(audit.missingEventLabels.length, 0);
+});
+
 test("real page fixture audit reports markdown baseline shrinkage", async () => {
     const cleanupDomParser = await installNodeDomParser();
     try {
@@ -477,7 +539,7 @@ test("real page fixture audit reports markdown baseline shrinkage", async () => 
     }
 });
 
-test("real page fixture audit reports previous context growth as a metric", async () => {
+test("real page fixture audit reports previous context ratio as a metric", async () => {
     const cleanupDomParser = await installNodeDomParser();
     try {
         const fixture = {
@@ -514,7 +576,7 @@ test("real page fixture audit reports previous context growth as a metric", asyn
 
         const audit = auditRealPageFixture(fixture);
 
-        assert.ok(audit.shrinkRatioVsPreviousContext > 1);
+        assert.equal(audit.shrinkRatioVsPreviousContext, 0.817);
         assert.equal(audit.passed, true);
     } finally {
         cleanupDomParser();

@@ -24,6 +24,7 @@ export const REAL_PAGE_FIXTURE_DIR = path.join(
 const GENERATED_REAL_PAGE_REPORT_FILES = new Set([
     "report.json",
     "llm-report.json",
+    "old-new-llm-report.json",
 ]);
 
 export function fixtureFileNameForEntry(entry) {
@@ -89,7 +90,19 @@ function normalizeExpectedEvent(event) {
 }
 
 function normalizeSearchText(value) {
-    return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+    return String(value || "")
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[\u2018\u2019\u201b]/g, "'")
+        .replace(/[\u201c\u201d]/g, '"')
+        .replace(/[\u2010-\u2015]/g, "-")
+        .replace(/\s+/g, " ")
+        .replace(/\s+([,.;:!?])/g, "$1")
+        .replace(/([(/])\s+/g, "$1")
+        .replace(/\s+([)/])/g, "$1")
+        .replace(/\s*-\s*/g, "-")
+        .trim()
+        .toLowerCase();
 }
 
 function contextIncludes(combinedContext, label) {
