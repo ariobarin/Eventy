@@ -144,6 +144,33 @@ test("model input preserves later signals inside serialized event blocks", () =>
     assert.doesNotMatch(output, /Navigation item 519/);
 });
 
+test("model input preserves dense serialized event feeds over block budget", () => {
+    const repeatedNoise = Array.from(
+        { length: 520 },
+        (_, index) => `Navigation item ${index} privacy policy subscribe`
+    ).join("\n\n");
+    const serializedEventBlock = Array.from({ length: 40 }, (_, index) =>
+        [
+            `Dense Serialized Event ${index}.`,
+            `Friday June ${(index % 28) + 1}, 2026.`,
+            "7:00 PM.",
+            `Location: Room ${index}.`,
+            "Tickets and registration details are available now.",
+        ].join(" ")
+    ).join(" ");
+    const input = [repeatedNoise, serializedEventBlock, repeatedNoise].join("\n\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /Dense Serialized Event 0/);
+    assert.match(output, /Dense Serialized Event 12/);
+    assert.match(output, /Dense Serialized Event 24/);
+    assert.match(output, /Dense Serialized Event 36/);
+    assert.match(output, /Room 36/);
+    assert.doesNotMatch(output, /Navigation item 519/);
+});
+
 test("model input keeps day-first dates with adjacent event context", () => {
     const repeatedNoise = Array.from(
         { length: 520 },

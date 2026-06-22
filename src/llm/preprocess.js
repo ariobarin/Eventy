@@ -239,6 +239,8 @@ export function tablesToCsvSnippets(
 export const MODEL_INPUT_MAX_CHARS = 18000;
 
 const MODEL_INPUT_MAX_BLOCK_CHARS = 4000;
+const MODEL_INPUT_SIGNAL_CHUNK_CHARS = 1400;
+const MODEL_INPUT_SIGNAL_CHUNK_MIN_SIGNALS = 8;
 const MODEL_INPUT_SIGNAL_SCORE = 8;
 const MODEL_INPUT_LEAD_BLOCKS = 10;
 const MODEL_INPUT_TRUNCATION_NOTICE =
@@ -279,6 +281,47 @@ function normalizeModelText(text) {
         .trim();
 }
 
+function findSignalChunkBreak(text, minEnd, maxEnd) {
+    const breakWindow = text.slice(minEnd, maxEnd);
+    const sentenceBreakPattern = /[.!?]\s+(?=[A-Z0-9#*])/g;
+    let sentenceBreak = -1;
+    let match;
+    while ((match = sentenceBreakPattern.exec(breakWindow))) {
+        sentenceBreak = minEnd + match.index + match[0].length;
+    }
+    if (sentenceBreak > minEnd) return sentenceBreak;
+
+    const whitespaceBreak = text.lastIndexOf(" ", maxEnd);
+    if (whitespaceBreak > minEnd) return whitespaceBreak + 1;
+
+    return maxEnd;
+}
+
+function splitLongSignalParagraph(text) {
+    if (text.length <= MODEL_INPUT_MAX_BLOCK_CHARS) return [text];
+    if (collectSignalOffsets(text).length < MODEL_INPUT_SIGNAL_CHUNK_MIN_SIGNALS) {
+        return [text];
+    }
+
+    const chunks = [];
+    let start = 0;
+    while (start < text.length) {
+        const remainingChars = text.length - start;
+        if (remainingChars <= MODEL_INPUT_SIGNAL_CHUNK_CHARS) {
+            chunks.push(text.slice(start).trim());
+            break;
+        }
+
+        const minEnd = start + Math.floor(MODEL_INPUT_SIGNAL_CHUNK_CHARS * 0.65);
+        const maxEnd = Math.min(text.length, start + MODEL_INPUT_SIGNAL_CHUNK_CHARS);
+        const end = findSignalChunkBreak(text, minEnd, maxEnd);
+        chunks.push(text.slice(start, end).trim());
+        start = end;
+    }
+
+    return chunks.filter(Boolean);
+}
+
 function splitContentBlocks(text) {
     const normalized = normalizeModelText(text);
     if (!normalized) return [];
@@ -287,6 +330,12 @@ function splitContentBlocks(text) {
     for (const paragraph of normalized.split(/\n\s*\n/)) {
         const trimmed = paragraph.trim();
         if (!trimmed) continue;
+
+        const signalChunks = splitLongSignalParagraph(trimmed);
+        if (signalChunks.length > 1) {
+            blocks.push(...signalChunks);
+            continue;
+        }
 
         const lines = trimmed
             .split("\n")
