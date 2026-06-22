@@ -42,9 +42,11 @@ test("LLM judge request uses strict structured output", () => {
     assert.equal(body.response_format.type, "json_schema");
     assert.equal(body.response_format.json_schema.strict, true);
     assert.equal(Object.hasOwn(body, "stream"), false);
+    assert.match(body.messages[0].content, /venue suffix/i);
     assert.match(body.messages[1].content, /Opening Night/);
     assert.match(body.messages[1].content, /extractedEvents/);
     assert.match(body.messages[1].content, /expectedEventsAreExhaustive/);
+    assert.match(body.messages[1].content, /expectedIndex/);
 });
 
 test("LLM judge summary counts matches, misses, and hallucinations", () => {
@@ -87,21 +89,98 @@ test("LLM judge summary treats expected events as non-exhaustive labels", () => 
     });
 });
 
-test("LLM judge summary honors failed judge verdicts", () => {
+test("LLM judge summary ignores extra matches outside expected labels", () => {
     const summary = summarizeJudgeVerdict(
         {
             passed: false,
-            matches: [{ expectedTitle: "Gump Fiction" }],
+            matches: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Kenton Farmers Market",
+                    extractedTitle: "Kenton Farmers Market",
+                },
+                {
+                    expectedIndex: 1,
+                    expectedTitle: "South Waterfront Farmers Market",
+                    extractedTitle: "South Waterfront Farmers Market",
+                },
+                {
+                    expectedTitle: "Void Tattoo Fest Street Fair",
+                    extractedTitle: null,
+                },
+            ],
             misses: [],
             hallucinations: [],
         },
-        { expectedEventCount: 1 }
+        {
+            expectedEventCount: 2,
+            expectedEvents: [
+                { title: "Kenton Farmers Market" },
+                { title: "South Waterfront Farmers Market" },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: true,
+        matches: 2,
+        misses: 0,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary resolves contradictory misses for matched labels", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: true,
+            matches: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Great Opera Hits 2026",
+                    extractedTitle: "Great Opera Hits 2026",
+                },
+            ],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Great Opera Hits 2026",
+                    reason: "The event is present, so this is not a miss.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEventCount: 1,
+            expectedEvents: [{ title: "Great Opera Hits 2026" }],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: true,
+        matches: 1,
+        misses: 0,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary fails missing expected evidence", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [{ expectedIndex: 0, expectedTitle: "Gump Fiction" }],
+            hallucinations: [],
+        },
+        {
+            expectedEventCount: 1,
+            expectedEvents: [{ title: "Gump Fiction" }],
+        }
     );
 
     assert.deepEqual(summary, {
         passed: false,
-        matches: 1,
-        misses: 0,
+        matches: 0,
+        misses: 1,
         hallucinations: 0,
     });
 });

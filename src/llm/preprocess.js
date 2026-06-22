@@ -245,6 +245,7 @@ const MODEL_INPUT_SIGNAL_SCORE = 8;
 const MODEL_INPUT_LEAD_BLOCKS = 10;
 const MODEL_INPUT_TRUNCATION_NOTICE =
     "[Context shortened: source page exceeded the scan budget. Some events or details may be omitted.]";
+const MODEL_INPUT_TRUNCATION_SEPARATOR = "\n\n";
 const MONTH_NAME_PATTERN = "(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\\.?";
 const ORDINAL_DAY_PATTERN = "\\d{1,2}(?:st|nd|rd|th)?";
 const STANDALONE_DAY_WITH_YEAR_PATTERN = `${ORDINAL_DAY_PATTERN}(?:,?\\s*\\d{4})?`;
@@ -480,14 +481,23 @@ function prependTruncationNotice(text, maxChars) {
         return MODEL_INPUT_TRUNCATION_NOTICE.slice(0, maxChars).trim();
     }
 
-    const separator = "\n\n";
-    const bodyMaxChars =
-        maxChars - MODEL_INPUT_TRUNCATION_NOTICE.length - separator.length;
+    const bodyMaxChars = truncationNoticeBodyBudget(maxChars);
     const body = trimToMaxChars(text, bodyMaxChars);
 
     return body
-        ? `${MODEL_INPUT_TRUNCATION_NOTICE}${separator}${body}`
+        ? `${MODEL_INPUT_TRUNCATION_NOTICE}${MODEL_INPUT_TRUNCATION_SEPARATOR}${body}`
         : MODEL_INPUT_TRUNCATION_NOTICE;
+}
+
+function truncationNoticeBodyBudget(maxChars) {
+    if (maxChars <= MODEL_INPUT_TRUNCATION_NOTICE.length) return 0;
+
+    return Math.max(
+        0,
+        maxChars -
+            MODEL_INPUT_TRUNCATION_NOTICE.length -
+            MODEL_INPUT_TRUNCATION_SEPARATOR.length
+    );
 }
 
 // Heuristic scoring for event relevance
@@ -673,6 +683,9 @@ function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
         return normalized;
     }
 
+    const compactBudget = truncationNoticeBodyBudget(maxChars);
+    if (compactBudget <= 0) return prependTruncationNotice("", maxChars);
+
     const blocks = rawBlocks.map((content, index) => ({
         content: clipBlock(content),
         index,
@@ -721,11 +734,11 @@ function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
     for (const [index] of rankedCandidates) {
         const block = blocks[index];
         const addition = block.content.length + (selected.size ? 2 : 0);
-        if (selectedLength + addition > maxChars && selected.size) continue;
+        if (selectedLength + addition > compactBudget && selected.size) continue;
 
         selected.add(index);
         selectedLength += addition;
-        if (selectedLength >= maxChars) break;
+        if (selectedLength >= compactBudget) break;
     }
 
     if (!selected.size) selected.add(0);

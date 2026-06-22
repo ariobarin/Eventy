@@ -26,11 +26,17 @@ const JUDGE_SCHEMA = {
             items: {
                 type: "object",
                 properties: {
+                    expectedIndex: { type: "integer" },
                     expectedTitle: { type: "string" },
                     extractedTitle: { type: ["string", "null"] },
                     reason: { type: "string" },
                 },
-                required: ["expectedTitle", "extractedTitle", "reason"],
+                required: [
+                    "expectedIndex",
+                    "expectedTitle",
+                    "extractedTitle",
+                    "reason",
+                ],
                 additionalProperties: false,
             },
         },
@@ -39,10 +45,11 @@ const JUDGE_SCHEMA = {
             items: {
                 type: "object",
                 properties: {
+                    expectedIndex: { type: "integer" },
                     expectedTitle: { type: "string" },
                     reason: { type: "string" },
                 },
-                required: ["expectedTitle", "reason"],
+                required: ["expectedIndex", "expectedTitle", "reason"],
                 additionalProperties: false,
             },
         },
@@ -71,7 +78,7 @@ export function buildEventJudgeRequestBody({ model, fixture, extractedEvents }) 
             {
                 role: "system",
                 content:
-                    "You judge whether extracted calendar events include source-visible expected events. The expected events are non-exhaustive must-find labels, not a complete inventory. Be strict about missing expected titles, dates, times, and locations, but allow equivalent date formatting. Do not mark an extracted event as a hallucination only because it is absent from the expected list.",
+                    "You judge whether extracted calendar events include source-visible expected events. The expected events are non-exhaustive must-find labels, not a complete inventory. Return exactly one outcome for each expected event: put it in matches if it is present, or misses if it is absent. A matches entry must use the expectedIndex from expectedEvents and must never describe an extra extracted event. Do not list the same expectedIndex in both matches and misses. Be strict about missing expected titles, dates, times, and locations, but allow equivalent date formatting and allow a source-visible venue suffix, category suffix, or stage suffix on extracted titles when the core expected title and other fields match. Do not mark an extracted event as a hallucination only because it is absent from the expected list.",
             },
             {
                 role: "user",
@@ -80,7 +87,12 @@ export function buildEventJudgeRequestBody({ model, fixture, extractedEvents }) 
                         pageName: fixture.name,
                         pageUrl: fixture.finalUrl || fixture.url,
                         expectedEventsAreExhaustive: false,
-                        expectedEvents: fixture.expectedEvents || [],
+                        expectedEvents: (fixture.expectedEvents || []).map(
+                            (event, expectedIndex) => ({
+                                ...event,
+                                expectedIndex,
+                            })
+                        ),
                         extractedEvents,
                     },
                     null,
@@ -105,27 +117,87 @@ export function buildEventJudgeRequestBody({ model, fixture, extractedEvents }) 
 
 export function summarizeJudgeVerdict(
     verdict,
-    { expectedEventCount = 0, groundTruthExhaustive = false } = {}
+    {
+        expectedEventCount = 0,
+        expectedEvents = [],
+        groundTruthExhaustive = false,
+    } = {}
 ) {
-    const matches = Array.isArray(verdict?.matches) ? verdict.matches.length : 0;
-    const misses = Array.isArray(verdict?.misses) ? verdict.misses.length : 0;
+    const rawMatches = Array.isArray(verdict?.matches) ? verdict.matches : [];
+    const rawMisses = Array.isArray(verdict?.misses) ? verdict.misses : [];
     const hallucinations = Array.isArray(verdict?.hallucinations)
         ? verdict.hallucinations.length
         : 0;
+    const expectedCount = expectedEvents.length || expectedEventCount;
+    const expectedTitleKeys = new Map(
+        expectedEvents
+            .map((event, index) => [normalizeJudgeTitle(event?.title), index])
+            .filter(([title]) => title)
+    );
+
+    const hasExpectedEvents = expectedCount > 0;
+    let matches = rawMatches.length;
+    let misses = rawMisses.length;
+
+    if (expectedEvents.length) {
+        const matchedKeys = new Set();
+        for (const match of rawMatches) {
+            if (!match?.extractedTitle) continue;
+            const key = resolveJudgeExpectedKey(
+                match,
+                expectedCount,
+                expectedTitleKeys
+            );
+            if (key) matchedKeys.add(key);
+        }
+
+        const missedKeys = new Set();
+        for (const miss of rawMisses) {
+            const key = resolveJudgeExpectedKey(
+                miss,
+                expectedCount,
+                expectedTitleKeys
+            );
+            if (key && !matchedKeys.has(key)) missedKeys.add(key);
+        }
+
+        matches = matchedKeys.size;
+        misses = missedKeys.size;
+    }
+
     const hasCompleteMatchCount =
-        expectedEventCount > 0 && matches >= expectedEventCount;
-    const hasExpectedEvents = expectedEventCount > 0;
-    const judgePassed = Boolean(verdict?.passed);
+        expectedCount > 0 && matches >= expectedCount;
     return {
         passed:
-            judgePassed &&
             misses === 0 &&
             (!groundTruthExhaustive || hallucinations === 0) &&
-            (hasExpectedEvents ? hasCompleteMatchCount : true),
+            (hasExpectedEvents
+                ? hasCompleteMatchCount
+                : Boolean(verdict?.passed)),
         matches,
         misses,
         hallucinations,
     };
+}
+
+function normalizeJudgeTitle(title) {
+    return String(title || "")
+        .trim()
+        .replace(/\s+/g, " ")
+        .toLowerCase();
+}
+
+function resolveJudgeExpectedKey(item, expectedCount, expectedTitleKeys) {
+    if (
+        Number.isInteger(item?.expectedIndex) &&
+        item.expectedIndex >= 0 &&
+        item.expectedIndex < expectedCount
+    ) {
+        return `index:${item.expectedIndex}`;
+    }
+
+    const titleKey = expectedTitleKeys.get(normalizeJudgeTitle(item?.expectedTitle));
+    return Number.isInteger(titleKey) ? `index:${titleKey}` : null;
 }
 
 export function buildErroredEvalPage({ fixture, model, judgeModel, error }) {
@@ -341,6 +413,7 @@ export async function runRealPageLLMEval({
                 const judge = parseJsonResponse(judgeData);
                 const summary = summarizeJudgeVerdict(judge, {
                     expectedEventCount: fixture.expectedEvents.length,
+                    expectedEvents: fixture.expectedEvents,
                 });
                 pages.push({
                     name: fixture.name,

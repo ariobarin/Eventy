@@ -549,6 +549,31 @@ test("model input marks shortened event-heavy pages", () => {
     assert.match(output, /some events or details may be omitted/i);
 });
 
+test("model input reserves truncation notice budget before selecting event blocks", () => {
+    const leadCopy = Array.from(
+        { length: 10 },
+        (_, index) =>
+            `Visitor information ${index} general copy general copy general copy general copy general copy general copy`
+    ).join("\n\n");
+    const events = Array.from({ length: 134 }, (_, index) =>
+        [
+            `Reserved Budget Event ${index}`,
+            `Friday June ${(index % 28) + 1}, 2026`,
+            `${(index % 12) + 1}:17 PM`,
+            `Location: Budget Hall ${index}`,
+            "Tickets are available from the box office.",
+        ].join("\n\n")
+    ).join("\n\n");
+    const output = buildModelInput(`${leadCopy}\n\n${events}`, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /Context shortened/);
+    assert.match(output, /Reserved Budget Event 133/);
+    assert.match(output, /Friday June 22, 2026/);
+    assert.match(output, /2:17 PM/);
+    assert.match(output, /Location: Budget Hall 133/);
+});
+
 test("html conversion does not prefer generic content chrome over page content", () => {
     const originalDomParser = globalThis.DOMParser;
     globalThis.DOMParser = class {
