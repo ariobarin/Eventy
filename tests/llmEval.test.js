@@ -199,7 +199,7 @@ test("LLM judge summary fails incomplete expected matches", () => {
     assert.deepEqual(summary, {
         passed: false,
         matches: 1,
-        misses: 0,
+        misses: 1,
         hallucinations: 0,
     });
 });

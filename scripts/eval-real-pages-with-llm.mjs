@@ -167,6 +167,10 @@ export function summarizeJudgeVerdict(
 
     const hasCompleteMatchCount =
         expectedCount > 0 && matches >= expectedCount;
+    if (hasExpectedEvents && matches < expectedCount) {
+        misses = Math.max(misses, expectedCount - matches);
+    }
+
     return {
         passed:
             misses === 0 &&
