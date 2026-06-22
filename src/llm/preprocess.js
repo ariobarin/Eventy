@@ -179,12 +179,12 @@ export function tablesToCsvSnippets(
         const snippets = [];
         const cleanCell = (s) => {
             const cleaned = String(s || "")
-                .replace(/"/g, '""')
                 .replace(/[\n\r]+/g, " ")
                 .trim();
-            return cleaned.length > 240
+            const truncated = cleaned.length > 240
                 ? `${cleaned.slice(0, 237).trim()}...`
                 : cleaned;
+            return truncated.replace(/"/g, '""');
         };
         const quote = (s) => '"' + cleanCell(s) + '"';
         for (let ti = 0; ti < Math.min(tables.length, maxTables); ti++) {

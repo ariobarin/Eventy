@@ -661,6 +661,65 @@ test("table csv snippets cap large table context", () => {
     }
 });
 
+test("table csv snippets keep truncated quoted cells valid", () => {
+    const originalDomParser = globalThis.DOMParser;
+    const longQuotedCell = `${"A".repeat(236)}" trailing event details that should be truncated`;
+
+    class FakeRow {
+        constructor(cells) {
+            this.cells = cells.map((textContent) => ({ textContent }));
+        }
+
+        querySelectorAll(selector) {
+            return selector === "td,th" ? this.cells : [];
+        }
+
+        contains(cell) {
+            return this.cells.includes(cell);
+        }
+    }
+
+    class FakeTable {
+        constructor(rows) {
+            this.rows = rows;
+        }
+
+        querySelectorAll(selector) {
+            if (selector === "tr") return this.rows;
+            if (selector === "thead tr th") return this.rows[0].cells;
+            return [];
+        }
+    }
+
+    globalThis.DOMParser = class {
+        parseFromString() {
+            const table = new FakeTable([
+                new FakeRow(["Title", "Details"]),
+                new FakeRow(["Quoted Event", longQuotedCell]),
+            ]);
+            return {
+                querySelectorAll(selector) {
+                    return selector === "table" ? [table] : [];
+                },
+            };
+        }
+    };
+
+    try {
+        const [csv] = tablesToCsvSnippets("<table></table>", 1, 5, 6000);
+        const detailCell = csv.split("\n")[1].split(",")[1];
+
+        assert.match(detailCell, /^"(?:[^"]|"")*"$/);
+        assert.match(detailCell, /\.\.\."$/);
+    } finally {
+        if (originalDomParser === undefined) {
+            delete globalThis.DOMParser;
+        } else {
+            globalThis.DOMParser = originalDomParser;
+        }
+    }
+});
+
 test("popup page scans use compact preprocessing before messaging background", () => {
     const js = fs.readFileSync(new URL("../src/popup.js", import.meta.url), "utf8");
     const start = js.indexOf("async function handleScan()");
