@@ -49,7 +49,7 @@ test("disabled scan hover is delegated to the scan wrapper", () => {
 });
 
 test("popup toast leaves layout after it fades out", () => {
-    const js = fs.readFileSync(new URL("../src/popup.js", import.meta.url), "utf8");
+    const js = fs.readFileSync(new URL("../src/popup/toast.js", import.meta.url), "utf8");
 
     assert.match(js, /toast\.classList\.remove\("visible"\);/);
     assert.match(js, /toast\.dataset\.hideTimeoutId = String\(setTimeout\(\(\) => {/);

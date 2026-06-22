@@ -19,6 +19,7 @@
     },
     "devDependencies": {
         "archiver": "^8.0.0",
-        "chrome-types": "^0.1.429"
+        "chrome-types": "^0.1.429",
+        "jsdom": "^26.1.0"
     }
 }
