@@ -250,6 +250,27 @@ function expectedFieldMatchesExtractedEvent(expected, extracted, field) {
 }
 
 function extractedDateMatchesExpected(extracted, expectedDate) {
+    const expectedRange = parseDateRange(expectedDate);
+    if (dateLooksLikeRange(expectedDate)) {
+        return (
+            expectedRange &&
+            extractedDateRangeMatchesExpected(extracted, expectedRange)
+        );
+    }
+
+    if (!hasExplicitYear(expectedDate)) {
+        const expectedMonthDay = parseMonthDayKey(expectedDate);
+        if (expectedMonthDay) {
+            const hasMatchingMonthDay = [extracted?.startDate, extracted?.endDate]
+                .map(dateKey)
+                .some(
+                    (candidate) =>
+                        candidate && candidate.slice(5) === expectedMonthDay
+                );
+            if (hasMatchingMonthDay) return true;
+        }
+    }
+
     const expectedKey = dateKey(expectedDate);
     if (!expectedKey) {
         return normalizeJudgeText(extractedEventSearchText(extracted)).includes(
@@ -262,6 +283,22 @@ function extractedDateMatchesExpected(extracted, expectedDate) {
         .some((candidate) => candidate === expectedKey);
 }
 
+function extractedDateRangeMatchesExpected(extracted, expectedRange) {
+    return (
+        extractedDatePartMatchesExpected(extracted?.startDate, expectedRange.start) &&
+        extractedDatePartMatchesExpected(extracted?.endDate, expectedRange.end)
+    );
+}
+
+function extractedDatePartMatchesExpected(candidateDate, expectedPart) {
+    const candidateKey = dateKey(candidateDate);
+    if (!candidateKey) return false;
+    if (expectedPart.kind === "monthDay") {
+        return candidateKey.slice(5) === expectedPart.key;
+    }
+    return candidateKey === expectedPart.key;
+}
+
 function extractedTimeMatchesExpected(extracted, expectedTime) {
     const expectedText = normalizeJudgeText(expectedTime);
     const startText = normalizeJudgeText(extracted?.startTime);
@@ -270,6 +307,25 @@ function extractedTimeMatchesExpected(extracted, expectedTime) {
         [extracted?.startTime, extracted?.endTime].filter(Boolean).join(" ")
     );
     const searchText = normalizeJudgeText(extractedEventSearchText(extracted));
+    const expectedRange = parseTimeRange(expectedTime);
+    const startValue = extracted?.startTime;
+    const endValue = extracted?.endTime;
+    const extractedRange =
+        startValue &&
+        endValue &&
+        !parseTimeRange(startValue) &&
+        !parseTimeRange(endValue)
+            ? parseTimeRange(`${startValue} - ${endValue}`)
+            : null;
+
+    if (expectedRange) {
+        return (
+            extractedRange &&
+            expectedRange.start === extractedRange.start &&
+            expectedRange.end === extractedRange.end
+        );
+    }
+    if (timeLooksLikeRange(expectedTime)) return false;
 
     return (
         (startText && expectedText.includes(startText)) ||
@@ -279,10 +335,400 @@ function extractedTimeMatchesExpected(extracted, expectedTime) {
     );
 }
 
+function hasExplicitYear(value) {
+    return /\b\d{4}\b/.test(String(value || ""));
+}
+
+const MONTH_INDEXES = new Map(
+    [
+        ["jan", 1],
+        ["january", 1],
+        ["feb", 2],
+        ["february", 2],
+        ["mar", 3],
+        ["march", 3],
+        ["apr", 4],
+        ["april", 4],
+        ["may", 5],
+        ["jun", 6],
+        ["june", 6],
+        ["jul", 7],
+        ["july", 7],
+        ["aug", 8],
+        ["august", 8],
+        ["sep", 9],
+        ["sept", 9],
+        ["september", 9],
+        ["oct", 10],
+        ["october", 10],
+        ["nov", 11],
+        ["november", 11],
+        ["dec", 12],
+        ["december", 12],
+    ].map(([name, month]) => [name, String(month).padStart(2, "0")])
+);
+
+function parseMonthDayKey(value) {
+    const text = normalizeJudgeText(value);
+    const monthName = "(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)";
+    const day = "(\\d{1,2})(?:st|nd|rd|th)?";
+    const monthFirst = new RegExp(`\\b${monthName}\\.?\\s+${day}\\b`, "i");
+    const dayFirst = new RegExp(`\\b${day}\\s+${monthName}\\.?\\b`, "i");
+    const match = text.match(monthFirst);
+    if (match) return formatMonthDay(match[1], match[2]);
+
+    const reverseMatch = text.match(dayFirst);
+    if (reverseMatch) return formatMonthDay(reverseMatch[2], reverseMatch[1]);
+
+    return "";
+}
+
+function formatMonthDay(monthName, dayValue) {
+    const month = MONTH_INDEXES.get(String(monthName || "").toLowerCase());
+    const day = Number(dayValue);
+    if (!month || !Number.isInteger(day) || day < 1 || day > 31) return "";
+    return `${month}-${String(day).padStart(2, "0")}`;
+}
+
 function dateKey(value) {
+    const parsed = parseDateKey(value);
+    if (parsed) return parsed;
+
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "";
     return date.toISOString().slice(0, 10);
+}
+
+function parseDateKey(value) {
+    return parseStructuredDateKey(value);
+}
+
+function parseStructuredDateKey(value) {
+    const text = normalizeJudgeText(value);
+    const isoMatch = text.match(/\b(\d{4})-(\d{2})-(\d{2})\b/);
+    if (isoMatch) {
+        return validDateParts(isoMatch[1], isoMatch[2], isoMatch[3])
+            ? `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`
+            : "";
+    }
+
+    const monthDayYear = parseNaturalMonthDayYear(text);
+    if (monthDayYear) return monthDayYear;
+
+    const numeric = parseNumericDateKey(text);
+    if (numeric) return numeric;
+
+    return "";
+}
+
+function parseDateRange(value) {
+    const text = normalizeJudgeText(value);
+    const compactRange =
+        parseCompactSameMonthRange(text) ||
+        parseCompactMonthToMonthRange(text) ||
+        parseCompactDayRangeSameMonth(text);
+    if (compactRange) return inferDateRangeYears(compactRange);
+
+    const parts = text
+        .split(/\s+(?:-|to|until)\s+/i)
+        .map((part) => part.trim())
+        .filter(Boolean);
+    if (parts.length < 2) return null;
+
+    const start = parseDateRangePart(parts[0]);
+    const end = parseDateRangePart(parts.slice(1).join(" "));
+    if (!start || !end) return null;
+    return inferDateRangeYears({ start, end });
+}
+
+function parseCompactSameMonthRange(text) {
+    const monthName = "(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)";
+    const day = "(\\d{1,2})(?:st|nd|rd|th)?";
+    const match = String(text || "").match(
+        new RegExp(
+            `\\b${monthName}\\.?\\s+${day}\\s*-\\s*${day}(?:,?\\s+(\\d{4}))?\\b`,
+            "i"
+        )
+    );
+    if (!match) return null;
+
+    const [, monthNameValue, startDay, endDay, year] = match;
+    if (year) {
+        const start = formatDateKey(year, monthNameValue, startDay);
+        const end = formatDateKey(year, monthNameValue, endDay);
+        return start && end
+            ? {
+                  start: { kind: "date", key: start },
+                  end: { kind: "date", key: end },
+              }
+            : null;
+    }
+
+    const start = formatMonthDay(monthNameValue, startDay);
+    const end = formatMonthDay(monthNameValue, endDay);
+    return start && end
+        ? {
+              start: { kind: "monthDay", key: start },
+              end: { kind: "monthDay", key: end },
+          }
+        : null;
+}
+
+function parseCompactMonthToMonthRange(text) {
+    const monthName = "(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)";
+    const day = "(\\d{1,2})(?:st|nd|rd|th)?";
+    const match = String(text || "").match(
+        new RegExp(
+            `\\b${monthName}\\.?\\s+${day}\\s*-\\s*${monthName}\\.?\\s+${day}(?:,?\\s+(\\d{4}))?\\b`,
+            "i"
+        )
+    );
+    if (!match) return null;
+
+    const [, startMonth, startDay, endMonth, endDay, year] = match;
+    if (year) {
+        const start = formatDateKey(year, startMonth, startDay);
+        const end = formatDateKey(year, endMonth, endDay);
+        return start && end
+            ? {
+                  start: { kind: "date", key: start },
+                  end: { kind: "date", key: end },
+              }
+            : null;
+    }
+
+    const start = formatMonthDay(startMonth, startDay);
+    const end = formatMonthDay(endMonth, endDay);
+    return start && end
+        ? {
+              start: { kind: "monthDay", key: start },
+              end: { kind: "monthDay", key: end },
+          }
+        : null;
+}
+
+function parseCompactDayRangeSameMonth(text) {
+    const monthName = "(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)";
+    const day = "(\\d{1,2})(?:st|nd|rd|th)?";
+    const match = String(text || "").match(
+        new RegExp(
+            `\\b(?:[a-z]{2,9}\\s+)?${day}\\s*-\\s*(?:[a-z]{2,9}\\s+)?${day}\\s+${monthName}\\.?(?:,?\\s+(\\d{4}))?\\b`,
+            "i"
+        )
+    );
+    if (!match) return null;
+
+    const [, startDay, endDay, monthNameValue, year] = match;
+    if (year) {
+        const start = formatDateKey(year, monthNameValue, startDay);
+        const end = formatDateKey(year, monthNameValue, endDay);
+        return start && end
+            ? {
+                  start: { kind: "date", key: start },
+                  end: { kind: "date", key: end },
+              }
+            : null;
+    }
+
+    const start = formatMonthDay(monthNameValue, startDay);
+    const end = formatMonthDay(monthNameValue, endDay);
+    return start && end
+        ? {
+              start: { kind: "monthDay", key: start },
+              end: { kind: "monthDay", key: end },
+          }
+        : null;
+}
+
+function parseDateRangePart(value) {
+    const fullDate = parseStructuredDateKey(value);
+    if (fullDate) return { kind: "date", key: fullDate };
+
+    const monthDay = parseMonthDayKey(value);
+    if (monthDay) return { kind: "monthDay", key: monthDay };
+
+    return null;
+}
+
+function inferDateRangeYears(range) {
+    if (range.start.kind === "date" && range.end.kind === "monthDay") {
+        return {
+            start: range.start,
+            end: datePartFromMonthDay(range.end, range.start.key.slice(0, 4)),
+        };
+    }
+
+    if (range.start.kind === "monthDay" && range.end.kind === "date") {
+        return {
+            start: datePartFromMonthDay(range.start, range.end.key.slice(0, 4)),
+            end: range.end,
+        };
+    }
+
+    return range;
+}
+
+function datePartFromMonthDay(part, year) {
+    const [month, day] = String(part.key || "").split("-");
+    return validDateParts(year, month, day)
+        ? { kind: "date", key: `${year}-${month}-${day}` }
+        : part;
+}
+
+function dateLooksLikeRange(value) {
+    const text = normalizeJudgeText(value).replace(
+        /\b\d{4}-\d{2}-\d{2}\b/g,
+        ""
+    );
+    const monthName = "(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)";
+    return (
+        /\b(?:to|until)\b/i.test(text) ||
+        /\s+-\s+/.test(text) ||
+        new RegExp(
+            `\\b${monthName}\\.?\\s+\\d{1,2}(?:st|nd|rd|th)?\\s*-\\s*(?:${monthName}|\\d{1,2})`,
+            "i"
+        ).test(text) ||
+        new RegExp(
+            `\\b\\d{1,2}(?:st|nd|rd|th)?\\s*-\\s*(?:[a-z]{2,9}\\s+)?\\d{1,2}(?:st|nd|rd|th)?\\s+${monthName}\\b`,
+            "i"
+        ).test(text)
+    );
+}
+
+function parseNaturalMonthDayYear(text) {
+    const monthName = "(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)";
+    const day = "(\\d{1,2})(?:st|nd|rd|th)?";
+    const year = "(\\d{4})";
+    const monthFirst = new RegExp(
+        `\\b${monthName}\\.?\\s+${day},?\\s+${year}\\b`,
+        "i"
+    );
+    const dayFirst = new RegExp(
+        `\\b${day}\\s+${monthName}\\.?\\s+${year}\\b`,
+        "i"
+    );
+    const match = text.match(monthFirst);
+    if (match) return formatDateKey(match[3], match[1], match[2]);
+
+    const reverseMatch = text.match(dayFirst);
+    if (reverseMatch) {
+        return formatDateKey(reverseMatch[3], reverseMatch[2], reverseMatch[1]);
+    }
+
+    return "";
+}
+
+function formatDateKey(yearValue, monthName, dayValue) {
+    const month = MONTH_INDEXES.get(String(monthName || "").toLowerCase());
+    const day = String(Number(dayValue)).padStart(2, "0");
+    return validDateParts(yearValue, month, day)
+        ? `${yearValue}-${month}-${day}`
+        : "";
+}
+
+function validDateParts(yearValue, monthValue, dayValue) {
+    const year = Number(yearValue);
+    const month = Number(monthValue);
+    const day = Number(dayValue);
+    if (
+        !Number.isInteger(year) ||
+        !Number.isInteger(month) ||
+        !Number.isInteger(day) ||
+        month < 1 ||
+        month > 12 ||
+        day < 1 ||
+        day > 31
+    ) {
+        return false;
+    }
+
+    const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    return day <= daysInMonth;
+}
+
+function parseNumericDateKey(text) {
+    const match = String(text || "").match(/\b(\d{1,2})[/-](\d{1,2})[/-](\d{4})\b/);
+    if (!match) return "";
+
+    let month = Number(match[1]);
+    let day = Number(match[2]);
+    const year = match[3];
+    if (month > 12 && day <= 12) {
+        [month, day] = [day, month];
+    }
+
+    const monthText = String(month).padStart(2, "0");
+    const dayText = String(day).padStart(2, "0");
+    return validDateParts(year, monthText, dayText)
+        ? `${year}-${monthText}-${dayText}`
+        : "";
+}
+
+function parseTimeRange(value) {
+    const text = String(value || "")
+        .replace(/[\u2010-\u2015]/g, "-")
+        .replace(/\s+/g, " ")
+        .trim();
+    const timePattern =
+        "(\\d{1,2}(?:(?::|\\.)\\d{2})?\\s*(?:[ap](?:\\.?m\\.?)?)?)";
+    const zonePattern = "(?:\\s*[a-z]{2,5})?";
+    const match = text.match(
+        new RegExp(
+            `\\b${timePattern}${zonePattern}\\s*(?:-|to|until)\\s*${timePattern}${zonePattern}\\b`,
+            "i"
+        )
+    );
+    if (!match) return null;
+
+    const endMeridiem = meridiemOf(match[2]);
+    const start = timeMinutes(
+        endMeridiem && !meridiemOf(match[1])
+            ? `${match[1]} ${endMeridiem}`
+            : match[1]
+    );
+    const end = timeMinutes(match[2]);
+    if (start === null || end === null) return null;
+    return { start, end };
+}
+
+function timeLooksLikeRange(value) {
+    const text = String(value || "")
+        .replace(/[\u2010-\u2015]/g, "-")
+        .replace(/\s+/g, " ")
+        .trim();
+    return /\b\d{1,2}(?::\d{2})?\s*(?:[ap]\.?m\.?)?(?:\s*[a-z]{2,5})?\s*(?:-|to|until)\s*\d{1,2}/i.test(
+        text
+    );
+}
+
+function meridiemOf(value) {
+    return String(value || "")
+        .match(/\b([ap])\.?m\.?\b/i)?.[1]
+        ?.toLowerCase();
+}
+
+function timeMinutes(value) {
+    const match = String(value || "")
+        .trim()
+        .match(/^(\d{1,2})(?:(?::|\.)(\d{2}))?\s*([ap])?\.?m?\.?$/i);
+    if (!match) return null;
+
+    let hour = Number(match[1]);
+    const minute = Number(match[2] || 0);
+    const meridiem = match[3]?.toLowerCase();
+    if (!Number.isFinite(hour) || !Number.isFinite(minute) || minute > 59) {
+        return null;
+    }
+
+    if (meridiem) {
+        if (hour < 1 || hour > 12) return null;
+        if (meridiem === "a") hour = hour === 12 ? 0 : hour;
+        if (meridiem === "p") hour = hour === 12 ? 12 : hour + 12;
+    } else if (hour > 23) {
+        return null;
+    }
+
+    return hour * 60 + minute;
 }
 
 function extractedEventSearchText(extracted) {

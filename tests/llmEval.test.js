@@ -230,6 +230,919 @@ test("LLM judge summary reconciles exact extracted events missed by judge", () =
     });
 });
 
+test("LLM judge summary reconciles yearless expected dates by month and day", () => {
+    const originalTz = process.env.TZ;
+    process.env.TZ = "Pacific/Kiritimati";
+    try {
+        const summary = summarizeJudgeVerdict(
+            {
+                passed: false,
+                matches: [],
+                misses: [
+                    {
+                        expectedIndex: 0,
+                        expectedTitle: "Great Opera Hits 2026",
+                        reason: "The event is present with the same month and day.",
+                    },
+                ],
+                hallucinations: [],
+            },
+            {
+                expectedEvents: [
+                    {
+                        title: "Great Opera Hits 2026",
+                        date: "5 July",
+                    },
+                ],
+                extractedEvents: [
+                    {
+                        title: "Great Opera Hits 2026",
+                        startDate: "2026-07-05",
+                    },
+                ],
+            }
+        );
+
+        assert.deepEqual(summary, {
+            passed: true,
+            matches: 1,
+            misses: 0,
+            hallucinations: 0,
+        });
+    } finally {
+        if (originalTz === undefined) {
+            delete process.env.TZ;
+        } else {
+            process.env.TZ = originalTz;
+        }
+    }
+});
+
+test("LLM judge summary reconciles natural language dates across timezones", () => {
+    const originalTz = process.env.TZ;
+    process.env.TZ = "Pacific/Kiritimati";
+    try {
+        const summary = summarizeJudgeVerdict(
+            {
+                passed: false,
+                matches: [],
+                misses: [
+                    {
+                        expectedIndex: 0,
+                        expectedTitle: "Great Opera Hits 2026",
+                        reason: "The event is present with the same date.",
+                    },
+                ],
+                hallucinations: [],
+            },
+            {
+                expectedEvents: [
+                    {
+                        title: "Great Opera Hits 2026",
+                        date: "July 5, 2026",
+                    },
+                ],
+                extractedEvents: [
+                    {
+                        title: "Great Opera Hits 2026",
+                        startDate: "2026-07-05",
+                    },
+                ],
+            }
+        );
+
+        assert.deepEqual(summary, {
+            passed: true,
+            matches: 1,
+            misses: 0,
+            hallucinations: 0,
+        });
+    } finally {
+        if (originalTz === undefined) {
+            delete process.env.TZ;
+        } else {
+            process.env.TZ = originalTz;
+        }
+    }
+});
+
+test("LLM judge summary reconciles numeric slash dates across timezones", () => {
+    const originalTz = process.env.TZ;
+    process.env.TZ = "Pacific/Kiritimati";
+    try {
+        const summary = summarizeJudgeVerdict(
+            {
+                passed: false,
+                matches: [],
+                misses: [
+                    {
+                        expectedIndex: 0,
+                        expectedTitle: "Community Briefing",
+                        reason: "The event is present with the same date.",
+                    },
+                ],
+                hallucinations: [],
+            },
+            {
+                expectedEvents: [
+                    {
+                        title: "Community Briefing",
+                        date: "Monday, 6/22/2026",
+                    },
+                ],
+                extractedEvents: [
+                    {
+                        title: "Community Briefing",
+                        startDate: "2026-06-22",
+                    },
+                ],
+            }
+        );
+
+        assert.deepEqual(summary, {
+            passed: true,
+            matches: 1,
+            misses: 0,
+            hallucinations: 0,
+        });
+    } finally {
+        if (originalTz === undefined) {
+            delete process.env.TZ;
+        } else {
+            process.env.TZ = originalTz;
+        }
+    }
+});
+
+test("LLM judge summary does not reconcile date ranges missing an end date", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Summer Exhibition",
+                    reason: "The extraction is missing the range end.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Summer Exhibition",
+                    date: "June 29, 2026 - Jul 2, 2026",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Summer Exhibition",
+                    startDate: "2026-06-29",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: false,
+        matches: 0,
+        misses: 1,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary does not reconcile yearless date ranges missing an end date", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Summer Exhibition",
+                    reason: "The extraction is missing the range end.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Summer Exhibition",
+                    date: "May 19th - Aug 2nd",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Summer Exhibition",
+                    startDate: "2026-05-19",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: false,
+        matches: 0,
+        misses: 1,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary does not reconcile compact date ranges missing an end date", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Workshop Week",
+                    reason: "The extraction is missing the range end.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Workshop Week",
+                    date: "June 13-19",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Workshop Week",
+                    startDate: "2026-06-13",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: false,
+        matches: 0,
+        misses: 1,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary does not reconcile month-to-month ranges missing an end date", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Long Exhibition",
+                    reason: "The extraction is missing the range end.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Long Exhibition",
+                    date: "May 19th-Aug 2nd",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Long Exhibition",
+                    startDate: "2026-05-19",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: false,
+        matches: 0,
+        misses: 1,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary infers missing range years from the other endpoint", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Summer Festival",
+                    reason: "The extracted start date is in the wrong year.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Summer Festival",
+                    date: "June 11 to July 19, 2026",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Summer Festival",
+                    startDate: "2025-06-11",
+                    endDate: "2026-07-19",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: false,
+        matches: 0,
+        misses: 1,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary reconciles complete date ranges", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Summer Exhibition",
+                    reason: "The extraction includes both range ends.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Summer Exhibition",
+                    date: "June 29, 2026 - Jul 2, 2026",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Summer Exhibition",
+                    startDate: "2026-06-29",
+                    endDate: "2026-07-02",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: true,
+        matches: 1,
+        misses: 0,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary reconciles shorthand expected time ranges", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Community Market",
+                    reason: "The extracted event has the correct expanded range.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Community Market",
+                    time: "5-6 PM",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Community Market",
+                    startTime: "5:00 PM",
+                    endTime: "6:00 PM",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: true,
+        matches: 1,
+        misses: 0,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary reconciles expected time ranges with timezone text", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Research Workshop",
+                    reason: "The extracted event has the correct expanded range.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Research Workshop",
+                    time: "5:15pm UTC - 8pm UTC",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Research Workshop",
+                    startTime: "5:15 PM",
+                    endTime: "8:00 PM",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: true,
+        matches: 1,
+        misses: 0,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary reconciles dotted-minute expected time ranges", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Gallery Tour",
+                    reason: "The extracted event has the correct dotted-minute range.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Gallery Tour",
+                    time: "11am - 11.45am",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Gallery Tour",
+                    startTime: "11:00 AM",
+                    endTime: "11:45 AM",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: true,
+        matches: 1,
+        misses: 0,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary does not reconcile dotted-minute ranges with wrong endpoints", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Gallery Tour",
+                    reason: "The extracted end time is wrong.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Gallery Tour",
+                    time: "11am - 11.45am",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Gallery Tour",
+                    startTime: "11:00 AM",
+                    endTime: "11:00 AM",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: false,
+        matches: 0,
+        misses: 1,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary reconciles dot-separated twenty-four-hour ranges", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Community Drop In",
+                    reason: "The extracted event has the correct dot-separated range.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Community Drop In",
+                    time: "08.00-11.00",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Community Drop In",
+                    startTime: "08:00",
+                    endTime: "11:00",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: true,
+        matches: 1,
+        misses: 0,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary does not reconcile dot-separated ranges with wrong starts", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Community Drop In",
+                    reason: "The extracted start time is wrong.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Community Drop In",
+                    time: "08.00-11.00",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Community Drop In",
+                    startTime: "00:00",
+                    endTime: "11:00",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: false,
+        matches: 0,
+        misses: 1,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary reconciles single-letter meridiem ranges", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Morning Session",
+                    reason: "The extracted event has the correct compact range.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Morning Session",
+                    time: "11a-12p",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Morning Session",
+                    startTime: "11:00 AM",
+                    endTime: "12:00 PM",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: true,
+        matches: 1,
+        misses: 0,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary does not reconcile single-letter meridiem ranges from descriptions", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Morning Session",
+                    reason: "The extraction is missing structured time fields.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Morning Session",
+                    time: "11a-12p",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Morning Session",
+                    description: "11a-12p",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: false,
+        matches: 0,
+        misses: 1,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary does not reconcile shorthand ranges missing an end time", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Community Market",
+                    reason: "The extraction is missing the range end.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Community Market",
+                    time: "5-6 PM",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Community Market",
+                    startTime: "5",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: false,
+        matches: 0,
+        misses: 1,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary does not reconcile timezone ranges from descriptions", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Research Workshop",
+                    reason: "The extraction is missing structured range fields.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Research Workshop",
+                    time: "5:15pm UTC - 8pm UTC",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Research Workshop",
+                    description: "5:15pm UTC - 8pm UTC",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: false,
+        matches: 0,
+        misses: 1,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary does not reconcile timezone ranges from a single time field", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Research Workshop",
+                    reason: "The extraction is missing separate structured range fields.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Research Workshop",
+                    time: "5:15pm UTC - 8pm UTC",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Research Workshop",
+                    startTime: "5:15pm UTC - 8pm UTC",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: false,
+        matches: 0,
+        misses: 1,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary does not reconcile time ranges from a single start field", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Community Market",
+                    reason: "The extraction is missing a separate structured end time.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Community Market",
+                    time: "5-6 PM",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Community Market",
+                    startTime: "5:00 PM - 6:00 PM",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: false,
+        matches: 0,
+        misses: 1,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary does not reconcile time ranges from a single end field", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Community Market",
+                    reason: "The extraction is missing a separate structured start time.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Community Market",
+                    time: "5-6 PM",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Community Market",
+                    endTime: "5:00 PM - 6:00 PM",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: false,
+        matches: 0,
+        misses: 1,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary does not reconcile expected time ranges from descriptions", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Community Market",
+                    reason: "The extraction is missing structured times.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Community Market",
+                    time: "5-6 PM",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Community Market",
+                    description: "Doors at 5-6 PM.",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: false,
+        matches: 0,
+        misses: 1,
+        hallucinations: 0,
+    });
+});
+
 test("LLM judge summary does not reconcile missing expected fields", () => {
     const summary = summarizeJudgeVerdict(
         {
