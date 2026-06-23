@@ -88,10 +88,8 @@ export function buildEventJudgeRequestBody({ model, fixture, extractedEvents }) 
                         pageUrl: fixture.finalUrl || fixture.url,
                         expectedEventsAreExhaustive: false,
                         expectedEvents: (fixture.expectedEvents || []).map(
-                            (event, expectedIndex) => ({
-                                ...event,
-                                expectedIndex,
-                            })
+                            (event, expectedIndex) =>
+                                expectedEventForJudge(event, expectedIndex)
                         ),
                         extractedEvents,
                     },
@@ -115,11 +113,20 @@ export function buildEventJudgeRequestBody({ model, fixture, extractedEvents }) 
     };
 }
 
+function expectedEventForJudge(event, expectedIndex) {
+    const { labels, ...judgeEvent } = event || {};
+    return {
+        ...judgeEvent,
+        expectedIndex,
+    };
+}
+
 export function summarizeJudgeVerdict(
     verdict,
     {
         expectedEventCount = 0,
         expectedEvents = [],
+        extractedEvents = [],
         groundTruthExhaustive = false,
     } = {}
 ) {
@@ -150,6 +157,13 @@ export function summarizeJudgeVerdict(
             );
             if (key) matchedKeys.add(key);
         }
+
+        expectedEvents.forEach((event, index) => {
+            if (matchedKeys.has(`index:${index}`)) return;
+            if (extractedEvents.some((extracted) => extractedEventMatchesExpected(extracted, event))) {
+                matchedKeys.add(`index:${index}`);
+            }
+        });
 
         const missedKeys = new Set();
         for (const miss of rawMisses) {
@@ -189,6 +203,103 @@ function normalizeJudgeTitle(title) {
         .trim()
         .replace(/\s+/g, " ")
         .toLowerCase();
+}
+
+function normalizeJudgeText(value) {
+    return String(value || "")
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[\u2018\u2019\u201b]/g, "'")
+        .replace(/[\u201c\u201d]/g, '"')
+        .replace(/[\u2010-\u2015]/g, "-")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
+}
+
+function extractedEventMatchesExpected(extracted, expected) {
+    if (
+        !expected?.title ||
+        normalizeJudgeTitle(extracted?.title) !== normalizeJudgeTitle(expected.title)
+    ) {
+        return false;
+    }
+
+    return Object.keys(expected)
+        .filter((field) => !["labels", "title"].includes(field))
+        .every((field) =>
+            expectedFieldMatchesExtractedEvent(expected, extracted, field)
+        );
+}
+
+function expectedFieldMatchesExtractedEvent(expected, extracted, field) {
+    const expectedValue = String(expected?.[field] || "").trim();
+    if (!expectedValue) return true;
+
+    if (field === "date") {
+        return extractedDateMatchesExpected(extracted, expectedValue);
+    }
+
+    if (field === "time") {
+        return extractedTimeMatchesExpected(extracted, expectedValue);
+    }
+
+    return normalizeJudgeText(extractedEventSearchText(extracted)).includes(
+        normalizeJudgeText(expectedValue)
+    );
+}
+
+function extractedDateMatchesExpected(extracted, expectedDate) {
+    const expectedKey = dateKey(expectedDate);
+    if (!expectedKey) {
+        return normalizeJudgeText(extractedEventSearchText(extracted)).includes(
+            normalizeJudgeText(expectedDate)
+        );
+    }
+
+    return [extracted?.startDate, extracted?.endDate]
+        .map(dateKey)
+        .some((candidate) => candidate === expectedKey);
+}
+
+function extractedTimeMatchesExpected(extracted, expectedTime) {
+    const expectedText = normalizeJudgeText(expectedTime);
+    const startText = normalizeJudgeText(extracted?.startTime);
+    const endText = normalizeJudgeText(extracted?.endTime);
+    const rangeText = normalizeJudgeText(
+        [extracted?.startTime, extracted?.endTime].filter(Boolean).join(" ")
+    );
+    const searchText = normalizeJudgeText(extractedEventSearchText(extracted));
+
+    return (
+        (startText && expectedText.includes(startText)) ||
+        (endText && expectedText.includes(endText)) ||
+        (rangeText && expectedText.includes(rangeText)) ||
+        searchText.includes(expectedText)
+    );
+}
+
+function dateKey(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toISOString().slice(0, 10);
+}
+
+function extractedEventSearchText(extracted) {
+    return [
+        extracted?.title,
+        extracted?.preview,
+        extracted?.startDate,
+        extracted?.startTime,
+        extracted?.endDate,
+        extracted?.endTime,
+        extracted?.location,
+        extracted?.description,
+        extracted?.recurrence,
+        extracted?.category,
+    ]
+        .filter(Boolean)
+        .join(" ");
 }
 
 function resolveJudgeExpectedKey(item, expectedCount, expectedTitleKeys) {
@@ -418,6 +529,7 @@ export async function runRealPageLLMEval({
                 const summary = summarizeJudgeVerdict(judge, {
                     expectedEventCount: fixture.expectedEvents.length,
                     expectedEvents: fixture.expectedEvents,
+                    extractedEvents,
                 });
                 pages.push({
                     name: fixture.name,

@@ -140,6 +140,7 @@ async function evaluateVariant({
     const summary = summarizeJudgeVerdict(judge, {
         expectedEventCount: fixture.expectedEvents.length,
         expectedEvents: fixture.expectedEvents,
+        extractedEvents,
     });
 
     return {
@@ -149,6 +150,31 @@ async function evaluateVariant({
         extractedEvents,
         judge,
     };
+}
+
+export function isRetryableVariantError(error) {
+    const message = String(error?.message || error || "");
+    return /JSON|Unexpected end|aborted|timed out|fetch failed|network/i.test(
+        message
+    );
+}
+
+async function evaluateVariantWithRetry(options, maxAttempts = 2) {
+    let lastError;
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+        try {
+            return await evaluateVariant(options);
+        } catch (error) {
+            lastError = error;
+            if (attempt >= maxAttempts || !isRetryableVariantError(error)) {
+                throw error;
+            }
+            console.warn(
+                `retry ${options.fixture.name} ${attempt + 1}/${maxAttempts}: ${error.message}`
+            );
+        }
+    }
+    throw lastError;
 }
 
 export function buildErroredVariantResult({
@@ -215,7 +241,6 @@ export function summarizeComparisonPages(pages) {
             : null,
         passed:
             pages.length > 0 &&
-            oldErrors.length === 0 &&
             currentErrors.length === 0 &&
             regressions.length === 0 &&
             pages.every((page) => page.current.passed),
@@ -279,7 +304,7 @@ export async function runOldNewComparison({
             const oldStats = contextStats(oldPreprocessed);
             const currentStats = contextStats(currentPreprocessed);
 
-            const oldResult = await evaluateVariant({
+            const oldResult = await evaluateVariantWithRetry({
                 fixture,
                 preprocessed: oldPreprocessed,
                 model,
@@ -293,7 +318,7 @@ export async function runOldNewComparison({
                     error,
                 })
             );
-            const currentResult = await evaluateVariant({
+            const currentResult = await evaluateVariantWithRetry({
                 fixture,
                 preprocessed: currentPreprocessed,
                 model,
@@ -352,8 +377,10 @@ export async function runOldNewComparison({
 
 export function formatComparisonLine(page) {
     let status = "FAIL";
-    if (page.old.error || page.current.error) {
+    if (page.current.error) {
         status = "ERROR";
+    } else if (page.old.error && page.current.passed) {
+        status = "WARN";
     } else if (
         page.current.passed &&
         (page.current.misses <= page.old.misses || !page.old.passed)

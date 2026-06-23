@@ -5,6 +5,7 @@ import {
     buildErroredVariantResult,
     contextStats,
     formatComparisonLine,
+    isRetryableVariantError,
     summarizeComparisonPages,
 } from "../scripts/compare-real-pages-old-new.mjs";
 
@@ -22,6 +23,14 @@ test("context comparison stats count model and csv input", () => {
             contextChars: 11,
         }
     );
+});
+
+test("old-new comparison retries transient LLM response errors only", () => {
+    assert.equal(
+        isRetryableVariantError(new Error("Unexpected end of JSON input")),
+        true
+    );
+    assert.equal(isRetryableVariantError(new Error("The user is missing")), false);
 });
 
 test("old-new comparison summary reports savings and regressions", () => {
@@ -52,7 +61,7 @@ test("old-new comparison summary reports savings and regressions", () => {
     assert.equal(summary.passed, false);
 });
 
-test("old-new comparison summary fails when either side errors", () => {
+test("old-new comparison summary reports baseline errors without blocking current pass", () => {
     const summary = summarizeComparisonPages([
         {
             name: "old-timeout",
@@ -64,6 +73,17 @@ test("old-new comparison summary fails when either side errors", () => {
             },
             current: { passed: true, misses: 0, contextChars: 500 },
         },
+    ]);
+
+    assert.equal(summary.passed, true);
+    assert.deepEqual(summary.oldErrors, ["old-timeout"]);
+    assert.deepEqual(summary.currentErrors, []);
+    assert.deepEqual(summary.regressions, []);
+    assert.deepEqual(summary.improvements, []);
+});
+
+test("old-new comparison summary fails when current errors", () => {
+    const summary = summarizeComparisonPages([
         {
             name: "current-timeout",
             old: { passed: true, misses: 0, contextChars: 800 },
@@ -77,7 +97,7 @@ test("old-new comparison summary fails when either side errors", () => {
     ]);
 
     assert.equal(summary.passed, false);
-    assert.deepEqual(summary.oldErrors, ["old-timeout"]);
+    assert.deepEqual(summary.oldErrors, []);
     assert.deepEqual(summary.currentErrors, ["current-timeout"]);
     assert.deepEqual(summary.regressions, []);
     assert.deepEqual(summary.improvements, []);
@@ -100,6 +120,23 @@ test("old-new comparison line includes quality and size deltas", () => {
 test("old-new comparison line marks request errors explicitly", () => {
     const line = formatComparisonLine({
         name: "timeout-page",
+        old: { passed: true, misses: 0, contextChars: 1000 },
+        current: {
+            passed: false,
+            misses: 1,
+            contextChars: 250,
+            error: "timed out",
+        },
+        savedContextChars: 750,
+    });
+
+    assert.match(line, /^ERROR timeout-page /);
+    assert.match(line, /currentError=timed out/);
+});
+
+test("old-new comparison line warns on baseline-only errors", () => {
+    const line = formatComparisonLine({
+        name: "timeout-page",
         old: {
             passed: false,
             misses: 1,
@@ -110,7 +147,7 @@ test("old-new comparison line marks request errors explicitly", () => {
         savedContextChars: 750,
     });
 
-    assert.match(line, /^ERROR timeout-page /);
+    assert.match(line, /^WARN timeout-page /);
     assert.match(line, /oldError=timed out/);
 });
 

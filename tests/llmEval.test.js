@@ -26,6 +26,7 @@ test("LLM judge request uses strict structured output", () => {
                     title: "Opening Night",
                     date: "June 26, 2026",
                     location: "Main Hall",
+                    labels: ["source-only audit marker"],
                 },
             ],
         },
@@ -48,6 +49,7 @@ test("LLM judge request uses strict structured output", () => {
     assert.match(body.messages[1].content, /extractedEvents/);
     assert.match(body.messages[1].content, /expectedEventsAreExhaustive/);
     assert.match(body.messages[1].content, /expectedIndex/);
+    assert.doesNotMatch(body.messages[1].content, /source-only audit marker/);
 });
 
 test("LLM judge summary counts matches, misses, and hallucinations", () => {
@@ -164,6 +166,114 @@ test("LLM judge summary resolves contradictory misses for matched labels", () =>
     });
 });
 
+test("LLM judge summary reconciles exact extracted events missed by judge", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Second Chance Seed Library",
+                    extractedTitle: "Second Chance Seed Library",
+                    reason: "Title and date match.",
+                },
+            ],
+            misses: [
+                {
+                    expectedIndex: 1,
+                    expectedTitle:
+                        "In-Person One-to-One English Conversation (Reston Regional Library)",
+                    reason:
+                        "The extracted event has matching title, date, time, and location. It should be considered matched.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Second Chance Seed Library",
+                    date: "June 22, 2026",
+                    location: "John Marshall Library",
+                },
+                {
+                    title:
+                        "In-Person One-to-One English Conversation (Reston Regional Library)",
+                    date: "June 23, 2026",
+                    time: "10:00am - 11:00am",
+                    location: "Reston Regional Library",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Second Chance Seed Library",
+                    startDate: "2026-06-22",
+                    location: "John Marshall Library",
+                },
+                {
+                    title:
+                        "In-Person One-to-One English Conversation (Reston Regional Library)",
+                    startDate: "2026-06-23",
+                    startTime: "10:00am",
+                    endTime: "11:00am",
+                    location: "Reston Large Print Area, Reston Regional Library",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: true,
+        matches: 2,
+        misses: 0,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary does not reconcile missing expected fields", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "DNewTech - July 2026",
+                    reason: "The extracted event is missing recurrence.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "DNewTech - July 2026",
+                    date: "Wednesday, July 8, 2026",
+                    time: "6:30 PM to 8:30 PM EDT",
+                    location: "Tech Town Detroit",
+                    recurrence: "2nd Wednesday of the month",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "DNewTech - July 2026",
+                    startDate: "2026-07-08",
+                    startTime: "6:30 PM",
+                    endTime: "8:30 PM",
+                    location: "Tech Town Detroit",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: false,
+        matches: 0,
+        misses: 1,
+        hallucinations: 0,
+    });
+});
+
 test("LLM judge summary fails missing expected evidence", () => {
     const summary = summarizeJudgeVerdict(
         {
@@ -210,7 +320,7 @@ test("LLM eval can use a proxy transport without exposing OpenRouter auth", () =
         env: {
             EVENTY_EVAL_PROXY_URL: "https://example.test/api",
             EVENTY_EVAL_PROXY_TOKEN: "shared-token",
-            OPENROUTER_API_KEY: "sk-or-v1-raw-key",
+            OPENROUTER_API_KEY: "fake-openrouter-key",
         },
     });
     const request = buildEvalTransportRequest({

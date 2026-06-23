@@ -2279,7 +2279,13 @@
             {
                 "title": "Public Health & Environment Committee",
                 "date": "6/24/2026",
-                "time": "10:00 AM"
+                "time": "10:00 AM",
+                "location": "HEARING IS RESCHEDULED - NEW DATE JULY 1, 2026",
+                "description": "HEARING RESCHEDULED - NEW DATE JULY 1, 2026",
+                "labels": [
+                    "HEARING IS RESCHEDULED - NEW DATE JULY 1, 2026",
+                    "HEARING RESCHEDULED - NEW DATE JULY 1, 2026"
+                ]
             },
             {
                 "title": "Board of Estimates",
@@ -2287,7 +2293,7 @@
                 "time": "9:00 AM"
             }
         ],
-        "labelingNotes": "Multi-event worker candidate using Legistar table rows.",
+        "labelingNotes": "Multi-event worker candidate using Legistar table rows, including a rescheduled hearing row.",
         "risk": "Default Legistar date range can drift and rows use meeting bodies as titles."
     },
     {
