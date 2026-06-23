@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 
 import {
     buildStaticComparisonPage,
@@ -10,6 +13,9 @@ import {
     isRetryableVariantError,
     summarizeComparisonPages,
 } from "../scripts/compare-real-pages-old-new.mjs";
+import {
+    loadCapturedRealPageFixtures,
+} from "../scripts/real-page-fixtures.mjs";
 
 test("context comparison stats count model and csv input", () => {
     assert.deepEqual(
@@ -179,6 +185,28 @@ test("static variant result evaluates event labels across model and csv context"
     assert.equal(result.contextChars, 75);
 });
 
+test("static variant result evaluates custom expected labels", () => {
+    const result = buildStaticVariantResult({
+        fixture: {
+            expectedEvents: [
+                {
+                    title: "Community Jam",
+                    labels: ["All ages", "Pay what you can"],
+                },
+            ],
+        },
+        preprocessed: {
+            modelHtml: "Community Jam\nAll ages",
+            csvSnippets: [],
+        },
+    });
+
+    assert.equal(result.passed, false);
+    assert.deepEqual(result.missingEventLabels, [
+        "Community Jam: label-2=Pay what you can",
+    ]);
+});
+
 test("static variant result reports missing retained labels", () => {
     const result = buildStaticVariantResult({
         fixture: {
@@ -202,6 +230,24 @@ test("static variant result reports missing retained labels", () => {
     assert.deepEqual(result.missingEventLabels, [
         "Missing Details Talk: location=Room 101",
     ]);
+});
+
+test("captured fixture loader ignores generated static reports", async () => {
+    const fixtureDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), "eventy-real-pages-")
+    );
+    await fs.writeFile(
+        path.join(fixtureDir, "sample-event-page.json"),
+        JSON.stringify({ name: "sample event page" })
+    );
+    await fs.writeFile(
+        path.join(fixtureDir, "old-new-static-report.json"),
+        JSON.stringify({ pageCount: 1, pages: [] })
+    );
+
+    const fixtures = await loadCapturedRealPageFixtures(fixtureDir);
+
+    assert.deepEqual(fixtures, [{ name: "sample event page" }]);
 });
 
 test("static comparison page reports retention changes and savings", () => {

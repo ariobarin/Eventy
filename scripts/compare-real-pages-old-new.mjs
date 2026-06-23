@@ -442,7 +442,11 @@ export async function runOldNewComparison({
 
 export async function runOldNewStaticComparison({
     names = [],
-    reportPath = path.join(REAL_PAGE_FIXTURE_DIR, "old-new-static-report.json"),
+    reportPath = path.join(
+        REAL_PAGE_FIXTURE_DIR,
+        "reports",
+        "old-new-static-report.json"
+    ),
 } = {}) {
     const cleanupDomParser = await installNodeDomParser();
     const pages = [];

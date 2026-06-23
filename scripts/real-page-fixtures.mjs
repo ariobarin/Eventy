@@ -25,7 +25,7 @@ export const REAL_PAGE_FIXTURE_DIR = path.join(
     "real-pages"
 );
 const GENERATED_REAL_PAGE_REPORT_FILE_PATTERN =
-    /^(?:report|llm-report|old-new-llm-report)(?:-[^.]+)?\.json$/;
+    /^(?:report|llm-report|old-new-(?:llm|static)-report)(?:-[^.]+)?\.json$/;
 
 export function fixtureFileNameForEntry(entry) {
     const safeName = String(entry?.name || "")
@@ -326,33 +326,47 @@ export function auditExpectedEventLabels(
     combinedContext
 ) {
     const title = event.title || `event-${index + 1}`;
-    const fieldLabels = EVENT_LABEL_FIELDS.map((field) => ({
-        field,
-        label: String(event[field] || "").trim(),
-    })).filter((label) => label.label);
+    const fieldLabels = EVENT_LABEL_FIELDS.flatMap((field) => {
+        const label = String(event[field] || "").trim();
+        return label ? [{ field, label }] : [];
+    });
+    const customLabels = (Array.isArray(event.labels) ? event.labels : [])
+        .map((label) => String(label || "").trim())
+        .filter(Boolean)
+        .filter(
+            (label) =>
+                !fieldLabels.some(
+                    (fieldLabel) => fieldLabel.label === label
+                )
+        )
+        .map((label, labelIndex) => ({
+            field: `label-${labelIndex + 1}`,
+            label,
+        }));
+    const labels = [...fieldLabels, ...customLabels];
     const sourceLabelPresence = Object.fromEntries(
-        fieldLabels.map(({ field, label }) => [
+        labels.map(({ field, label }) => [
             field,
             contextIncludes(sourceContext, label),
         ])
     );
     const contextLabelPresence = Object.fromEntries(
-        fieldLabels.map(({ field, label }) => [
+        labels.map(({ field, label }) => [
             field,
             contextIncludes(combinedContext, label),
         ])
     );
-    const missingSourceLabels = fieldLabels.filter(
+    const missingSourceLabels = labels.filter(
         ({ field }) => !sourceLabelPresence[field]
     );
-    const missingContextLabels = fieldLabels.filter(
+    const missingContextLabels = labels.filter(
         ({ field }) => !contextLabelPresence[field]
     );
 
     return {
         index,
         title,
-        labels: fieldLabels,
+        labels,
         sourceLabelPresence,
         contextLabelPresence,
         labelPresence: contextLabelPresence,
