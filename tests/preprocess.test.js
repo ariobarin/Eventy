@@ -778,6 +778,180 @@ test("model input prefers complete rendered text when it fits budget", () => {
     }
 });
 
+test("model input keeps hidden html event details over sparse rendered chrome", () => {
+    const originalDomParser = globalThis.DOMParser;
+    globalThis.DOMParser = class {
+        parseFromString(html) {
+            return new JSDOM(html).window.document;
+        }
+    };
+
+    try {
+        const text = [
+            "Events Happening at Civic Square",
+            "Hear music? Spot a crowd? Wondering what is happening at Civic Square?",
+            "The Square is a bustling civic space with community and special events popping up throughout the year. Whether you are passing through or coming to visit, explore the schedule below to find out what is happening today and in the days ahead.",
+            "For more details about each event, click the linked event organizer website or social media channel.",
+            "Please note, this schedule is not a tool for determining availability. Learn how to book Civic Square.",
+            "Expand All",
+            "Events Happening at Civic Square accordion panels",
+            "Collapse All",
+            "Events Happening at Civic Square accordion panels",
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "Date modified: June 5, 2026",
+        ].join("\n\n");
+        const html = [
+            "<main>",
+            "<h1>Events Happening at Civic Square</h1>",
+            Array.from(
+                { length: 80 },
+                (_, index) =>
+                    `<p>General municipal services note ${index} with booking guidance and public information.</p>`
+            ).join(""),
+            "<section>",
+            "<h2>June</h2>",
+            "<article>",
+            "<h3>TOgether 2026</h3>",
+            "<p>June 5 to 6</p>",
+            "<p>Nathan Phillips Square</p>",
+            "</article>",
+            "<article>",
+            "<h3>Summer Market</h3>",
+            "<p>June 12</p>",
+            "<p>Civic Square</p>",
+            "</article>",
+            "</section>",
+            "</main>",
+        ].join("");
+
+        const output = buildModelInput(text, html);
+
+        assert.match(output, /TOgether 2026/);
+        assert.match(output, /June 5 to 6/);
+        assert.match(output, /Nathan Phillips Square/);
+    } finally {
+        if (originalDomParser === undefined) {
+            delete globalThis.DOMParser;
+        } else {
+            globalThis.DOMParser = originalDomParser;
+        }
+    }
+});
+
+test("model input prefers near-budget rendered text over noisy markdown", () => {
+    const originalDomParser = globalThis.DOMParser;
+    globalThis.DOMParser = class {
+        parseFromString(html) {
+            return new JSDOM(html).window.document;
+        }
+    };
+
+    try {
+        const renderedNoise = Array.from(
+            { length: 430 },
+            (_, index) => `Rendered archive note ${index} privacy account footer`
+        ).join("\n\n");
+        const htmlNoise = Array.from(
+            { length: 360 },
+            (_, index) =>
+                `<p>Generic HTML event listing ${index} Friday June 26, 2026 7:00 PM tickets account</p>`
+        ).join("");
+        const text = [
+            "Rendered Dense Calendar",
+            "Rendered Dense Event",
+            "Friday June 26, 2026",
+            "7:00 PM",
+            "Main Theater",
+            renderedNoise,
+        ].join("\n\n");
+        const html = `<main><h1>Generic HTML Calendar</h1>${htmlNoise}</main>`;
+
+        assert.ok(text.length > MODEL_INPUT_MAX_CHARS);
+        assert.ok(text.length < MODEL_INPUT_MAX_CHARS * 1.35);
+
+        const output = buildModelInput(text, html);
+
+        assert.match(output, /Rendered Dense Event/);
+        assert.match(output, /Friday June 26, 2026/);
+        assert.match(output, /Main Theater/);
+        assert.doesNotMatch(output, /Generic HTML Calendar/);
+    } finally {
+        if (originalDomParser === undefined) {
+            delete globalThis.DOMParser;
+        } else {
+            globalThis.DOMParser = originalDomParser;
+        }
+    }
+});
+
+test("model input keeps non-accordion hidden html events over weak rendered text", () => {
+    const originalDomParser = globalThis.DOMParser;
+    globalThis.DOMParser = class {
+        parseFromString(html) {
+            return new JSDOM(html).window.document;
+        }
+    };
+
+    try {
+        const renderedNoise = Array.from({ length: 320 }, (_, index) =>
+            [
+                `July ${String((index % 28) + 1)}, 2026`,
+                `${(index % 12) + 1}:00 PM`,
+                "View Details",
+            ].join("\n")
+        ).join("\n\n");
+        const htmlNoise = Array.from(
+            { length: 260 },
+            (_, index) =>
+                `<p>General event directory ${index} with calendar date and visitor information.</p>`
+        ).join("");
+        const text = [
+            "Civic Arts Calendar",
+            "Browse upcoming community events.",
+            "For more information, select view details.",
+            renderedNoise,
+        ].join("\n\n");
+        const html = [
+            "<main>",
+            "<h1>Civic Arts Calendar</h1>",
+            htmlNoise,
+            "<article>",
+            "<h2>Hidden Jazz Workshop</h2>",
+            "<p>July 8, 2026</p>",
+            "<p>6:30 PM</p>",
+            "<p>Studio Hall</p>",
+            "</article>",
+            "<article>",
+            "<h2>Hidden Makers Night</h2>",
+            "<p>July 9, 2026</p>",
+            "<p>7:00 PM</p>",
+            "<p>Community Room</p>",
+            "</article>",
+            "</main>",
+        ].join("");
+
+        const output = buildModelInput(text, html);
+
+        assert.match(output, /Hidden Jazz Workshop/);
+        assert.match(output, /July 8, 2026/);
+        assert.match(output, /Studio Hall/);
+        assert.match(output, /Hidden Makers Night/);
+        assert.match(output, /Community Room/);
+    } finally {
+        if (originalDomParser === undefined) {
+            delete globalThis.DOMParser;
+        } else {
+            globalThis.DOMParser = originalDomParser;
+        }
+    }
+});
+
 test("model input uses cleaned markdown for html-only fallback", () => {
     const originalDomParser = globalThis.DOMParser;
     globalThis.DOMParser = class {

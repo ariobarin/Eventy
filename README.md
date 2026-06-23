@@ -57,6 +57,18 @@ webstore-docs/   Chrome Web Store submission notes
 npm test
 ```
 
+Real-page verification uses local static snapshots so the test corpus can be
+audited without committing large captured pages.
+
+```bash
+npm run capture:real-pages
+npm run audit:real-pages
+```
+
+Use `npm run verify:real-pages` to recapture every corpus page and audit the
+fresh snapshots in one command. LLM judging is available through
+`npm run compare:real-pages:llm` when an eval transport is configured.
+
 ## Homepage Front
 
 The public product page is served from this repository's GitHub Pages output and fronted at `https://eventy.ariobarin.com/` by the Cloudflare Worker in [workers/eventyHome.js](workers/eventyHome.js). The previous `https://ariobarin.com/eventy-home/` URL remains supported.

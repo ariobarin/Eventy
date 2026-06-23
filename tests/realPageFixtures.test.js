@@ -14,6 +14,8 @@ import {
     loadRealPageCorpus,
     mergeCorpusEntryIntoFixture,
 } from "../scripts/real-page-fixtures.mjs";
+import { MODEL_INPUT_MAX_CHARS } from "../src/llm/preprocess.js";
+import { preprocessForPopup } from "../src/utils/scan.js";
 
 test("real page corpus defines reusable fixture targets", async () => {
     const corpus = await loadRealPageCorpus();
@@ -90,6 +92,109 @@ test("real page fixture audit reports retained anchors and size metrics", () => 
     assert.ok(audit.modelInputChars > 0);
     assert.ok(audit.contextChars > 0);
     assert.ok(audit.contextChars <= audit.sourceTextChars);
+});
+
+test("popup preprocessing reserves model budget for large table csv snippets", async () => {
+    const cleanupDomParser = await installNodeDomParser();
+    try {
+        const text = Array.from(
+            { length: 900 },
+            (_, index) =>
+                `Calendar summary ${index}\nJune ${String(
+                    (index % 28) + 1
+                )}, 2026\n${(index % 12) + 1}:00 PM\nRoom ${index}`
+        ).join("\n\n");
+        const tableRows = Array.from(
+            { length: 420 },
+            (_, index) =>
+                `<tr><td>Long Table Event ${index} With Extra Context</td><td>June ${
+                    (index % 28) + 1
+                }, 2026</td><td>${(index % 12) + 1}:00 PM</td><td>Room ${index}</td></tr>`
+        ).join("");
+        const html = `<main><h1>Conference Schedule</h1><table><tr><th>Title</th><th>Date</th><th>Time</th><th>Room</th></tr>${tableRows}</table></main>`;
+
+        const { modelHtml, csvSnippets } = preprocessForPopup(text, html);
+        const csvChars = csvSnippets.reduce((sum, csv) => sum + csv.length, 0);
+
+        assert.ok(csvChars >= 2000);
+        assert.ok(modelHtml.length < MODEL_INPUT_MAX_CHARS);
+        assert.ok(
+            modelHtml.length + csvChars + csvSnippets.length <=
+                MODEL_INPUT_MAX_CHARS
+        );
+    } finally {
+        cleanupDomParser();
+    }
+});
+
+test("popup preprocessing reserves model budget for small table csv snippets", async () => {
+    const cleanupDomParser = await installNodeDomParser();
+    try {
+        const text = Array.from(
+            { length: 1200 },
+            (_, index) =>
+                `Calendar item ${index}\nJune ${String(
+                    (index % 28) + 1
+                )}, 2026\nRoom ${index}`
+        ).join("\n\n");
+        const html = [
+            "<main>",
+            "<table>",
+            "<tr><th>Title</th><th>Date</th><th>Room</th></tr>",
+            "<tr><td>Small Table Event One</td><td>June 1, 2026</td><td>Room A</td></tr>",
+            "<tr><td>Small Table Event Two</td><td>June 2, 2026</td><td>Room B</td></tr>",
+            "</table>",
+            "</main>",
+        ].join("");
+
+        const { modelHtml, csvSnippets } = preprocessForPopup(text, html);
+        const csvChars = csvSnippets.reduce((sum, csv) => sum + csv.length, 0);
+
+        assert.ok(csvChars > 0);
+        assert.ok(csvChars < 2000);
+        assert.ok(
+            modelHtml.length + csvChars + csvSnippets.length <=
+                MODEL_INPUT_MAX_CHARS
+        );
+    } finally {
+        cleanupDomParser();
+    }
+});
+
+test("popup preprocessing fits multiple large table csv snippets", async () => {
+    const cleanupDomParser = await installNodeDomParser();
+    try {
+        const text = Array.from(
+            { length: 1000 },
+            (_, index) =>
+                `Program overview ${index}\nJuly ${String(
+                    (index % 28) + 1
+                )}, 2026\nHall ${index}`
+        ).join("\n\n");
+        const table = (tableIndex) =>
+            `<table><tr><th>Title</th><th>Date</th><th>Time</th><th>Room</th></tr>${Array.from(
+                { length: 220 },
+                (_, rowIndex) =>
+                    `<tr><td>Table ${tableIndex} Event ${rowIndex} With Long Context</td><td>July ${
+                        (rowIndex % 28) + 1
+                    }, 2026</td><td>${(rowIndex % 12) + 1}:00 PM</td><td>Hall ${rowIndex}</td></tr>`
+            ).join("")}</table>`;
+        const html = `<main><h1>Full Program</h1>${[0, 1, 2]
+            .map(table)
+            .join("")}</main>`;
+
+        const { modelHtml, csvSnippets } = preprocessForPopup(text, html);
+        const csvChars = csvSnippets.reduce((sum, csv) => sum + csv.length, 0);
+
+        assert.ok(csvSnippets.length >= 2);
+        assert.ok(csvChars <= MODEL_INPUT_MAX_CHARS - 6000);
+        assert.ok(
+            modelHtml.length + csvChars + csvSnippets.length <=
+                MODEL_INPUT_MAX_CHARS
+        );
+    } finally {
+        cleanupDomParser();
+    }
 });
 
 test("real page fixture audit reports retained event labels", () => {
@@ -358,6 +463,14 @@ test("real page fixture audit ignores generated report files", async () => {
             path.join(fixtureDir, "old-new-llm-report.json"),
             JSON.stringify({ generatedAt: "2026-06-20T00:00:00.000Z" })
         );
+        await fs.writeFile(
+            path.join(fixtureDir, "old-new-llm-report-shard1.json"),
+            JSON.stringify({ generatedAt: "2026-06-20T00:00:00.000Z" })
+        );
+        await fs.writeFile(
+            path.join(fixtureDir, "llm-report-smoke.json"),
+            JSON.stringify({ generatedAt: "2026-06-20T00:00:00.000Z" })
+        );
 
         const fixtures = await loadRealPageAuditFixtures(corpusPath, fixtureDir);
 
@@ -576,7 +689,7 @@ test("real page fixture audit reports previous context ratio as a metric", async
 
         const audit = auditRealPageFixture(fixture);
 
-        assert.equal(audit.shrinkRatioVsPreviousContext, 0.817);
+        assert.equal(audit.shrinkRatioVsPreviousContext, 0.8178);
         assert.equal(audit.passed, true);
     } finally {
         cleanupDomParser();

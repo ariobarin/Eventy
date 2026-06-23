@@ -16,6 +16,7 @@
         "test": "node --test tests/*.test.js",
         "capture:real-pages": "node scripts/capture-real-pages.mjs",
         "audit:real-pages": "node scripts/audit-real-pages.mjs",
+        "verify:real-pages": "npm run capture:real-pages && npm run audit:real-pages",
         "eval:real-pages:llm": "node scripts/eval-real-pages-with-llm.mjs",
         "compare:real-pages:llm": "node scripts/compare-real-pages-old-new.mjs",
         "package": "node scripts/package-extension.mjs",

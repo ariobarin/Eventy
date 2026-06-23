@@ -76,6 +76,28 @@ test("event extraction messages include page context and compact inputs", () => 
     assert.match(messages.at(-1).content, /June 26, 2026/);
 });
 
+test("event extraction prompt prioritizes structured row fields", () => {
+    const messages = buildEventExtractionMessages({
+        modelInput: "Meeting Notes\nHEARING RESCHEDULED - NEW DATE JULY 1, 2026",
+        url: "https://example.test/calendar",
+        csvSnippets: [
+            [
+                '"Name","Meeting Date","Meeting Time","Meeting Topic"',
+                '"Public Health & Environment Committee","6/24/2026","10:00 AM","HEARING RESCHEDULED - NEW DATE JULY 1, 2026"',
+            ].join("\n"),
+        ],
+    });
+
+    assert.match(
+        messages[0].content,
+        /row has explicit date\/time\/location fields/
+    );
+    assert.match(
+        messages[0].content,
+        /Dates mentioned only inside notes or descriptions are details/
+    );
+});
+
 test("structured output parser extracts events from model responses", () => {
     const events = extractEventsFromStructuredOutput({
         choices: [

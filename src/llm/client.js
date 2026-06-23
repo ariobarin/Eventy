@@ -76,6 +76,7 @@ Times:
 Tables/CSV:
 - If CSV/markdown tables are provided, treat the first row as headers and extract one event per row when sufficient fields exist.
 - Map header synonyms to canonical fields: Title, Date, Time, StartTime, EndTime, Location, Notes/Description.
+- When a row has explicit date/time/location fields, use those fields for event date/time/location. Dates mentioned only inside notes or descriptions are details unless no structured date field exists.
 
 Descriptions:
 - Put remaining details (performers, fees, age limits, notes) in description.

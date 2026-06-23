@@ -565,10 +565,29 @@ function chooseRawModelContent(textContent, htmlContent) {
     const textScore = sourceQualityScore(normalizedText);
     const textLeadScore = sourceQualityScore(normalizedText.slice(0, 2200));
     const htmlLeadScore = sourceQualityScore(normalizedHtml.slice(0, 2200));
+    const detailChromeMatches = (
+        normalizedText.match(
+            /\b(?:view details|show details|event details|see details|learn more|read more|more info(?:rmation)?)\b/gi
+        ) || []
+    ).length;
+    const textLooksLikeDetailsChrome =
+        detailChromeMatches >= 6 &&
+        normalizedHtml.length >= normalizedText.length * 0.45 &&
+        htmlScore >= 16;
+    const textLooksLikeCollapsedDetails =
+        textLooksLikeDetailsChrome ||
+        (normalizedText.length <= 4000 &&
+            normalizedHtml.length > normalizedText.length * 3 &&
+            /\b(expand all|collapse all|accordion panels?|accordion)\b/i.test(
+                normalizedText
+            ) &&
+            htmlScore >= textScore - 15);
     const textFitsScanBudget =
+        !textLooksLikeCollapsedDetails &&
         normalizedText.length <= MODEL_INPUT_MAX_CHARS &&
         textScore >= Math.max(8, htmlScore - 10);
     const textLeadIsClearlyBetter =
+        !textLooksLikeCollapsedDetails &&
         normalizedText.length <= normalizedHtml.length &&
         textLeadScore >= 16 &&
         textLeadScore >= htmlLeadScore + 12;
@@ -576,6 +595,12 @@ function chooseRawModelContent(textContent, htmlContent) {
         normalizedText.length <= normalizedHtml.length &&
         hasDelimitedLeadDate(normalizedText) &&
         !hasDelimitedLeadDate(normalizedHtml);
+    const textIsNearBudgetRenderedView =
+        !textLooksLikeCollapsedDetails &&
+        normalizedText.length <= MODEL_INPUT_MAX_CHARS * 1.35 &&
+        normalizedHtml.length >= normalizedText.length * 0.75 &&
+        textScore >= 16 &&
+        textLeadScore >= 12;
     const htmlIsSparse =
         normalizedHtml.length < 1200 &&
         normalizedText.length > normalizedHtml.length * 3 &&
@@ -594,6 +619,7 @@ function chooseRawModelContent(textContent, htmlContent) {
     return textFitsScanBudget ||
         textLeadIsClearlyBetter ||
         textHasDelimitedLeadDate ||
+        textIsNearBudgetRenderedView ||
         htmlIsSparse ||
         textIsClearlyRicher ||
         textIsBroaderRenderedView ||
@@ -891,7 +917,7 @@ function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
     return prependTruncationNotice(compact, maxChars);
 }
 
-export function buildModelInput(text, html) {
+export function buildModelInput(text, html, maxChars = MODEL_INPUT_MAX_CHARS) {
     const textContent = String(text || "");
     let htmlContent = "";
 
@@ -910,5 +936,5 @@ export function buildModelInput(text, html) {
         htmlContent || String(html || "")
     );
 
-    return condenseContent(rawContent, MODEL_INPUT_MAX_CHARS);
+    return condenseContent(rawContent, maxChars);
 }

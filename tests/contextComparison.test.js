@@ -18,7 +18,8 @@ test("context comparison stats count model and csv input", () => {
             modelInputChars: 4,
             csvSnippetCount: 2,
             csvChars: 5,
-            contextChars: 9,
+            separatorChars: 2,
+            contextChars: 11,
         }
     );
 });
@@ -41,12 +42,45 @@ test("old-new comparison summary reports savings and regressions", () => {
     assert.equal(summary.oldPasses, 2);
     assert.equal(summary.currentPasses, 1);
     assert.deepEqual(summary.regressions, ["regressed-quality"]);
+    assert.deepEqual(summary.oldErrors, []);
+    assert.deepEqual(summary.currentErrors, []);
     assert.equal(summary.totalOldContextChars, 1800);
     assert.equal(summary.totalNewContextChars, 700);
     assert.equal(summary.savedContextChars, 1100);
     assert.equal(summary.currentVsOldContextRatio, 0.3889);
     assert.equal(summary.savingsRatio, 0.6111);
     assert.equal(summary.passed, false);
+});
+
+test("old-new comparison summary fails when either side errors", () => {
+    const summary = summarizeComparisonPages([
+        {
+            name: "old-timeout",
+            old: {
+                passed: false,
+                misses: 2,
+                contextChars: 1000,
+                error: "timed out",
+            },
+            current: { passed: true, misses: 0, contextChars: 500 },
+        },
+        {
+            name: "current-timeout",
+            old: { passed: true, misses: 0, contextChars: 800 },
+            current: {
+                passed: false,
+                misses: 2,
+                contextChars: 400,
+                error: "timed out",
+            },
+        },
+    ]);
+
+    assert.equal(summary.passed, false);
+    assert.deepEqual(summary.oldErrors, ["old-timeout"]);
+    assert.deepEqual(summary.currentErrors, ["current-timeout"]);
+    assert.deepEqual(summary.regressions, []);
+    assert.deepEqual(summary.improvements, []);
 });
 
 test("old-new comparison line includes quality and size deltas", () => {
@@ -61,6 +95,23 @@ test("old-new comparison line includes quality and size deltas", () => {
     assert.match(line, /oldMisses=0/);
     assert.match(line, /currentMisses=0/);
     assert.match(line, /saved=750/);
+});
+
+test("old-new comparison line marks request errors explicitly", () => {
+    const line = formatComparisonLine({
+        name: "timeout-page",
+        old: {
+            passed: false,
+            misses: 1,
+            contextChars: 1000,
+            error: "timed out",
+        },
+        current: { passed: true, misses: 0, contextChars: 250 },
+        savedContextChars: 750,
+    });
+
+    assert.match(line, /^ERROR timeout-page /);
+    assert.match(line, /oldError=timed out/);
 });
 
 test("old-new comparison records variant errors without losing size stats", () => {

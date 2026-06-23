@@ -45,13 +45,20 @@ function csvChars(csvSnippets) {
     return csvSnippets.reduce((sum, csv) => sum + csv.length, 0);
 }
 
+function contextSeparatorChars(csvSnippets) {
+    return csvSnippets.length;
+}
+
 export function contextStats(preprocessed) {
-    const csvLength = csvChars(preprocessed.csvSnippets || []);
+    const csvSnippets = preprocessed.csvSnippets || [];
+    const csvLength = csvChars(csvSnippets);
+    const separatorLength = contextSeparatorChars(csvSnippets);
     return {
         modelInputChars: preprocessed.modelHtml.length,
-        csvSnippetCount: (preprocessed.csvSnippets || []).length,
+        csvSnippetCount: csvSnippets.length,
         csvChars: csvLength,
-        contextChars: preprocessed.modelHtml.length + csvLength,
+        separatorChars: separatorLength,
+        contextChars: preprocessed.modelHtml.length + csvLength + separatorLength,
     };
 }
 
@@ -168,16 +175,21 @@ export function summarizeComparisonPages(pages) {
         (sum, page) => sum + page.current.contextChars,
         0
     );
-    const regressions = pages.filter(
+    const comparablePages = pages.filter(
+        (page) => !page.old.error && !page.current.error
+    );
+    const regressions = comparablePages.filter(
         (page) =>
             page.current.misses > page.old.misses ||
             (page.old.passed && !page.current.passed)
     );
-    const improvements = pages.filter(
+    const improvements = comparablePages.filter(
         (page) =>
             page.current.misses < page.old.misses ||
             (!page.old.passed && page.current.passed)
     );
+    const oldErrors = pages.filter((page) => page.old.error);
+    const currentErrors = pages.filter((page) => page.current.error);
 
     return {
         pageCount: pages.length,
@@ -185,6 +197,8 @@ export function summarizeComparisonPages(pages) {
         currentPasses: pages.filter((page) => page.current.passed).length,
         regressions: regressions.map((page) => page.name),
         improvements: improvements.map((page) => page.name),
+        oldErrors: oldErrors.map((page) => page.name),
+        currentErrors: currentErrors.map((page) => page.name),
         totalOldContextChars,
         totalNewContextChars,
         savedContextChars: totalOldContextChars - totalNewContextChars,
@@ -201,6 +215,8 @@ export function summarizeComparisonPages(pages) {
             : null,
         passed:
             pages.length > 0 &&
+            oldErrors.length === 0 &&
+            currentErrors.length === 0 &&
             regressions.length === 0 &&
             pages.every((page) => page.current.passed),
     };
@@ -328,18 +344,22 @@ export async function runOldNewComparison({
     await fs.writeFile(reportPath, JSON.stringify(report, null, 2));
     console.log(`report=${path.relative(process.cwd(), reportPath)}`);
     console.log(
-        `summary pages=${report.pageCount} oldPasses=${report.oldPasses} currentPasses=${report.currentPasses} savingsRatio=${report.savingsRatio}`
+        `summary pages=${report.pageCount} oldPasses=${report.oldPasses} currentPasses=${report.currentPasses} oldErrors=${report.oldErrors.length} currentErrors=${report.currentErrors.length} savingsRatio=${report.savingsRatio}`
     );
 
     return report;
 }
 
 export function formatComparisonLine(page) {
-    const status =
+    let status = "FAIL";
+    if (page.old.error || page.current.error) {
+        status = "ERROR";
+    } else if (
         page.current.passed &&
         (page.current.misses <= page.old.misses || !page.old.passed)
-            ? "PASS"
-            : "FAIL";
+    ) {
+        status = "PASS";
+    }
     const oldError = page.old.error ? ` oldError=${page.old.error}` : "";
     const currentError = page.current.error
         ? ` currentError=${page.current.error}`

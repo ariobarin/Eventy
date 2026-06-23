@@ -3,7 +3,10 @@ import fsSync from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { htmlToMarkdown } from "../src/llm/preprocess.js";
+import {
+    htmlToMarkdown,
+    MODEL_INPUT_MAX_CHARS,
+} from "../src/llm/preprocess.js";
 import { preprocessForPopup } from "../src/utils/scan.js";
 
 const ROOT_DIR = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -21,11 +24,8 @@ export const REAL_PAGE_FIXTURE_DIR = path.join(
     "fixtures",
     "real-pages"
 );
-const GENERATED_REAL_PAGE_REPORT_FILES = new Set([
-    "report.json",
-    "llm-report.json",
-    "old-new-llm-report.json",
-]);
+const GENERATED_REAL_PAGE_REPORT_FILE_PATTERN =
+    /^(?:report|llm-report|old-new-llm-report)(?:-[^.]+)?\.json$/;
 
 export function fixtureFileNameForEntry(entry) {
     const safeName = String(entry?.name || "")
@@ -59,7 +59,7 @@ function normalizeCorpusEntry(entry) {
         maxContextChars:
             Number.isFinite(entry.maxContextChars) && entry.maxContextChars > 0
                 ? entry.maxContextChars
-                : 30000,
+                : MODEL_INPUT_MAX_CHARS,
         maxPreviousContextGrowthRatio:
             Number.isFinite(entry.maxPreviousContextGrowthRatio) &&
             entry.maxPreviousContextGrowthRatio > 0
@@ -109,6 +109,10 @@ function contextIncludes(combinedContext, label) {
     return normalizeSearchText(combinedContext).includes(normalizeSearchText(label));
 }
 
+function contextSeparatorChars(csvSnippets) {
+    return csvSnippets.length;
+}
+
 export async function loadRealPageCorpus(corpusPath = REAL_PAGE_CORPUS_PATH) {
     const raw = await fs.readFile(corpusPath, "utf8");
     const corpus = JSON.parse(raw);
@@ -132,7 +136,7 @@ export async function loadCapturedRealPageFixtures(
     const fixtures = [];
     for (const entry of entries) {
         if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
-        if (GENERATED_REAL_PAGE_REPORT_FILES.has(entry.name)) continue;
+        if (GENERATED_REAL_PAGE_REPORT_FILE_PATTERN.test(entry.name)) continue;
 
         const raw = await fs.readFile(path.join(fixtureDir, entry.name), "utf8");
         fixtures.push(JSON.parse(raw));
@@ -229,9 +233,10 @@ export function auditRealPageFixture(fixture) {
             ? htmlToMarkdown(html)
             : "";
     const csvChars = csvSnippets.reduce((sum, csv) => sum + csv.length, 0);
-    const contextChars = modelHtml.length + csvChars;
+    const separatorChars = contextSeparatorChars(csvSnippets);
+    const contextChars = modelHtml.length + csvChars + separatorChars;
     const previousContextChars = baselineMarkdown.length
-        ? baselineMarkdown.length + csvChars
+        ? baselineMarkdown.length + csvChars + separatorChars
         : null;
     const combinedContext = [modelHtml, ...csvSnippets].join("\n");
     const expectedAnchors = (fixture.expectedAnchors || fixture.anchors || []).map(
@@ -246,7 +251,7 @@ export function auditRealPageFixture(fixture) {
     const maxContextChars =
         Number.isFinite(fixture.maxContextChars) && fixture.maxContextChars > 0
             ? fixture.maxContextChars
-            : 30000;
+            : MODEL_INPUT_MAX_CHARS;
     const maxPreviousContextGrowthRatio =
         Number.isFinite(fixture.maxPreviousContextGrowthRatio) &&
         fixture.maxPreviousContextGrowthRatio > 0
@@ -289,6 +294,7 @@ export function auditRealPageFixture(fixture) {
         modelInputChars: modelHtml.length,
         csvSnippetCount: csvSnippets.length,
         csvChars,
+        separatorChars,
         contextChars,
         shrinkRatioVsText: text.length
             ? Number((contextChars / text.length).toFixed(4))
