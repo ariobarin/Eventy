@@ -1202,6 +1202,37 @@ test("model input uses cleaned markdown for html-only fallback", () => {
     }
 });
 
+test("model input does not fall back to raw html after empty cleanup", () => {
+    const originalDomParser = globalThis.DOMParser;
+    globalThis.DOMParser = class {
+        parseFromString(html) {
+            return new JSDOM(html).window.document;
+        }
+    };
+
+    try {
+        const html = [
+            "<html>",
+            "<head>",
+            "<style>.hidden{display:none}</style>",
+            "<script>window.__events = [{ title: 'Hidden Event', date: 'June 26, 2026' }]</script>",
+            "</head>",
+            "<body></body>",
+            "</html>",
+        ].join("");
+
+        const output = buildModelInput("", html);
+
+        assert.equal(output, "");
+    } finally {
+        if (originalDomParser === undefined) {
+            delete globalThis.DOMParser;
+        } else {
+            globalThis.DOMParser = originalDomParser;
+        }
+    }
+});
+
 test("model input preserves tab delimiters in custom table text", () => {
     const input = [
         "Title\tDate\tTime\tLocation",

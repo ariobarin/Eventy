@@ -1005,20 +1005,17 @@ function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
 export function buildModelInput(text, html, maxChars = MODEL_INPUT_MAX_CHARS) {
     const textContent = String(text || "");
     let htmlContent = "";
+    const hasHtml = html && typeof html === "string" && html.trim();
+    const canParseHtml = hasHtml && typeof DOMParser !== "undefined";
 
     // Prefer HTML path when available, converting to Markdown
-    if (
-        html &&
-        typeof html === "string" &&
-        html.trim() &&
-        typeof DOMParser !== "undefined"
-    ) {
+    if (canParseHtml) {
         htmlContent = htmlToMarkdown(html);
     }
 
     const rawContent = chooseRawModelContent(
         textContent,
-        htmlContent || String(html || "")
+        htmlContent || (hasHtml && !canParseHtml ? String(html) : "")
     );
 
     return condenseContent(rawContent, maxChars);
