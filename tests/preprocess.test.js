@@ -1215,6 +1215,150 @@ test("model input keeps hidden html details for small accordion lists", () => {
     }
 });
 
+test("model input keeps hidden html details without details chrome", () => {
+    const originalDomParser = globalThis.DOMParser;
+    globalThis.DOMParser = class {
+        parseFromString(html) {
+            return new JSDOM(html).window.document;
+        }
+    };
+
+    try {
+        const text = [
+            "Small Arts Calendar",
+            "Hidden Jazz Workshop",
+            "July 8, 2026",
+            "6:30 PM",
+            "Hidden Makers Night",
+            "July 9, 2026",
+            "7:00 PM",
+        ].join("\n\n");
+        const html = [
+            "<main>",
+            "<h1>Small Arts Calendar</h1>",
+            "<article>",
+            "<h2>Hidden Jazz Workshop</h2>",
+            "<p>July 8, 2026</p>",
+            "<p>6:30 PM</p>",
+            "<p>Studio Hall</p>",
+            "<p>Hands-on session with local musicians.</p>",
+            "</article>",
+            "<article>",
+            "<h2>Hidden Makers Night</h2>",
+            "<p>July 9, 2026</p>",
+            "<p>7:00 PM</p>",
+            "<p>Community Room</p>",
+            "<p>Materials included with registration.</p>",
+            "</article>",
+            "</main>",
+        ].join("");
+
+        const output = buildModelInput(text, html);
+
+        assert.match(output, /Hidden Jazz Workshop/);
+        assert.match(output, /6:30 PM/);
+        assert.match(output, /Studio Hall/);
+        assert.match(output, /Hands-on session/);
+        assert.match(output, /Hidden Makers Night/);
+        assert.match(output, /7:00 PM/);
+        assert.match(output, /Community Room/);
+    } finally {
+        if (originalDomParser === undefined) {
+            delete globalThis.DOMParser;
+        } else {
+            globalThis.DOMParser = originalDomParser;
+        }
+    }
+});
+
+test("model input keeps a single hidden html location without details chrome", () => {
+    const originalDomParser = globalThis.DOMParser;
+    globalThis.DOMParser = class {
+        parseFromString(html) {
+            return new JSDOM(html).window.document;
+        }
+    };
+
+    try {
+        const text = [
+            "Small Arts Calendar",
+            "Solo Workshop",
+            "July 8, 2026",
+            "6:30 PM",
+        ].join("\n\n");
+        const html = [
+            "<main>",
+            "<h1>Small Arts Calendar</h1>",
+            "<article>",
+            "<h2>Solo Workshop</h2>",
+            "<p>July 8, 2026</p>",
+            "<p>6:30 PM</p>",
+            "<p>Studio Hall</p>",
+            "</article>",
+            "</main>",
+        ].join("");
+
+        const output = buildModelInput(text, html);
+
+        assert.match(output, /Solo Workshop/);
+        assert.match(output, /July 8, 2026/);
+        assert.match(output, /6:30 PM/);
+        assert.match(output, /Studio Hall/);
+    } finally {
+        if (originalDomParser === undefined) {
+            delete globalThis.DOMParser;
+        } else {
+            globalThis.DOMParser = originalDomParser;
+        }
+    }
+});
+
+test("model input does not pull link-heavy html for one hidden location", () => {
+    const originalDomParser = globalThis.DOMParser;
+    globalThis.DOMParser = class {
+        parseFromString(html) {
+            return new JSDOM(html).window.document;
+        }
+    };
+
+    try {
+        const archiveLinks = Array.from(
+            { length: 120 },
+            (_, index) =>
+                `<p><a href="/archive/${index}">Archive Event Link ${index}</a></p>`
+        ).join("");
+        const text = [
+            "Small Arts Calendar",
+            "Solo Workshop",
+            "July 8, 2026",
+            "6:30 PM",
+        ].join("\n\n");
+        const html = [
+            "<main>",
+            archiveLinks,
+            "<article>",
+            "<h2>Solo Workshop</h2>",
+            "<p>July 8, 2026</p>",
+            "<p>6:30 PM</p>",
+            "<p>Studio Hall</p>",
+            "</article>",
+            "</main>",
+        ].join("");
+
+        const output = buildModelInput(text, html);
+
+        assert.match(output, /Solo Workshop/);
+        assert.doesNotMatch(output, /Archive Event Link 0/);
+        assert.doesNotMatch(output, /Archive Event Link 119/);
+    } finally {
+        if (originalDomParser === undefined) {
+            delete globalThis.DOMParser;
+        } else {
+            globalThis.DOMParser = originalDomParser;
+        }
+    }
+});
+
 test("model input uses cleaned markdown for html-only fallback", () => {
     const originalDomParser = globalThis.DOMParser;
     globalThis.DOMParser = class {

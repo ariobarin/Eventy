@@ -554,6 +554,64 @@ function hasDelimitedLeadDate(text) {
         .some((line) => line.includes("|") && hasDateSignal(line));
 }
 
+function stripMarkdownLinks(text) {
+    return String(text || "")
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+}
+
+function lineFingerprint(text) {
+    return stripMarkdownLinks(text)
+        .toLowerCase()
+        .replace(/^[#>*\-\s]+/g, "")
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
+}
+
+function hasPlaceDetailSignal(text) {
+    return /\b(?:venue|location|where|address|room|auditorium|hall|street|st\.|avenue|ave\.|road|rd\.|studio|theater|theatre|centre|center)\b/i.test(
+        text
+    );
+}
+
+function isLinkHeavyParsedContent(htmlText, renderedLength) {
+    const linkCount = (htmlText.match(/\]\(/g) || []).length;
+    return (
+        linkCount >= 20 &&
+        htmlText.length > Math.max(1200, renderedLength * 3)
+    );
+}
+
+function htmlAddsMissingEventDetails(renderedText, htmlText, textScore, htmlScore) {
+    if (
+        renderedText.length > 5000 ||
+        htmlText.length <= renderedText.length * 1.1 ||
+        isLinkHeavyParsedContent(htmlText, renderedText.length) ||
+        htmlScore < Math.max(12, textScore - 6)
+    ) {
+        return false;
+    }
+
+    const renderedFingerprint = lineFingerprint(renderedText);
+    const missingDetailLines = htmlText
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line.length >= 4 && line.length <= 240)
+        .filter((line) => !(line.match(/\]\(/g) || []).length)
+        .filter((line) => !line.includes("|"))
+        .map((line) => stripMarkdownLinks(line))
+        .filter((plainText) => scoreBlock(plainText) >= 5)
+        .filter((plainText) => {
+            const fingerprint = lineFingerprint(plainText);
+            return (
+                fingerprint.length >= 4 &&
+                !renderedFingerprint.includes(fingerprint)
+            );
+        });
+    const missingPlaceDetailLines = missingDetailLines.filter(hasPlaceDetailSignal);
+
+    return missingPlaceDetailLines.length >= 1;
+}
+
 function chooseRawModelContent(textContent, htmlContent) {
     if (!htmlContent) return textContent;
     if (!textContent) return htmlContent;
@@ -579,8 +637,15 @@ function chooseRawModelContent(textContent, htmlContent) {
         (detailChromeMatches >= 2 &&
             normalizedHtml.length > normalizedText.length * 1.5 &&
             htmlScore >= textScore + 8);
+    const htmlAddsHiddenEventDetails = htmlAddsMissingEventDetails(
+        normalizedText,
+        normalizedHtml,
+        textScore,
+        htmlScore
+    );
     const textLooksLikeCollapsedDetails =
         textLooksLikeDetailsChrome ||
+        htmlAddsHiddenEventDetails ||
         (normalizedText.length <= 4000 &&
             normalizedHtml.length > normalizedText.length * 3 &&
             /\b(expand all|collapse all|accordion panels?|accordion)\b/i.test(
