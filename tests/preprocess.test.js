@@ -171,6 +171,38 @@ test("model input preserves dense serialized event feeds over block budget", () 
     assert.doesNotMatch(output, /Navigation item 519/);
 });
 
+test("model input keeps titles before dates in long serialized cards", () => {
+    const intro = Array.from(
+        { length: 70 },
+        (_, index) =>
+            `General program overview ${index} with broad attendance guidance and planning notes`
+    ).join(" ");
+    const description = Array.from(
+        { length: 26 },
+        (_, index) => `detail ${index}`
+    ).join(" ");
+    const outro = Array.from(
+        { length: 70 },
+        (_, index) =>
+            `Additional visitor note ${index} with parking policy and transit guidance`
+    ).join(" ");
+    const input = [
+        intro,
+        "Aurora Hands-On Lab",
+        description,
+        "Friday June 26, 2026 at 7:00 PM",
+        "Location: Innovation Room",
+        outro,
+    ].join(" ");
+
+    const output = buildModelInput(input, null, 3000);
+
+    assert.ok(output.length <= 3000);
+    assert.match(output, /Aurora Hands-On Lab/);
+    assert.match(output, /Friday June 26, 2026/);
+    assert.match(output, /Innovation Room/);
+});
+
 test("model input preserves leading page-level event context", () => {
     const leadingContext = [
         "DATE 2026",
@@ -1060,6 +1092,59 @@ test("model input honors reduced budget before choosing rendered text", () => {
         assert.match(output, /HTML Complete Budget Event/);
         assert.match(output, /Studio Hall/);
         assert.ok(output.length <= 6000);
+    } finally {
+        if (originalDomParser === undefined) {
+            delete globalThis.DOMParser;
+        } else {
+            globalThis.DOMParser = originalDomParser;
+        }
+    }
+});
+
+test("model input keeps rendered events when reduced budget preserves them", () => {
+    const originalDomParser = globalThis.DOMParser;
+    globalThis.DOMParser = class {
+        parseFromString(html) {
+            return new JSDOM(html).window.document;
+        }
+    };
+
+    try {
+        const renderedEvents = Array.from({ length: 38 }, (_, index) =>
+            [
+                `Rendered Only Workshop ${index}`,
+                `Friday June ${(index % 28) + 1}, 2026`,
+                `${(index % 12) + 1}:30 PM`,
+                `Location: Visible Room ${index}`,
+            ].join("\n\n")
+        ).join("\n\n");
+        const renderedNoise = Array.from(
+            { length: 90 },
+            (_, index) =>
+                `Rendered support copy ${index} tickets registration accessibility visitor policies and newsletter links`
+        ).join("\n\n");
+        const text = [renderedEvents, renderedNoise].join("\n\n");
+        const html = [
+            "<main>",
+            "<article>",
+            "<h2>HTML Different Event</h2>",
+            "<p>Friday July 3, 2026</p>",
+            "<p>6:00 PM</p>",
+            "<p>Location: HTML Room</p>",
+            "</article>",
+            "</main>",
+        ].join("");
+
+        assert.ok(text.length > 6000);
+        assert.ok(text.length <= MODEL_INPUT_MAX_CHARS);
+
+        const output = buildModelInput(text, html, 6000);
+
+        assert.ok(output.length <= 6000);
+        assert.match(output, /Rendered Only Workshop 0/);
+        assert.match(output, /Rendered Only Workshop 37/);
+        assert.match(output, /Location: Visible Room 37/);
+        assert.doesNotMatch(output, /HTML Different Event/);
     } finally {
         if (originalDomParser === undefined) {
             delete globalThis.DOMParser;

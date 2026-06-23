@@ -267,6 +267,8 @@ export const MODEL_INPUT_MAX_CHARS = 18000;
 const MODEL_INPUT_MAX_BLOCK_CHARS = 4000;
 const MODEL_INPUT_SIGNAL_CHUNK_CHARS = 1400;
 const MODEL_INPUT_SIGNAL_CHUNK_MIN_SIGNALS = 8;
+const MODEL_INPUT_SIGNAL_PRE_CONTEXT_CHARS = 420;
+const MODEL_INPUT_SIGNAL_POST_CONTEXT_CHARS = 95;
 const MODEL_INPUT_SIGNAL_SCORE = 8;
 const MODEL_INPUT_MAX_SCORELESS_PRIORITY_LEAD_CHARS = 800;
 const MODEL_INPUT_PRIORITY_LEAD_BLOCKS = 3;
@@ -498,7 +500,12 @@ function clipBlock(content) {
     const segments = [];
     addClipSegment(segments, content.length, 0, 220);
     for (const offset of spreadSignalOffsets(signalOffsets, 5)) {
-        addClipSegment(segments, content.length, offset - 50, offset + 95);
+        addClipSegment(
+            segments,
+            content.length,
+            offset - MODEL_INPUT_SIGNAL_PRE_CONTEXT_CHARS,
+            offset + MODEL_INPUT_SIGNAL_POST_CONTEXT_CHARS
+        );
     }
     addClipSegment(segments, content.length, content.length - 180, content.length);
 
@@ -572,6 +579,33 @@ function hasPlaceDetailSignal(text) {
     return /\b(?:venue|location|where|address|room|auditorium|hall|street|st\.|avenue|ave\.|road|rd\.|studio|theater|theatre|centre|center)\b/i.test(
         text
     );
+}
+
+function hasTimeSignal(text) {
+    EVENT_TIME_PATTERN.lastIndex = 0;
+    const result = EVENT_TIME_PATTERN.test(text);
+    EVENT_TIME_PATTERN.lastIndex = 0;
+    return result;
+}
+
+function completeEventClusterCount(text) {
+    const blocks = splitContentBlocks(text);
+    let count = 0;
+
+    for (let index = 0; index < blocks.length; index++) {
+        const windowText = blocks.slice(index, index + 6).join("\n");
+        if (
+            hasDateSignal(windowText) &&
+            hasPlaceDetailSignal(windowText) &&
+            (hasTimeSignal(windowText) ||
+                NOISE_KEYWORD_TITLE_EVENT_PATTERN.test(windowText))
+        ) {
+            count++;
+            index += 3;
+        }
+    }
+
+    return count;
 }
 
 function isLinkHeavyParsedContent(htmlText, renderedLength) {
@@ -669,6 +703,19 @@ function chooseRawModelContent(
         normalizedText.length > selectionBudget &&
         normalizedHtml.length <= selectionBudget &&
         htmlScore >= 16;
+    const budgetedRenderedText = htmlCanFitReducedBudget
+        ? condenseContent(normalizedText, selectionBudget)
+        : "";
+    const renderedCompleteEventCount = budgetedRenderedText
+        ? completeEventClusterCount(budgetedRenderedText)
+        : 0;
+    const htmlCompleteEventCount = htmlCanFitReducedBudget
+        ? completeEventClusterCount(normalizedHtml)
+        : 0;
+    const renderedBudgetKeepsBroaderEvents =
+        renderedCompleteEventCount >= Math.max(3, htmlCompleteEventCount + 2);
+    const htmlShouldWinReducedBudget =
+        htmlCanFitReducedBudget && !renderedBudgetKeepsBroaderEvents;
     const textLeadIsClearlyBetter =
         !textLooksLikeCollapsedDetails &&
         normalizedText.length <= normalizedHtml.length &&
@@ -699,7 +746,7 @@ function chooseRawModelContent(
         normalizedHtml.length > normalizedText.length * 2.5 &&
         textScore >= 12;
 
-    return !htmlCanFitReducedBudget &&
+    return !htmlShouldWinReducedBudget &&
         (textFitsScanBudget ||
             textLeadIsClearlyBetter ||
             textHasDelimitedLeadDate ||
