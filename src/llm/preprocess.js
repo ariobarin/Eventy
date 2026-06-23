@@ -613,10 +613,18 @@ function htmlAddsMissingEventDetails(renderedText, htmlText, textScore, htmlScor
     return missingPlaceDetailLines.length >= 1;
 }
 
-function chooseRawModelContent(textContent, htmlContent) {
+function chooseRawModelContent(
+    textContent,
+    htmlContent,
+    maxChars = MODEL_INPUT_MAX_CHARS
+) {
     if (!htmlContent) return textContent;
     if (!textContent) return htmlContent;
 
+    const selectionBudget =
+        Number.isFinite(maxChars) && maxChars > 0
+            ? maxChars
+            : MODEL_INPUT_MAX_CHARS;
     const normalizedText = normalizeModelText(textContent);
     const normalizedHtml = normalizeModelText(htmlContent);
     if (!normalizedHtml) return normalizedText;
@@ -655,8 +663,12 @@ function chooseRawModelContent(textContent, htmlContent) {
             htmlScore >= textScore - 15);
     const textFitsScanBudget =
         !textLooksLikeCollapsedDetails &&
-        normalizedText.length <= MODEL_INPUT_MAX_CHARS &&
+        normalizedText.length <= selectionBudget &&
         textScore >= Math.max(8, htmlScore - 10);
+    const htmlCanFitReducedBudget =
+        normalizedText.length > selectionBudget &&
+        normalizedHtml.length <= selectionBudget &&
+        htmlScore >= 16;
     const textLeadIsClearlyBetter =
         !textLooksLikeCollapsedDetails &&
         normalizedText.length <= normalizedHtml.length &&
@@ -668,7 +680,7 @@ function chooseRawModelContent(textContent, htmlContent) {
         !hasDelimitedLeadDate(normalizedHtml);
     const textIsNearBudgetRenderedView =
         !textLooksLikeCollapsedDetails &&
-        normalizedText.length <= MODEL_INPUT_MAX_CHARS * 1.35 &&
+        normalizedText.length <= selectionBudget * 1.35 &&
         normalizedHtml.length >= normalizedText.length * 0.75 &&
         textScore >= 16 &&
         textLeadScore >= 12;
@@ -683,18 +695,19 @@ function chooseRawModelContent(textContent, htmlContent) {
         normalizedText.length > normalizedHtml.length * 2.5 &&
         textScore >= Math.max(10, htmlScore - 6);
     const htmlIsBulkyDuplicate =
-        normalizedHtml.length > MODEL_INPUT_MAX_CHARS &&
+        normalizedHtml.length > selectionBudget &&
         normalizedHtml.length > normalizedText.length * 2.5 &&
         textScore >= 12;
 
-    return textFitsScanBudget ||
-        textLeadIsClearlyBetter ||
-        textHasDelimitedLeadDate ||
-        textIsNearBudgetRenderedView ||
-        htmlIsSparse ||
-        textIsClearlyRicher ||
-        textIsBroaderRenderedView ||
-        htmlIsBulkyDuplicate
+    return !htmlCanFitReducedBudget &&
+        (textFitsScanBudget ||
+            textLeadIsClearlyBetter ||
+            textHasDelimitedLeadDate ||
+            textIsNearBudgetRenderedView ||
+            htmlIsSparse ||
+            textIsClearlyRicher ||
+            textIsBroaderRenderedView ||
+            htmlIsBulkyDuplicate)
         ? normalizedText
         : normalizedHtml;
 }
@@ -1089,7 +1102,8 @@ export function buildModelInput(text, html, maxChars = MODEL_INPUT_MAX_CHARS) {
 
     const rawContent = chooseRawModelContent(
         textContent,
-        htmlContent || (hasHtml && !canParseHtml ? String(html) : "")
+        htmlContent || (hasHtml && !canParseHtml ? String(html) : ""),
+        maxChars
     );
 
     return condenseContent(rawContent, maxChars);

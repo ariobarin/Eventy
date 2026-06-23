@@ -1018,6 +1018,57 @@ test("model input prefers complete rendered text when it fits budget", () => {
     }
 });
 
+test("model input honors reduced budget before choosing rendered text", () => {
+    const originalDomParser = globalThis.DOMParser;
+    globalThis.DOMParser = class {
+        parseFromString(html) {
+            return new JSDOM(html).window.document;
+        }
+    };
+
+    try {
+        const renderedIntro = Array.from(
+            { length: 170 },
+            (_, index) =>
+                `Rendered listing note ${index} has June ${index % 28 + 1}, 2026 at 7:00 PM near the lobby.`
+        ).join(" ");
+        const text = [
+            "Rendered Long Calendar",
+            "Rendered Featured Event",
+            "June 24, 2026",
+            "7:00 PM",
+            "Lobby Stage",
+            renderedIntro,
+        ].join("\n\n");
+        const html = [
+            "<main>",
+            "<h1>Compact Calendar</h1>",
+            "<article>",
+            "<h2>HTML Complete Budget Event</h2>",
+            "<p>June 30, 2026</p>",
+            "<p>8:00 PM</p>",
+            "<p>Studio Hall</p>",
+            "</article>",
+            "</main>",
+        ].join("");
+
+        assert.ok(text.length > 6000);
+        assert.ok(text.length <= MODEL_INPUT_MAX_CHARS);
+
+        const output = buildModelInput(text, html, 6000);
+
+        assert.match(output, /HTML Complete Budget Event/);
+        assert.match(output, /Studio Hall/);
+        assert.ok(output.length <= 6000);
+    } finally {
+        if (originalDomParser === undefined) {
+            delete globalThis.DOMParser;
+        } else {
+            globalThis.DOMParser = originalDomParser;
+        }
+    }
+});
+
 test("model input keeps hidden html event details over sparse rendered chrome", () => {
     const originalDomParser = globalThis.DOMParser;
     globalThis.DOMParser = class {
