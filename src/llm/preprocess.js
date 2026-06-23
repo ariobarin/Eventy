@@ -828,10 +828,7 @@ function addStandaloneMonthDayCandidates(candidates, blocks) {
 function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
     const normalizedInput = normalizeModelText(text);
     if (!normalizedInput) return "";
-    if (
-        normalizedInput.length <= maxChars &&
-        hasDelimitedTableRows(normalizedInput)
-    ) {
+    if (normalizedInput.length <= maxChars) {
         return normalizedInput;
     }
 

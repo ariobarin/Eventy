@@ -1034,6 +1034,22 @@ test("model input preserves markdown table row newlines in custom table text", (
     assert.doesNotMatch(output, /\| --- \| --- \| --- \| --- \|\n\n\| Community Market/);
 });
 
+test("model input does not condense under-budget line-based agenda text", () => {
+    const rows = Array.from({ length: 800 }, (_, index) =>
+        `A${String(index).padStart(3, "0")} Jun 26 2026 Room`
+    );
+    rows[rows.length - 1] = "Final Vote Jun 26 2026 Room";
+    const input = rows.join("\n");
+
+    assert.ok(input.length <= MODEL_INPUT_MAX_CHARS);
+    assert.ok(rows.join("\n\n").length > MODEL_INPUT_MAX_CHARS);
+
+    const output = buildModelInput(input, null);
+
+    assert.equal(output, input);
+    assert.match(output, /Final Vote Jun 26 2026 Room$/);
+});
+
 test("table csv snippets cap large table context", () => {
     const originalDomParser = globalThis.DOMParser;
     const longCell = "Long event detail ".repeat(40);

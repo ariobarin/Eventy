@@ -689,7 +689,7 @@ test("real page fixture audit reports previous context ratio as a metric", async
 
         const audit = auditRealPageFixture(fixture);
 
-        assert.equal(audit.shrinkRatioVsPreviousContext, 0.8178);
+        assert.equal(audit.shrinkRatioVsPreviousContext, 0.7956);
         assert.equal(audit.passed, true);
     } finally {
         cleanupDomParser();
