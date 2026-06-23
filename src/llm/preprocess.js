@@ -573,9 +573,12 @@ function chooseRawModelContent(textContent, htmlContent) {
         ) || []
     ).length;
     const textLooksLikeDetailsChrome =
-        detailChromeMatches >= 6 &&
-        normalizedHtml.length >= normalizedText.length * 0.45 &&
-        htmlScore >= 16;
+        (detailChromeMatches >= 6 &&
+            normalizedHtml.length >= normalizedText.length * 0.45 &&
+            htmlScore >= 16) ||
+        (detailChromeMatches >= 2 &&
+            normalizedHtml.length > normalizedText.length * 1.5 &&
+            htmlScore >= textScore + 8);
     const textLooksLikeCollapsedDetails =
         textLooksLikeDetailsChrome ||
         (normalizedText.length <= 4000 &&

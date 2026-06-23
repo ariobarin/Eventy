@@ -1160,6 +1160,61 @@ test("model input keeps non-accordion hidden html events over weak rendered text
     }
 });
 
+test("model input keeps hidden html details for small accordion lists", () => {
+    const originalDomParser = globalThis.DOMParser;
+    globalThis.DOMParser = class {
+        parseFromString(html) {
+            return new JSDOM(html).window.document;
+        }
+    };
+
+    try {
+        const text = [
+            "Small Arts Calendar",
+            "Hidden Jazz Workshop",
+            "July 8, 2026",
+            "View Details",
+            "Hidden Makers Night",
+            "July 9, 2026",
+            "View Details",
+        ].join("\n\n");
+        const html = [
+            "<main>",
+            "<h1>Small Arts Calendar</h1>",
+            "<article>",
+            "<h2>Hidden Jazz Workshop</h2>",
+            "<p>July 8, 2026</p>",
+            "<p>6:30 PM</p>",
+            "<p>Studio Hall</p>",
+            "<p>Hands-on session with local musicians.</p>",
+            "</article>",
+            "<article>",
+            "<h2>Hidden Makers Night</h2>",
+            "<p>July 9, 2026</p>",
+            "<p>7:00 PM</p>",
+            "<p>Community Room</p>",
+            "<p>Materials included with registration.</p>",
+            "</article>",
+            "</main>",
+        ].join("");
+
+        const output = buildModelInput(text, html);
+
+        assert.match(output, /Hidden Jazz Workshop/);
+        assert.match(output, /6:30 PM/);
+        assert.match(output, /Studio Hall/);
+        assert.match(output, /Hidden Makers Night/);
+        assert.match(output, /7:00 PM/);
+        assert.match(output, /Community Room/);
+    } finally {
+        if (originalDomParser === undefined) {
+            delete globalThis.DOMParser;
+        } else {
+            globalThis.DOMParser = originalDomParser;
+        }
+    }
+});
+
 test("model input uses cleaned markdown for html-only fallback", () => {
     const originalDomParser = globalThis.DOMParser;
     globalThis.DOMParser = class {
