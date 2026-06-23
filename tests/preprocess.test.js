@@ -555,6 +555,106 @@ test("model input filters common chrome before standalone dates", () => {
     assert.doesNotMatch(output, /Community resource section 519/);
 });
 
+test("model input keeps titles with common noise words before full dates", () => {
+    const repeatedCopy = Array.from(
+        { length: 520 },
+        (_, index) =>
+            `Community resource section ${index} with general visitor information and local program summaries.`
+    ).join("\n\n");
+    const input = [
+        repeatedCopy,
+        "Cookie Decorating Workshop",
+        "June 26, 2026",
+        "Main Hall",
+        "Subscribe to Mozart",
+        "June 27, 2026",
+        "Auditorium",
+        repeatedCopy,
+    ].join("\n\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /Cookie Decorating Workshop/);
+    assert.match(output, /Subscribe to Mozart/);
+    assert.match(output, /June 26, 2026/);
+    assert.match(output, /June 27, 2026/);
+    assert.match(output, /Main Hall/);
+    assert.match(output, /Auditorium/);
+    assert.doesNotMatch(output, /Community resource section 250/);
+});
+
+test("model input filters common chrome before full dates", () => {
+    const repeatedCopy = Array.from(
+        { length: 520 },
+        (_, index) =>
+            `Community resource section ${index} with general visitor information and local program summaries.`
+    ).join("\n\n");
+    const input = [
+        repeatedCopy,
+        "Cookie Settings",
+        "June 26, 2026",
+        "Main Hall",
+        "Subscribe for updates",
+        "June 27, 2026",
+        "Auditorium",
+        "Cookie Center",
+        "July 3, 2026",
+        "Side Hall",
+        "Manage Cookies",
+        "July 4, 2026",
+        "Studio",
+        "Subscribe to updates",
+        "July 5, 2026",
+        "Gallery",
+        "Subscribe to Calendar",
+        "August 6, 2026",
+        "Room 1",
+        "Subscribe to Event Calendar",
+        "August 7, 2026",
+        "Room 2",
+        "Subscribe to Google Calendar",
+        "August 8, 2026",
+        "Room 3",
+        "Subscribe to Mailing List",
+        "August 9, 2026",
+        "Room 4",
+        repeatedCopy,
+    ].join("\n\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /June 26, 2026/);
+    assert.match(output, /June 27, 2026/);
+    assert.match(output, /July 3, 2026/);
+    assert.match(output, /July 4, 2026/);
+    assert.match(output, /July 5, 2026/);
+    assert.match(output, /August 6, 2026/);
+    assert.match(output, /August 7, 2026/);
+    assert.match(output, /August 8, 2026/);
+    assert.match(output, /August 9, 2026/);
+    assert.match(output, /Main Hall/);
+    assert.match(output, /Auditorium/);
+    assert.match(output, /Side Hall/);
+    assert.match(output, /Studio/);
+    assert.match(output, /Gallery/);
+    assert.match(output, /Room 1/);
+    assert.match(output, /Room 2/);
+    assert.match(output, /Room 3/);
+    assert.match(output, /Room 4/);
+    assert.doesNotMatch(output, /Cookie Settings/);
+    assert.doesNotMatch(output, /Subscribe for updates/);
+    assert.doesNotMatch(output, /Cookie Center/);
+    assert.doesNotMatch(output, /Manage Cookies/);
+    assert.doesNotMatch(output, /Subscribe to updates/);
+    assert.doesNotMatch(output, /Subscribe to Calendar/);
+    assert.doesNotMatch(output, /Subscribe to Event Calendar/);
+    assert.doesNotMatch(output, /Subscribe to Google Calendar/);
+    assert.doesNotMatch(output, /Subscribe to Mailing List/);
+    assert.doesNotMatch(output, /Community resource section 250/);
+});
+
 test("model input keeps punctuated titles before standalone date cards", () => {
     const repeatedCopy = Array.from(
         { length: 520 },

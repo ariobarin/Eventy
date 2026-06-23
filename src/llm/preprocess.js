@@ -890,6 +890,23 @@ function addStandaloneMonthDayCandidates(candidates, blocks) {
     }
 }
 
+function addTitleContextBeforeSignal(candidates, blocks, index, priority) {
+    const previousBlock = blocks[index - 1]?.content;
+    if (isLikelyTitleContextBlock(previousBlock)) {
+        addCandidate(candidates, blocks, index - 1, priority, {
+            allowLikelyNoise: true,
+        });
+    }
+    if (
+        isCompactContextBridgeBlock(previousBlock) &&
+        isLikelyTitleContextBlock(blocks[index - 2]?.content)
+    ) {
+        addCandidate(candidates, blocks, index - 2, priority, {
+            allowLikelyNoise: true,
+        });
+    }
+}
+
 function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
     const normalizedInput = normalizeModelText(text);
     if (!normalizedInput) return "";
@@ -922,6 +939,12 @@ function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
             addCandidate(candidates, blocks, block.index - 3, block.score + 3);
             addCandidate(candidates, blocks, block.index - 2, block.score + 4);
             addCandidate(candidates, blocks, block.index - 1, block.score + 8);
+            addTitleContextBeforeSignal(
+                candidates,
+                blocks,
+                block.index,
+                block.score + 9
+            );
             addSplitDateContext(candidates, blocks, block.index, block.score + 6);
             addCandidate(candidates, blocks, block.index, block.score + 20);
             addCandidate(candidates, blocks, block.index + 1, block.score + 8);
