@@ -283,6 +283,8 @@ const EVENT_TIME_PATTERN =
     /\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b|\b\d{1,2}:\d{2}\b/gi;
 const EVENT_DETAIL_SIGNAL_PATTERN =
     /\b(event|calendar|ticket|tickets|rsvp|registration|doors|admission|presented|live|music|webinar|workshop|concert|screening|festival|meetup|lecture|panel|class|session|conference|show|performance|tour|venue|location|where|address|room|auditorium|hall|street|st\.|avenue|ave\.|road|rd\.)\b/gi;
+const NOISE_KEYWORD_TITLE_EVENT_PATTERN =
+    /\b(event|workshop|concert|screening|festival|meetup|lecture|panel|class|session|conference|show|performance|tour|market|opera|jazz|theater|theatre|film|movie|comedy|dance|night|party|gala|fair)\b/i;
 const EVENT_DATE_PATTERN = new RegExp(
     [
         "\\b(?:Mon|Tue|Tues|Wed|Thu|Thur|Thurs|Fri|Sat|Sun)(?:day)?\\b",
@@ -703,17 +705,23 @@ function isLikelyNoiseBlock(text, score) {
 
     const linkCount = (text.match(/\]\(/g) || []).length;
     return (
-        /\b(cookie|privacy policy|terms of use|terms and conditions|subscribe|newsletter|login|signin|signup|account|cart|copyright|all rights reserved|skip to content|navigation)\b/i.test(
+        /\b(manage cookies?|cookies?|privacy policy|terms of use|terms and conditions|subscribe|newsletter|login|signin|signup|account|cart|copyright|all rights reserved|skip to content|navigation)\b/i.test(
             text
         ) ||
         (linkCount > 2 && text.length < 220)
     );
 }
 
-function addCandidate(candidates, blocks, index, priority) {
+function addCandidate(candidates, blocks, index, priority, options = {}) {
     if (index < 0 || index >= blocks.length) return;
     const block = blocks[index];
-    if (!block || isLikelyNoiseBlock(block.content, block.score)) return;
+    if (
+        !block ||
+        (!options.allowLikelyNoise &&
+            isLikelyNoiseBlock(block.content, block.score))
+    ) {
+        return;
+    }
 
     candidates.set(index, Math.max(candidates.get(index) || 0, priority));
 }
@@ -733,7 +741,12 @@ function hasDateSignal(text) {
     return result;
 }
 
-function isCleanCompactContextBlock(text, maxLength, allowTerminalPunctuation = false) {
+function isCleanCompactContextBlock(
+    text,
+    maxLength,
+    allowTerminalPunctuation = false,
+    options = {}
+) {
     const trimmed = String(text || "").trim();
     if (!trimmed || trimmed.length > maxLength) return false;
     if (trimmed.includes("\n")) return false;
@@ -744,7 +757,8 @@ function isCleanCompactContextBlock(text, maxLength, allowTerminalPunctuation = 
     if (/[\]\[]\(|https?:\/\//i.test(trimmed)) return false;
     if (!allowTerminalPunctuation && /[.!?]$/.test(trimmed)) return false;
     if (
-        /\b(cookie|privacy policy|terms of use|subscribe|newsletter|login|account|copyright|navigation)\b/i.test(
+        !options.allowNoiseKeywords &&
+        /\b(manage cookies?|cookies?|privacy policy|terms of use|subscribe|newsletter|login|account|copyright|navigation)\b/i.test(
             trimmed
         )
     ) {
@@ -756,8 +770,55 @@ function isCleanCompactContextBlock(text, maxLength, allowTerminalPunctuation = 
 
 function isLikelyTitleContextBlock(text) {
     const trimmed = String(text || "").trim();
-    if (!isCleanCompactContextBlock(trimmed, 220, true)) return false;
+    if (
+        !isCleanCompactContextBlock(trimmed, 220, true, {
+            allowNoiseKeywords: true,
+        })
+    ) {
+        return false;
+    }
     if (CONTEXT_LABEL_PATTERN.test(trimmed)) return false;
+    if (
+        /\b(privacy policy|terms of use|terms and conditions|newsletter|login|signin|signup|account|cart|copyright|all rights reserved|skip to content|navigation)\b/i.test(
+            trimmed
+        )
+    ) {
+        return false;
+    }
+    if (/^(cookie|cookies|subscribe)$/i.test(trimmed)) return false;
+    if (/\bmanage\s+cookies?\b/i.test(trimmed)) return false;
+    if (
+        /\bcookie(s)?\s+(settings|preferences|notice|policy|banner|consent|center|centre)\b/i.test(
+            trimmed
+        )
+    ) {
+        return false;
+    }
+    if (
+        /\bcookies?\b/i.test(trimmed) &&
+        !NOISE_KEYWORD_TITLE_EVENT_PATTERN.test(trimmed)
+    ) {
+        return false;
+    }
+    if (
+        /\bsubscribe\s+(for|to our|for our|now|today)\b/i.test(trimmed) ||
+        /\bsubscribe\s+(?:to\s+)?(?:updates?|newsletter|alerts?|emails?)\b/i.test(
+            trimmed
+        ) ||
+        /^subscribe\s+to\s+.*\b(?:calendar|events?|mailing lists?|list|updates?|newsletter|alerts?|emails?|ical|ics|outlook|apple|google|yahoo|rss|feed)\b/i.test(
+            trimmed
+        )
+    ) {
+        return false;
+    }
+    if (
+        /^subscribe\b/i.test(trimmed) &&
+        !/^[Ss]ubscribe\s+to\s+[A-Z][A-Za-z0-9'.-]*(?:\s+[A-Z][A-Za-z0-9'.-]*){0,5}$/.test(
+            trimmed
+        )
+    ) {
+        return false;
+    }
 
     const words = trimmed.split(/\s+/).filter(Boolean);
     if (words.length < 1 || words.length > 28 || !/[a-z]/i.test(trimmed)) {
@@ -809,13 +870,17 @@ function addStandaloneMonthDayCandidates(candidates, blocks) {
         const priority = MODEL_INPUT_SIGNAL_SCORE + 8;
         const previousBlock = blocks[index - 1]?.content;
         if (isLikelyTitleContextBlock(previousBlock)) {
-            addCandidate(candidates, blocks, index - 1, priority - 1);
+            addCandidate(candidates, blocks, index - 1, priority + 1, {
+                allowLikelyNoise: true,
+            });
         }
         if (
             isCompactContextBridgeBlock(previousBlock) &&
             isLikelyTitleContextBlock(blocks[index - 2]?.content)
         ) {
-            addCandidate(candidates, blocks, index - 2, priority - 1);
+            addCandidate(candidates, blocks, index - 2, priority + 1, {
+                allowLikelyNoise: true,
+            });
         }
         addCandidate(candidates, blocks, index, priority);
         addCandidate(candidates, blocks, index + 1, priority);
