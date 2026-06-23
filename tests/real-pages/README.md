@@ -20,6 +20,13 @@ For faster iteration on an existing local snapshot cache, run:
 npm run audit:real-pages
 ```
 
+To compare retained labels and context size against the v1.1.1-era scan context,
+run:
+
+```bash
+npm run compare:real-pages:static
+```
+
 LLM judged comparisons are optional because they require an eval transport:
 
 ```bash

@@ -105,7 +105,7 @@ function normalizeSearchText(value) {
         .toLowerCase();
 }
 
-function contextIncludes(combinedContext, label) {
+export function contextIncludes(combinedContext, label) {
     return normalizeSearchText(combinedContext).includes(normalizeSearchText(label));
 }
 
@@ -319,7 +319,12 @@ export function auditRealPageFixture(fixture) {
     };
 }
 
-function auditExpectedEventLabels(event, index, sourceContext, combinedContext) {
+export function auditExpectedEventLabels(
+    event,
+    index,
+    sourceContext,
+    combinedContext
+) {
     const title = event.title || `event-${index + 1}`;
     const fieldLabels = EVENT_LABEL_FIELDS.map((field) => ({
         field,

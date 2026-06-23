@@ -16,6 +16,7 @@ import {
 } from "./eval-real-pages-with-llm.mjs";
 import { preprocessLegacyForPopup } from "./legacy-preprocess.mjs";
 import {
+    auditExpectedEventLabels,
     installNodeDomParser,
     loadRealPageAuditFixtures,
     REAL_PAGE_FIXTURE_DIR,
@@ -32,6 +33,8 @@ function parseArgs(argv) {
             args.proxyUrl = arg.slice("--proxy-url=".length);
         } else if (arg.startsWith("--timeout-ms=")) {
             args.timeoutMs = Number(arg.slice("--timeout-ms=".length));
+        } else if (arg === "--static") {
+            args.static = true;
         } else if (arg.startsWith("--")) {
             throw new Error(`Unknown option: ${arg}`);
         } else {
@@ -59,6 +62,68 @@ export function contextStats(preprocessed) {
         csvChars: csvLength,
         separatorChars: separatorLength,
         contextChars: preprocessed.modelHtml.length + csvLength + separatorLength,
+    };
+}
+
+function combinedContextForPreprocessed(preprocessed) {
+    return [
+        preprocessed?.modelHtml || "",
+        ...(preprocessed?.csvSnippets || []),
+    ].join("\n");
+}
+
+export function buildStaticVariantResult({ fixture, preprocessed }) {
+    const expectedEvents = Array.isArray(fixture?.expectedEvents)
+        ? fixture.expectedEvents
+        : [];
+    const combinedContext = combinedContextForPreprocessed(preprocessed);
+    const eventLabelResults = expectedEvents.map((event, index) =>
+        auditExpectedEventLabels(event, index, combinedContext, combinedContext)
+    );
+    const missingEventLabels = eventLabelResults.flatMap((event) =>
+        event.missingLabels.map(
+            (missing) => `${event.title}: ${missing.field}=${missing.label}`
+        )
+    );
+    const misses = eventLabelResults.filter((event) => !event.passed).length;
+
+    return {
+        ...contextStats(preprocessed),
+        passed: missingEventLabels.length === 0,
+        matches: expectedEvents.length - misses,
+        misses,
+        hallucinations: 0,
+        eventLabelResults,
+        missingEventLabels,
+    };
+}
+
+export function buildStaticComparisonPage({
+    fixture,
+    oldPreprocessed,
+    currentPreprocessed,
+}) {
+    const oldResult = buildStaticVariantResult({
+        fixture,
+        preprocessed: oldPreprocessed,
+    });
+    const currentResult = buildStaticVariantResult({
+        fixture,
+        preprocessed: currentPreprocessed,
+    });
+
+    return {
+        name: fixture.name,
+        url: fixture.finalUrl || fixture.url,
+        expectedEventCount: Array.isArray(fixture.expectedEvents)
+            ? fixture.expectedEvents.length
+            : 0,
+        old: oldResult,
+        current: currentResult,
+        savedContextChars: oldResult.contextChars - currentResult.contextChars,
+        currentVsOldContextRatio: oldResult.contextChars
+            ? Number((currentResult.contextChars / oldResult.contextChars).toFixed(4))
+            : null,
     };
 }
 
@@ -375,6 +440,60 @@ export async function runOldNewComparison({
     return report;
 }
 
+export async function runOldNewStaticComparison({
+    names = [],
+    reportPath = path.join(REAL_PAGE_FIXTURE_DIR, "old-new-static-report.json"),
+} = {}) {
+    const cleanupDomParser = await installNodeDomParser();
+    const pages = [];
+    try {
+        const fixtures = selectFixtures(
+            await loadRealPageAuditFixtures(undefined, undefined, { names }),
+            names
+        );
+        if (!fixtures.length) {
+            throw new Error("No event-labeled real-page fixtures were available.");
+        }
+
+        for (const fixture of fixtures) {
+            const oldPreprocessed = preprocessLegacyForPopup(
+                fixture.text || "",
+                fixture.html || ""
+            );
+            const currentPreprocessed = preprocessForPopup(
+                fixture.text || "",
+                fixture.html || ""
+            );
+            const page = buildStaticComparisonPage({
+                fixture,
+                oldPreprocessed,
+                currentPreprocessed,
+            });
+            pages.push(page);
+            console.log(formatComparisonLine(page));
+        }
+    } finally {
+        cleanupDomParser();
+    }
+
+    const totals = summarizeComparisonPages(pages);
+    const report = {
+        generatedAt: new Date().toISOString(),
+        mode: "static-retention",
+        ...totals,
+        pages,
+    };
+
+    await fs.mkdir(path.dirname(reportPath), { recursive: true });
+    await fs.writeFile(reportPath, JSON.stringify(report, null, 2));
+    console.log(`report=${path.relative(process.cwd(), reportPath)}`);
+    console.log(
+        `summary pages=${report.pageCount} oldPasses=${report.oldPasses} currentPasses=${report.currentPasses} oldErrors=${report.oldErrors.length} currentErrors=${report.currentErrors.length} savingsRatio=${report.savingsRatio}`
+    );
+
+    return report;
+}
+
 export function formatComparisonLine(page) {
     let status = "FAIL";
     if (page.current.error) {
@@ -396,6 +515,12 @@ export function formatComparisonLine(page) {
 
 async function main() {
     const args = parseArgs(process.argv.slice(2));
+    if (args.static) {
+        const report = await runOldNewStaticComparison({ names: args.names });
+        if (!report.passed) process.exitCode = 1;
+        return;
+    }
+
     const transport = resolveEvalTransport({
         env: process.env,
         args: {

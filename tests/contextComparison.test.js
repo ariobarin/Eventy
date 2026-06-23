@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+    buildStaticComparisonPage,
+    buildStaticVariantResult,
     buildErroredVariantResult,
     contextStats,
     formatComparisonLine,
@@ -149,6 +151,89 @@ test("old-new comparison line warns on baseline-only errors", () => {
 
     assert.match(line, /^WARN timeout-page /);
     assert.match(line, /oldError=timed out/);
+});
+
+test("static variant result evaluates event labels across model and csv context", () => {
+    const result = buildStaticVariantResult({
+        fixture: {
+            expectedEvents: [
+                {
+                    title: "Opening Keynote",
+                    date: "June 24, 2026",
+                },
+                {
+                    title: "Workshop Lab",
+                    date: "June 25, 2026",
+                },
+            ],
+        },
+        preprocessed: {
+            modelHtml: "Opening Keynote\nJune 24, 2026",
+            csvSnippets: ['"Title","Date"\n"Workshop Lab","June 25, 2026"'],
+        },
+    });
+
+    assert.equal(result.passed, true);
+    assert.equal(result.matches, 2);
+    assert.equal(result.misses, 0);
+    assert.equal(result.contextChars, 75);
+});
+
+test("static variant result reports missing retained labels", () => {
+    const result = buildStaticVariantResult({
+        fixture: {
+            expectedEvents: [
+                {
+                    title: "Missing Details Talk",
+                    date: "June 26, 2026",
+                    location: "Room 101",
+                },
+            ],
+        },
+        preprocessed: {
+            modelHtml: "Missing Details Talk\nJune 26, 2026",
+            csvSnippets: [],
+        },
+    });
+
+    assert.equal(result.passed, false);
+    assert.equal(result.matches, 0);
+    assert.equal(result.misses, 1);
+    assert.deepEqual(result.missingEventLabels, [
+        "Missing Details Talk: location=Room 101",
+    ]);
+});
+
+test("static comparison page reports retention changes and savings", () => {
+    const page = buildStaticComparisonPage({
+        fixture: {
+            name: "sample-page",
+            url: "https://example.test/events",
+            expectedEvents: [
+                {
+                    title: "Workshop Lab",
+                    date: "June 25, 2026",
+                },
+            ],
+        },
+        oldPreprocessed: {
+            modelHtml: "Workshop Lab",
+            csvSnippets: [],
+        },
+        currentPreprocessed: {
+            modelHtml: "Workshop Lab\nJune 25, 2026",
+            csvSnippets: [],
+        },
+    });
+
+    assert.equal(page.name, "sample-page");
+    assert.equal(page.expectedEventCount, 1);
+    assert.equal(page.old.passed, false);
+    assert.equal(page.current.passed, true);
+    assert.equal(page.old.misses, 1);
+    assert.equal(page.current.misses, 0);
+    assert.equal(page.savedContextChars, -14);
+    assert.equal(page.currentVsOldContextRatio, 2.1667);
 });
 
 test("old-new comparison records variant errors without losing size stats", () => {
