@@ -832,6 +832,38 @@ test("model input reserves truncation notice budget before selecting event block
     assert.match(output, /Location: Budget Hall 133/);
 });
 
+test("model input does not let scoreless lead blocks outrank events", () => {
+    const leadBlock = Array.from(
+        { length: 260 },
+        (_, index) =>
+            `General visiting introduction ${index} with broad page background and policies`
+    ).join(" ");
+    const longListing = (index) =>
+        [
+            `Listing Row ${index}`,
+            `Friday June ${(index % 28) + 1}, 2026`,
+            Array.from(
+                { length: 80 },
+                (_, noteIndex) =>
+                    `Audience note ${noteIndex} with ordinary page copy and logistics`
+            ).join(" "),
+        ].join("\n");
+    const input = [
+        leadBlock,
+        leadBlock,
+        leadBlock,
+        ...Array.from({ length: 20 }, (_, index) => longListing(index)),
+    ].join("\n\n");
+
+    const output = buildModelInput(input, null, 9000);
+
+    assert.ok(output.length <= 9000);
+    assert.match(output, /Listing Row 0/);
+    assert.match(output, /Listing Row 19/);
+    assert.match(output, /Friday June 20, 2026/);
+    assert.doesNotMatch(output, /General visiting introduction 259/);
+});
+
 test("html conversion does not prefer generic content chrome over page content", () => {
     const originalDomParser = globalThis.DOMParser;
     globalThis.DOMParser = class {

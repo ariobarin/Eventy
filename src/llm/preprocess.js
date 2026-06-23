@@ -268,6 +268,7 @@ const MODEL_INPUT_MAX_BLOCK_CHARS = 4000;
 const MODEL_INPUT_SIGNAL_CHUNK_CHARS = 1400;
 const MODEL_INPUT_SIGNAL_CHUNK_MIN_SIGNALS = 8;
 const MODEL_INPUT_SIGNAL_SCORE = 8;
+const MODEL_INPUT_MAX_SCORELESS_PRIORITY_LEAD_CHARS = 800;
 const MODEL_INPUT_PRIORITY_LEAD_BLOCKS = 3;
 const MODEL_INPUT_LEAD_BLOCKS = 18;
 const MODEL_INPUT_TRUNCATION_NOTICE =
@@ -1029,8 +1030,13 @@ function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
         index++
     ) {
         const block = blocks[index];
+        const isPriorityLead = index < MODEL_INPUT_PRIORITY_LEAD_BLOCKS;
+        const isBoundedScorelessPriorityLead =
+            isPriorityLead &&
+            block.score <= 0 &&
+            block.content.length <= MODEL_INPUT_MAX_SCORELESS_PRIORITY_LEAD_CHARS;
         const priority =
-            index < MODEL_INPUT_PRIORITY_LEAD_BLOCKS || block.score > 0
+            block.score > 0 || isBoundedScorelessPriorityLead
                 ? MODEL_INPUT_SIGNAL_SCORE + 36
                 : 4;
         addCandidate(candidates, blocks, index, priority);
