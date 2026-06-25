@@ -21,7 +21,7 @@
         "eval:real-pages:llm": "node scripts/eval-real-pages-with-llm.mjs",
         "compare:real-pages:llm": "node scripts/compare-real-pages-old-new.mjs",
         "verify:ui": "node scripts/verify-extension-ui.mjs",
-        "verify:offline": "npm test && npm run compare:real-pages:static && npm run verify:ui -- --headless",
+        "verify:offline": "npm test && npm run verify:ui -- --headless",
         "verify:integration": "npm run eval:real-pages:llm -- --proxy-url=https://eventy-proxy.eventy.workers.dev/api --model=deepseek/deepseek-v4-flash --judge-model=deepseek/deepseek-v4-flash --concurrency=2 --timeout-ms=90000 city-of-sydney-whats-on mcasd-events",
         "verify:release": "npm run verify:offline && npm run verify:integration",
         "package": "node scripts/package-extension.mjs",

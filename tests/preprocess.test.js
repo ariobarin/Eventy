@@ -144,6 +144,24 @@ test("model input preserves later signals inside serialized event blocks", () =>
     assert.doesNotMatch(output, /Navigation item 519/);
 });
 
+test("model input preserves seven serialized date cards in one paragraph", () => {
+    const serializedEventBlock = Array.from({ length: 7 }, (_, index) =>
+        [
+            `Serialized Program ${index}`,
+            `June ${index + 1}, 2026`,
+            `Detailed program note ${index} `.repeat(70),
+        ].join(" ")
+    ).join(" ");
+
+    const output = buildModelInput(serializedEventBlock, null, 11000);
+
+    assert.ok(output.length <= 11000);
+    assert.match(output, /Serialized Program 0/);
+    assert.match(output, /Serialized Program 1/);
+    assert.match(output, /Serialized Program 4/);
+    assert.match(output, /Serialized Program 6/);
+});
+
 test("model input preserves dense serialized event feeds over block budget", () => {
     const repeatedNoise = Array.from(
         { length: 520 },
@@ -754,6 +772,32 @@ test("model input keeps punctuated titles before standalone date cards", () => {
     assert.doesNotMatch(output, /Community resource section 519/);
 });
 
+test("model input keeps long period-ended titles before standalone date cards", () => {
+    const repeatedCopy = Array.from(
+        { length: 520 },
+        (_, index) =>
+            `Community resource section ${index} with general visitor information and local program summaries.`
+    ).join("\n\n");
+    const title = "National Writers Union Annual Awards Ceremony.";
+    const input = [
+        repeatedCopy,
+        title,
+        "June",
+        "26",
+        "Online",
+        repeatedCopy,
+    ].join("\n\n");
+
+    const output = buildModelInput(input, null);
+
+    assert.ok(output.length <= MODEL_INPUT_MAX_CHARS);
+    assert.match(output, /National Writers Union Annual Awards Ceremony\./);
+    assert.match(output, /June/);
+    assert.match(output, /26/);
+    assert.match(output, /Online/);
+    assert.doesNotMatch(output, /Community resource section 519/);
+});
+
 test("model input keeps titles before labeled standalone month day cards", () => {
     const repeatedCopy = Array.from(
         { length: 520 },
@@ -1296,6 +1340,64 @@ test("model input keeps hidden html event details over sparse rendered chrome", 
         assert.match(output, /TOgether 2026/);
         assert.match(output, /June 5 to 6/);
         assert.match(output, /Nathan Phillips Square/);
+    } finally {
+        if (originalDomParser === undefined) {
+            delete globalThis.DOMParser;
+        } else {
+            globalThis.DOMParser = originalDomParser;
+        }
+    }
+});
+
+test("model input keeps hidden html details over large rendered text", () => {
+    const originalDomParser = globalThis.DOMParser;
+    globalThis.DOMParser = class {
+        parseFromString(html) {
+            return new JSDOM(html).window.document;
+        }
+    };
+
+    try {
+        const renderedNoise = Array.from(
+            { length: 150 },
+            (_, index) =>
+                `Rendered overview section ${index} with visitor guidance and ordinary browsing text.`
+        ).join("\n\n");
+        const htmlNoise = Array.from(
+            { length: 260 },
+            (_, index) =>
+                `<p>General HTML schedule note ${index} with visitor guidance and ordinary browsing text.</p>`
+        ).join("");
+        const text = [
+            "Large Arts Calendar",
+            "Warehouse Workshop",
+            "July 8, 2026",
+            "6:30 PM",
+            renderedNoise,
+        ].join("\n\n");
+        const html = [
+            "<main>",
+            "<h1>Large Arts Calendar</h1>",
+            htmlNoise,
+            "<article>",
+            "<h2>Warehouse Workshop</h2>",
+            "<p>July 8, 2026</p>",
+            "<p>6:30 PM</p>",
+            "<p>Location: Hidden Warehouse Room</p>",
+            "<p>Hands-on session with local makers.</p>",
+            "</article>",
+            "</main>",
+        ].join("");
+
+        assert.ok(text.length > 5000);
+        assert.ok(text.length <= MODEL_INPUT_MAX_CHARS);
+
+        const output = buildModelInput(text, html);
+
+        assert.match(output, /Warehouse Workshop/);
+        assert.match(output, /July 8, 2026/);
+        assert.match(output, /6:30 PM/);
+        assert.match(output, /Hidden Warehouse Room/);
     } finally {
         if (originalDomParser === undefined) {
             delete globalThis.DOMParser;

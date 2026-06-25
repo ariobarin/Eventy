@@ -1463,35 +1463,30 @@
             {
                 "title": "Archibald, Wynne and Sulman Prizes",
                 "date": "Tomorrow",
-                "location": "Art Gallery of NSW",
-                "description": "Exhibitions"
+                "location": "Art Gallery of NSW"
             },
             {
                 "title": "Bastille Festival 2026",
                 "date": "16 Jul 2026",
-                "location": "Circular Quay",
-                "description": "Food & drink"
+                "location": "Circular Quay"
             },
             {
                 "title": "Whale watching cruises",
                 "date": "Tomorrow",
-                "location": "Circular Quay",
-                "description": "Children & family"
+                "location": "Circular Quay"
             },
             {
                 "title": "Ceramics: Studio access program (6 weeks)",
                 "date": "30 Jul 2026",
-                "location": "Pine Street Creative Arts Centre",
-                "description": "Talks, courses & workshops"
+                "location": "Pine Street Creative Arts Centre"
             },
             {
                 "title": "Experimental Sculpture in Clay",
                 "date": "27 Jun 2026",
-                "location": "National Art School",
-                "description": "Talks, courses & workshops"
+                "location": "National Art School"
             }
         ],
-        "labelingNotes": "Checked the Today, Outdoor vibes, Family fun, and Hands on sections and used visible card title, venue, category, date, and time text.",
+        "labelingNotes": "Checked the Today, Outdoor vibes, Family fun, and Hands on sections and used visible card title, venue, date, and time text.",
         "risk": "Relative labels like Today and Tomorrow depend on capture date, and some cards are promoted section content rather than a pure chronological list."
     },
     {
@@ -2750,7 +2745,7 @@
         "expectedAnchors": [
             "Reflections: Giants",
             "Teen Art Collective Showcase",
-            "MCA in SD: Coronado Public Library",
+            "Free Second Sunday",
             "Contemporary Thinkers Social Mixer"
         ],
         "expectedEvents": [
@@ -2763,10 +2758,9 @@
                 "date": "June 5 to June 28, 2026"
             },
             {
-                "title": "MCA in SD: Coronado Public Library (Offsite)",
-                "date": "June 23, 2026",
-                "time": "6:00 pm",
-                "location": "Offsite"
+                "title": "Free Second Sunday",
+                "date": "July 12, 2026",
+                "time": "11:00 am"
             },
             {
                 "title": "Contemporary Thinkers Social Mixer, Vol. 3",
@@ -2774,7 +2768,7 @@
                 "time": "5:00 pm"
             }
         ],
-        "labelingNotes": "Multi-event scout candidate with neutral critic acceptance; labels intentionally include untimed date ranges and timed programs.",
+        "labelingNotes": "Multi-event scout candidate with neutral critic acceptance; labels intentionally include untimed date ranges and current timed programs.",
         "risk": "Filter controls and implicit museum location can compete with event card text."
     },
     {

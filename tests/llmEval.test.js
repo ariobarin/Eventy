@@ -645,6 +645,82 @@ test("LLM judge summary reconciles shorthand expected time ranges", () => {
     });
 });
 
+test("LLM judge summary reconciles shorthand single expected times", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Community Lunch",
+                    reason: "The extracted event uses a normalized time.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Community Lunch",
+                    time: "12 pm",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Community Lunch",
+                    startTime: "12:00 PM",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: true,
+        matches: 1,
+        misses: 0,
+        hallucinations: 0,
+    });
+});
+
+test("LLM judge summary reconciles timezone text on single expected times", () => {
+    const summary = summarizeJudgeVerdict(
+        {
+            passed: false,
+            matches: [],
+            misses: [
+                {
+                    expectedIndex: 0,
+                    expectedTitle: "Research Briefing",
+                    reason: "The extracted event uses a normalized time.",
+                },
+            ],
+            hallucinations: [],
+        },
+        {
+            expectedEvents: [
+                {
+                    title: "Research Briefing",
+                    time: "1pm EDT",
+                },
+            ],
+            extractedEvents: [
+                {
+                    title: "Research Briefing",
+                    startTime: "1:00 PM EDT",
+                },
+            ],
+        }
+    );
+
+    assert.deepEqual(summary, {
+        passed: true,
+        matches: 1,
+        misses: 0,
+        hallucinations: 0,
+    });
+});
+
 test("LLM judge summary reconciles expected time ranges with timezone text", () => {
     const summary = summarizeJudgeVerdict(
         {

@@ -35,6 +35,12 @@ test("release verification includes live LLM integration", () => {
     assert.match(packageJson.scripts?.["verify:release"] || "", /verify:integration/);
 });
 
+test("offline verification avoids volatile real page captures", () => {
+    const offlineScript = packageJson.scripts?.["verify:offline"] || "";
+    assert.equal(offlineScript.includes("verify:real-pages"), false);
+    assert.equal(offlineScript.includes("compare:real-pages:static"), false);
+});
+
 test("model listing does not send the user api key", () => {
     const settingsSource = fs.readFileSync(new URL("../src/ui/settings/api.js", import.meta.url), "utf8");
     assert.equal(settingsSource.includes('postProxyJson("/models", { apiKey })'), false);

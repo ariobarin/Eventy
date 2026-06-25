@@ -335,6 +335,13 @@ function extractedTimeMatchesExpected(extracted, expectedTime) {
     }
     if (timeLooksLikeRange(expectedTime)) return false;
 
+    const expectedSingleTime = parseSingleTime(expectedTime);
+    if (expectedSingleTime !== null) {
+        return [extracted?.startTime, extracted?.endTime]
+            .map(parseSingleTime)
+            .some((candidate) => candidate === expectedSingleTime);
+    }
+
     return (
         (startText && expectedText.includes(startText)) ||
         (endText && expectedText.includes(endText)) ||
@@ -697,6 +704,16 @@ function parseTimeRange(value) {
     const end = timeMinutes(match[2]);
     if (start === null || end === null) return null;
     return { start, end };
+}
+
+function parseSingleTime(value) {
+    const match = String(value || "")
+        .trim()
+        .match(
+            /^(\d{1,2}(?:(?::|\.)\d{2})?\s*(?:[ap](?:\.?m\.?)?)?)(?:\s*[a-z]{2,5})?$/i
+        );
+    if (!match) return null;
+    return timeMinutes(match[1]);
 }
 
 function timeLooksLikeRange(value) {

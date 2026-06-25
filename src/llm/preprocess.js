@@ -266,7 +266,7 @@ export const MODEL_INPUT_MAX_CHARS = 18000;
 
 const MODEL_INPUT_MAX_BLOCK_CHARS = 4000;
 const MODEL_INPUT_SIGNAL_CHUNK_CHARS = 1400;
-const MODEL_INPUT_SIGNAL_CHUNK_MIN_SIGNALS = 8;
+const MODEL_INPUT_SIGNAL_CHUNK_MIN_SIGNALS = 6;
 const MODEL_INPUT_SIGNAL_PRE_CONTEXT_CHARS = 900;
 const MODEL_INPUT_SIGNAL_POST_CONTEXT_CHARS = 95;
 const MODEL_INPUT_SIGNAL_SCORE = 8;
@@ -616,12 +616,10 @@ function isLinkHeavyParsedContent(htmlText, renderedLength) {
     );
 }
 
-function htmlAddsMissingEventDetails(renderedText, htmlText, textScore, htmlScore) {
+function htmlAddsMissingEventDetails(renderedText, htmlText, htmlScore) {
     if (
-        renderedText.length > 5000 ||
         htmlText.length <= renderedText.length * 1.1 ||
-        isLinkHeavyParsedContent(htmlText, renderedText.length) ||
-        htmlScore < Math.max(12, textScore - 6)
+        isLinkHeavyParsedContent(htmlText, renderedText.length)
     ) {
         return false;
     }
@@ -644,7 +642,10 @@ function htmlAddsMissingEventDetails(renderedText, htmlText, textScore, htmlScor
         });
     const missingPlaceDetailLines = missingDetailLines.filter(hasPlaceDetailSignal);
 
-    return missingPlaceDetailLines.length >= 1;
+    return (
+        missingPlaceDetailLines.length >= 1 &&
+        (htmlScore >= 12 || missingDetailLines.length >= 2)
+    );
 }
 
 function chooseRawModelContent(
@@ -683,7 +684,6 @@ function chooseRawModelContent(
     const htmlAddsHiddenEventDetails = htmlAddsMissingEventDetails(
         normalizedText,
         normalizedHtml,
-        textScore,
         htmlScore
     );
     const textLooksLikeCollapsedDetails =
@@ -956,7 +956,13 @@ function isLikelyTitleContextBlock(text) {
     }
 
     if (/[!?]$/.test(trimmed)) return true;
-    if (/\.$/.test(trimmed)) return words.length <= 4;
+    if (/\.$/.test(trimmed)) {
+        if (words.length <= 4) return true;
+        const titleCaseWords = words.filter((word) =>
+            /^[A-Z][A-Za-z0-9'.-]*\.?$/.test(word)
+        ).length;
+        return words.length <= 12 && titleCaseWords >= Math.ceil(words.length * 0.6);
+    }
 
     return true;
 }
