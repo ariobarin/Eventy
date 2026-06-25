@@ -84,7 +84,13 @@ LLM judging is available through `npm run compare:real-pages:llm` when an eval
 transport is configured.
 
 For local release confidence, run `npm run verify:release`. It combines unit
-tests, static real-page comparison, and the headless browser UI suite.
+tests, static real-page comparison, the headless browser UI suite, and a live
+LLM integration eval against a small labeled real-page set. The live eval uses
+the public Eventy proxy URL and reads any required token from
+`EVENTY_EVAL_PROXY_TOKEN` or `EVENTY_TOKEN`.
+
+For an offline confidence pass that does not call an LLM, run
+`npm run verify:offline`.
 
 ## Homepage Front
 

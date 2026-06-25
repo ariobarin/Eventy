@@ -18,9 +18,18 @@ test("extension only declares the Eventy proxy host", () => {
 
 test("package metadata is ready for public release work", () => {
     assert.equal(Object.hasOwn(packageJson, "private"), false);
-    assert.equal(packageJson.version, "1.1.1");
+    assert.equal(packageJson.version, "1.2.0");
+    assert.equal(manifest.version, "1.2.0");
     assert.equal(packageJson.scripts?.package, "node scripts/package-extension.mjs");
     assert.equal(packageJson.repository?.url, "git+https://github.com/ariobarin/Eventy.git");
+});
+
+test("release verification includes live LLM integration", () => {
+    assert.match(packageJson.scripts?.["verify:integration"] || "", /eval:real-pages:llm/);
+    assert.match(packageJson.scripts?.["verify:integration"] || "", /--proxy-url=https:\/\/eventy-proxy\.eventy\.workers\.dev\/api/);
+    assert.match(packageJson.scripts?.["verify:integration"] || "", /city-of-sydney-whats-on/);
+    assert.match(packageJson.scripts?.["verify:integration"] || "", /mcasd-events/);
+    assert.match(packageJson.scripts?.["verify:release"] || "", /verify:integration/);
 });
 
 test("model listing does not send the user api key", () => {
