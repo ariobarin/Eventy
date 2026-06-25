@@ -4,6 +4,15 @@ import { createICSDownloadUrl, createMergedICSDownloadUrl, generateICSFilename }
 // Track active downloads to revoke blob URLs
 const activeDownloads = new Map();
 
+function notifyIcsDownloadStarted(downloadedFiles, onIcsDownloadStarted) {
+    if (!downloadedFiles.length || typeof onIcsDownloadStarted !== "function") return;
+
+    onIcsDownloadStarted({
+        count: downloadedFiles.length,
+        filenames: downloadedFiles.map((file) => file.filename),
+    });
+}
+
 // Single listener for all downloads
 chrome.downloads.onChanged.addListener((delta) => {
     if (activeDownloads.has(delta.id) && delta.state?.current) {
@@ -52,13 +61,15 @@ export async function downloadMergedICS(events) {
     }
 }
 
-export async function openCalendarEventsInBackground(events) {
+export async function openCalendarEventsInBackground(events, options = {}) {
     // Load user's calendar preference
     const result = await chrome.storage.sync.get("settings");
     const settings = result.settings || {};
     const calendarType = settings.defaultCalendar || "google";
 
     if (calendarType === "icloud") {
+        const downloadedFiles = [];
+
         // Generate .ics files for iCloud Calendar
         for (const ev of events) {
             const icsUrl = createICSDownloadUrl(ev);
@@ -74,12 +85,15 @@ export async function openCalendarEventsInBackground(events) {
                 
                 // Track this download for blob URL cleanup
                 activeDownloads.set(downloadId, icsUrl);
+                downloadedFiles.push({ downloadId, filename });
             } catch (e) {
                 console.error("Download failed:", e);
                 // Clean up the blob URL immediately if download fails
                 URL.revokeObjectURL(icsUrl);
             }
         }
+
+        notifyIcsDownloadStarted(downloadedFiles, options.onIcsDownloadStarted);
     } else {
         // Default to Google Calendar (open URLs in new tabs)
         for (const ev of events) {

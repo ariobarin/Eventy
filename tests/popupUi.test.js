@@ -56,3 +56,16 @@ test("popup toast leaves layout after it fades out", () => {
     assert.match(js, /toast\.classList\.add\("hidden"\);/);
     assert.match(js, /clearTimeout\(Number\(toast\.dataset\.hideTimeoutId\)\);/);
 });
+
+test("popup tells iCalendar users to open downloaded files", () => {
+    const js = fs.readFileSync(new URL("../src/popup.js", import.meta.url), "utf8");
+    const start = js.indexOf("addSelectedBtn?.addEventListener");
+    assert.notEqual(start, -1, "add selected handler should exist");
+    const end = js.indexOf("// Check if a scan is in progress", start);
+    assert.notEqual(end, -1, "add selected handler should be bounded");
+    const handler = js.slice(start, end);
+
+    assert.match(handler, /onIcsDownloadStarted/);
+    assert.match(handler, /After it downloads, open the \.ics file/);
+    assert.match(handler, /showToast\(/);
+});
