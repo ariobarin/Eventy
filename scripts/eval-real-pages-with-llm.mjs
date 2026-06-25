@@ -118,7 +118,6 @@ export function buildEventJudgeRequestBody({ model, fixture, extractedEvents }) 
         provider: {
             require_parameters: true,
         },
-        temperature: 0,
     };
 }
 

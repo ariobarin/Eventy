@@ -141,7 +141,6 @@ export function buildOpenRouterRequestBody(messages) {
         provider: {
             require_parameters: true,
         },
-        temperature: 0,
     };
 }
 

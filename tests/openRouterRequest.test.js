@@ -28,6 +28,15 @@ test("completion request does not request streaming", () => {
     assert.equal(Object.hasOwn(body, "stream"), false);
 });
 
+test("completion request uses provider sampling defaults", () => {
+    const body = buildOpenRouterRequestBody([
+        { role: "user", content: "extract events" },
+    ]);
+
+    assert.equal(Object.hasOwn(body, "temperature"), false);
+    assert.equal(Object.hasOwn(body, "top_p"), false);
+});
+
 test("completion request requires routed providers to support parameters", () => {
     const body = buildOpenRouterRequestBody([
         { role: "user", content: "extract events" },
