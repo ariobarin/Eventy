@@ -45,8 +45,50 @@ test("old-new comparison summary reports savings and regressions", () => {
     const summary = summarizeComparisonPages([
         {
             name: "kept-quality",
-            old: { passed: true, misses: 0, contextChars: 1000 },
-            current: { passed: true, misses: 0, contextChars: 400 },
+            old: {
+                passed: true,
+                misses: 0,
+                contextChars: 1000,
+                requests: [
+                    {
+                        timing: { durationMs: 100, timeToFirstResponseMs: 25 },
+                        usage: {
+                            raw: { total_tokens: 15 },
+                            inputTokens: 10,
+                            outputTokens: 5,
+                            totalTokens: 15,
+                            cachedInputTokens: 4,
+                            costUsd: 0.0001,
+                        },
+                        throughput: {
+                            outputTokensPerSecond: 50,
+                            totalTokensPerSecond: 150,
+                        },
+                    },
+                ],
+            },
+            current: {
+                passed: true,
+                misses: 0,
+                contextChars: 400,
+                requests: [
+                    {
+                        timing: { durationMs: 80, timeToFirstResponseMs: 20 },
+                        usage: {
+                            raw: { total_tokens: 10 },
+                            inputTokens: 7,
+                            outputTokens: 3,
+                            totalTokens: 10,
+                            cachedInputTokens: 2,
+                            costUsd: 0.00007,
+                        },
+                        throughput: {
+                            outputTokensPerSecond: 37.5,
+                            totalTokensPerSecond: 125,
+                        },
+                    },
+                ],
+            },
         },
         {
             name: "regressed-quality",
@@ -66,6 +108,10 @@ test("old-new comparison summary reports savings and regressions", () => {
     assert.equal(summary.savedContextChars, 1100);
     assert.equal(summary.currentVsOldContextRatio, 0.3889);
     assert.equal(summary.savingsRatio, 0.6111);
+    assert.equal(summary.benchmarkTelemetry.requests.total, 2);
+    assert.equal(summary.benchmarkTelemetry.tokens.totalTokens, 25);
+    assert.equal(summary.benchmarkTelemetry.tokens.cachedInputTokens, 6);
+    assert.equal(summary.benchmarkTelemetry.cost.usd, 0.00017);
     assert.equal(summary.passed, false);
 });
 
@@ -283,6 +329,13 @@ test("static comparison page reports retention changes and savings", () => {
 });
 
 test("old-new comparison records variant errors without losing size stats", () => {
+    const requests = [
+        {
+            timing: { durationMs: 100, timeToFirstResponseMs: 90 },
+            usage: { raw: null },
+            error: "timed out",
+        },
+    ];
     const result = buildErroredVariantResult({
         stats: {
             modelInputChars: 10,
@@ -291,6 +344,7 @@ test("old-new comparison records variant errors without losing size stats", () =
             contextChars: 14,
         },
         expectedEventCount: 3,
+        requests,
         error: new Error("timed out"),
     });
 
@@ -298,5 +352,6 @@ test("old-new comparison records variant errors without losing size stats", () =
     assert.equal(result.matches, 0);
     assert.equal(result.misses, 3);
     assert.equal(result.contextChars, 14);
+    assert.equal(result.requests, requests);
     assert.equal(result.error, "timed out");
 });

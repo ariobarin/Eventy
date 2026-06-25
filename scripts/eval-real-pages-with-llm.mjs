@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { performance } from "node:perf_hooks";
 import { pathToFileURL } from "node:url";
 
 import {
@@ -13,6 +14,14 @@ import {
     loadRealPageAuditFixtures,
     REAL_PAGE_FIXTURE_DIR,
 } from "./real-page-fixtures.mjs";
+import {
+    buildLLMCallTelemetry,
+    summarizeLLMBenchmarkTelemetry,
+} from "./benchmark-telemetry.mjs";
+import {
+    normalizeConcurrency,
+    runWithConcurrency,
+} from "./benchmark-concurrency.mjs";
 
 const OPENROUTER_CHAT_COMPLETIONS_URL =
     "https://openrouter.ai/api/v1/chat/completions";
@@ -761,7 +770,13 @@ function resolveJudgeExpectedKey(item, expectedCount, expectedTitleKeys) {
     return Number.isInteger(titleKey) ? `index:${titleKey}` : null;
 }
 
-export function buildErroredEvalPage({ fixture, model, judgeModel, error }) {
+export function buildErroredEvalPage({
+    fixture,
+    model,
+    judgeModel,
+    requests = [],
+    error,
+}) {
     const expectedEventCount = fixture.expectedEvents?.length || 0;
     return {
         name: fixture.name,
@@ -776,6 +791,7 @@ export function buildErroredEvalPage({ fixture, model, judgeModel, error }) {
         hallucinations: 0,
         extractedEvents: [],
         judge: null,
+        requests,
         error: error?.message || String(error || "Unknown LLM eval error"),
     };
 }
@@ -791,6 +807,8 @@ function parseArgs(argv) {
             args.proxyUrl = arg.slice("--proxy-url=".length);
         } else if (arg.startsWith("--timeout-ms=")) {
             args.timeoutMs = Number(arg.slice("--timeout-ms=".length));
+        } else if (arg.startsWith("--concurrency=")) {
+            args.concurrency = arg.slice("--concurrency=".length);
         } else if (arg.startsWith("--")) {
             throw new Error(`Unknown option: ${arg}`);
         } else {
@@ -863,9 +881,43 @@ export function buildEvalTransportRequest({ transport, body }) {
     );
 }
 
-async function callLLM({ transport, body, timeoutMs = 60000 }) {
+export async function callLLMWithTelemetry({
+    transport,
+    body,
+    timeoutMs = 60000,
+    metadata = {},
+}) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    const startedAtMs = performance.now();
+    const startedAt = new Date().toISOString();
+    let responseStartedAtMs = null;
+    let responseStartedAt = null;
+    let endedAtMs = null;
+    let endedAt = null;
+    let responseStatus = null;
+    let responseStatusText = null;
+    let responseText = "";
+    let responseData = null;
+    const transportMode = transport?.mode || null;
+    const buildTelemetry = (error = null) =>
+        buildLLMCallTelemetry({
+            metadata,
+            transportMode,
+            body,
+            responseStatus,
+            responseStatusText,
+            responseData,
+            responseText,
+            startedAt,
+            responseStartedAt,
+            endedAt,
+            startedAtMs,
+            responseStartedAtMs,
+            endedAtMs,
+            error,
+        });
+
     try {
         const request = buildEvalTransportRequest({ transport, body });
         const response = await fetch(request.url, {
@@ -874,20 +926,60 @@ async function callLLM({ transport, body, timeoutMs = 60000 }) {
             body: request.body,
             signal: controller.signal,
         });
+        responseStartedAtMs = performance.now();
+        responseStartedAt = new Date().toISOString();
+        responseStatus = response.status;
+        responseStatusText = response.statusText;
+        responseText = await response.text();
+        endedAtMs = performance.now();
+        endedAt = new Date().toISOString();
 
         if (!response.ok) {
-            const text = await response.text();
-            throw new Error(
-                `LLM eval request failed: ${response.status} ${text.slice(
+            const error = new Error(
+                `LLM eval request failed: ${response.status} ${responseText.slice(
                     0,
                     500
                 )}`
             );
+            error.telemetry = buildTelemetry(error);
+            throw error;
         }
 
-        return response.json();
+        try {
+            responseData = JSON.parse(responseText);
+        } catch (error) {
+            error.telemetry = buildTelemetry(error);
+            throw error;
+        }
+
+        return {
+            data: responseData,
+            telemetry: buildTelemetry(),
+        };
+    } catch (error) {
+        if (endedAtMs === null) {
+            endedAtMs = performance.now();
+            endedAt = new Date().toISOString();
+        }
+        if (!error.telemetry) {
+            error.telemetry = buildTelemetry(error);
+        }
+        throw error;
     } finally {
         clearTimeout(timeoutId);
+    }
+}
+
+async function callAndRecordLLM(options, requests) {
+    try {
+        const { data, telemetry } = await callLLMWithTelemetry(options);
+        requests.push(telemetry);
+        return data;
+    } catch (error) {
+        if (error.telemetry) {
+            requests.push(error.telemetry);
+        }
+        throw error;
     }
 }
 
@@ -913,8 +1005,11 @@ export async function runRealPageLLMEval({
     judgeModel = model,
     names = [],
     timeoutMs = 60000,
+    concurrency = 1,
     reportPath = path.join(REAL_PAGE_FIXTURE_DIR, "llm-report.json"),
 } = {}) {
+    const benchmarkStartedAt = new Date().toISOString();
+    const benchmarkStartedAtMs = performance.now();
     const evalTransport =
         transport || resolveEvalTransport({ args: { apiKey, proxyUrl } });
     if (evalTransport.mode === "missing") {
@@ -935,7 +1030,8 @@ export async function runRealPageLLMEval({
             throw new Error("No event-labeled real-page fixtures were available.");
         }
 
-        for (const fixture of fixtures) {
+        pages = await runWithConcurrency(fixtures, concurrency, async (fixture) => {
+            const requests = [];
             try {
                 const { modelHtml, csvSnippets } = preprocessForPopup(
                     fixture.text || "",
@@ -954,11 +1050,20 @@ export async function runRealPageLLMEval({
                     ...buildOpenRouterRequestBody(messages),
                     model,
                 };
-                const extractionData = await callLLM({
-                    transport: evalTransport,
-                    body: extractionBody,
-                    timeoutMs,
-                });
+                const extractionData = await callAndRecordLLM(
+                    {
+                        transport: evalTransport,
+                        body: extractionBody,
+                        timeoutMs,
+                        metadata: {
+                            pageName: fixture.name,
+                            variant: "current",
+                            phase: "extract",
+                            attempt: 1,
+                        },
+                    },
+                    requests
+                );
                 const extractedEvents =
                     extractEventsFromStructuredOutput(extractionData);
                 const judgeBody = buildEventJudgeRequestBody({
@@ -966,18 +1071,27 @@ export async function runRealPageLLMEval({
                     fixture,
                     extractedEvents,
                 });
-                const judgeData = await callLLM({
-                    transport: evalTransport,
-                    body: judgeBody,
-                    timeoutMs,
-                });
+                const judgeData = await callAndRecordLLM(
+                    {
+                        transport: evalTransport,
+                        body: judgeBody,
+                        timeoutMs,
+                        metadata: {
+                            pageName: fixture.name,
+                            variant: "current",
+                            phase: "judge",
+                            attempt: 1,
+                        },
+                    },
+                    requests
+                );
                 const judge = parseJsonResponse(judgeData);
                 const summary = summarizeJudgeVerdict(judge, {
                     expectedEventCount: fixture.expectedEvents.length,
                     expectedEvents: fixture.expectedEvents,
                     extractedEvents,
                 });
-                pages.push({
+                const page = {
                     name: fixture.name,
                     url: fixture.finalUrl || fixture.url,
                     model,
@@ -987,31 +1101,47 @@ export async function runRealPageLLMEval({
                     ...summary,
                     extractedEvents,
                     judge,
-                });
+                    requests,
+                };
                 console.log(
                     `${summary.passed ? "PASS" : "FAIL"} ${fixture.name} matches=${summary.matches} misses=${summary.misses} hallucinations=${summary.hallucinations}`
                 );
+                return page;
             } catch (error) {
                 const page = buildErroredEvalPage({
                     fixture,
                     model,
                     judgeModel,
+                    requests,
                     error,
                 });
-                pages.push(page);
                 console.log(`ERROR ${fixture.name} ${page.error}`);
+                return page;
             }
-        }
+        });
     } finally {
         cleanupDomParser();
     }
 
+    const benchmarkEndedAt = new Date().toISOString();
+    const benchmarkEndedAtMs = performance.now();
+    const benchmarkTelemetry = summarizeLLMBenchmarkTelemetry(
+        pages.flatMap((page) => page.requests || []),
+        {
+            startedAt: benchmarkStartedAt,
+            endedAt: benchmarkEndedAt,
+            startedAtMs: benchmarkStartedAtMs,
+            endedAtMs: benchmarkEndedAtMs,
+        }
+    );
     const report = {
         generatedAt: new Date().toISOString(),
         model,
         judgeModel,
+        concurrency: normalizeConcurrency(concurrency),
         pageCount: pages.length,
         passed: pages.every((page) => page.passed),
+        benchmarkTelemetry,
         pages,
     };
 
@@ -1037,12 +1167,16 @@ async function main() {
         Number.isFinite(args.timeoutMs) && args.timeoutMs > 0
             ? args.timeoutMs
             : Number(process.env.EVENTY_EVAL_TIMEOUT_MS || 60000);
+    const concurrency = normalizeConcurrency(
+        args.concurrency || process.env.EVENTY_EVAL_CONCURRENCY
+    );
     const report = await runRealPageLLMEval({
         transport,
         model,
         judgeModel,
         names: args.names,
         timeoutMs,
+        concurrency,
     });
 
     if (!report.passed) process.exitCode = 1;

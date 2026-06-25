@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { performance } from "node:perf_hooks";
 import { pathToFileURL } from "node:url";
 
 import {
@@ -11,6 +12,7 @@ import { preprocessForPopup } from "../src/utils/scan.js";
 import {
     buildEvalTransportRequest,
     buildEventJudgeRequestBody,
+    callLLMWithTelemetry,
     resolveEvalTransport,
     summarizeJudgeVerdict,
 } from "./eval-real-pages-with-llm.mjs";
@@ -21,6 +23,11 @@ import {
     loadRealPageAuditFixtures,
     REAL_PAGE_FIXTURE_DIR,
 } from "./real-page-fixtures.mjs";
+import { summarizeLLMBenchmarkTelemetry } from "./benchmark-telemetry.mjs";
+import {
+    normalizeConcurrency,
+    runWithConcurrency,
+} from "./benchmark-concurrency.mjs";
 
 function parseArgs(argv) {
     const args = { names: [] };
@@ -33,6 +40,8 @@ function parseArgs(argv) {
             args.proxyUrl = arg.slice("--proxy-url=".length);
         } else if (arg.startsWith("--timeout-ms=")) {
             args.timeoutMs = Number(arg.slice("--timeout-ms=".length));
+        } else if (arg.startsWith("--concurrency=")) {
+            args.concurrency = arg.slice("--concurrency=".length);
         } else if (arg === "--static") {
             args.static = true;
         } else if (arg.startsWith("--")) {
@@ -133,31 +142,16 @@ function parseJsonResponse(data) {
     return JSON.parse(content);
 }
 
-async function callLLM({ transport, body, timeoutMs = 60000 }) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+async function callAndRecordLLM(options, requests) {
     try {
-        const request = buildEvalTransportRequest({ transport, body });
-        const response = await fetch(request.url, {
-            method: "POST",
-            headers: request.headers,
-            body: request.body,
-            signal: controller.signal,
-        });
-
-        if (!response.ok) {
-            const text = await response.text();
-            throw new Error(
-                `LLM comparison request failed: ${response.status} ${text.slice(
-                    0,
-                    500
-                )}`
-            );
+        const { data, telemetry } = await callLLMWithTelemetry(options);
+        requests.push(telemetry);
+        return data;
+    } catch (error) {
+        if (error.telemetry) {
+            requests.push(error.telemetry);
         }
-
-        return response.json();
-    } finally {
-        clearTimeout(timeoutId);
+        throw error;
     }
 }
 
@@ -181,26 +175,47 @@ function buildExtractionBody({ fixture, preprocessed, model }) {
 async function evaluateVariant({
     fixture,
     preprocessed,
+    variant,
     model,
     judgeModel,
     transport,
     timeoutMs,
+    attempt = 1,
+    requests = [],
 }) {
-    const extractionData = await callLLM({
-        transport,
-        body: buildExtractionBody({ fixture, preprocessed, model }),
-        timeoutMs,
-    });
+    const extractionData = await callAndRecordLLM(
+        {
+            transport,
+            body: buildExtractionBody({ fixture, preprocessed, model }),
+            timeoutMs,
+            metadata: {
+                pageName: fixture.name,
+                variant,
+                phase: "extract",
+                attempt,
+            },
+        },
+        requests
+    );
     const extractedEvents = extractEventsFromStructuredOutput(extractionData);
-    const judgeData = await callLLM({
-        transport,
-        body: buildEventJudgeRequestBody({
-            model: judgeModel,
-            fixture,
-            extractedEvents,
-        }),
-        timeoutMs,
-    });
+    const judgeData = await callAndRecordLLM(
+        {
+            transport,
+            body: buildEventJudgeRequestBody({
+                model: judgeModel,
+                fixture,
+                extractedEvents,
+            }),
+            timeoutMs,
+            metadata: {
+                pageName: fixture.name,
+                variant,
+                phase: "judge",
+                attempt,
+            },
+        },
+        requests
+    );
     const judge = parseJsonResponse(judgeData);
     const summary = summarizeJudgeVerdict(judge, {
         expectedEventCount: fixture.expectedEvents.length,
@@ -214,6 +229,7 @@ async function evaluateVariant({
         extractedEventCount: extractedEvents.length,
         extractedEvents,
         judge,
+        requests,
     };
 }
 
@@ -228,7 +244,7 @@ async function evaluateVariantWithRetry(options, maxAttempts = 2) {
     let lastError;
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
         try {
-            return await evaluateVariant(options);
+            return await evaluateVariant({ ...options, attempt });
         } catch (error) {
             lastError = error;
             if (attempt >= maxAttempts || !isRetryableVariantError(error)) {
@@ -245,6 +261,7 @@ async function evaluateVariantWithRetry(options, maxAttempts = 2) {
 export function buildErroredVariantResult({
     stats,
     expectedEventCount,
+    requests = [],
     error,
 }) {
     return {
@@ -253,11 +270,12 @@ export function buildErroredVariantResult({
         matches: 0,
         misses: expectedEventCount,
         hallucinations: 0,
+        requests,
         error: error?.message || String(error || "Unknown error"),
     };
 }
 
-export function summarizeComparisonPages(pages) {
+export function summarizeComparisonPages(pages, benchmarkRun = {}) {
     const totalOldContextChars = pages.reduce(
         (sum, page) => sum + page.old.contextChars,
         0
@@ -281,6 +299,10 @@ export function summarizeComparisonPages(pages) {
     );
     const oldErrors = pages.filter((page) => page.old.error);
     const currentErrors = pages.filter((page) => page.current.error);
+    const requestTelemetry = pages.flatMap((page) => [
+        ...(page.old.requests || []),
+        ...(page.current.requests || []),
+    ]);
 
     return {
         pageCount: pages.length,
@@ -304,6 +326,10 @@ export function summarizeComparisonPages(pages) {
                   ).toFixed(4)
               )
             : null,
+        benchmarkTelemetry: summarizeLLMBenchmarkTelemetry(
+            requestTelemetry,
+            benchmarkRun
+        ),
         passed:
             pages.length > 0 &&
             currentErrors.length === 0 &&
@@ -335,8 +361,11 @@ export async function runOldNewComparison({
     judgeModel = model,
     names = [],
     timeoutMs = 60000,
+    concurrency = 1,
     reportPath = path.join(REAL_PAGE_FIXTURE_DIR, "old-new-llm-report.json"),
 } = {}) {
+    const benchmarkStartedAt = new Date().toISOString();
+    const benchmarkStartedAtMs = performance.now();
     const evalTransport =
         transport || resolveEvalTransport({ args: { proxyUrl } });
     if (evalTransport.mode === "missing") {
@@ -357,75 +386,97 @@ export async function runOldNewComparison({
             throw new Error("No event-labeled real-page fixtures were available.");
         }
 
-        for (const fixture of fixtures) {
-            const oldPreprocessed = preprocessLegacyForPopup(
-                fixture.text || "",
-                fixture.html || ""
-            );
-            const currentPreprocessed = preprocessForPopup(
-                fixture.text || "",
-                fixture.html || ""
-            );
-            const oldStats = contextStats(oldPreprocessed);
-            const currentStats = contextStats(currentPreprocessed);
+        const comparedPages = await runWithConcurrency(
+            fixtures,
+            concurrency,
+            async (fixture) => {
+                const oldPreprocessed = preprocessLegacyForPopup(
+                    fixture.text || "",
+                    fixture.html || ""
+                );
+                const currentPreprocessed = preprocessForPopup(
+                    fixture.text || "",
+                    fixture.html || ""
+                );
+                const oldStats = contextStats(oldPreprocessed);
+                const currentStats = contextStats(currentPreprocessed);
+                const oldRequests = [];
+                const currentRequests = [];
 
-            const oldResult = await evaluateVariantWithRetry({
-                fixture,
-                preprocessed: oldPreprocessed,
-                model,
-                judgeModel,
-                transport: evalTransport,
-                timeoutMs,
-            }).catch((error) =>
-                buildErroredVariantResult({
-                    stats: oldStats,
-                    expectedEventCount: fixture.expectedEvents.length,
-                    error,
-                })
-            );
-            const currentResult = await evaluateVariantWithRetry({
-                fixture,
-                preprocessed: currentPreprocessed,
-                model,
-                judgeModel,
-                transport: evalTransport,
-                timeoutMs,
-            }).catch((error) =>
-                buildErroredVariantResult({
-                    stats: currentStats,
-                    expectedEventCount: fixture.expectedEvents.length,
-                    error,
-                })
-            );
+                const oldResult = await evaluateVariantWithRetry({
+                    fixture,
+                    preprocessed: oldPreprocessed,
+                    variant: "old",
+                    model,
+                    judgeModel,
+                    transport: evalTransport,
+                    timeoutMs,
+                    requests: oldRequests,
+                }).catch((error) =>
+                    buildErroredVariantResult({
+                        stats: oldStats,
+                        expectedEventCount: fixture.expectedEvents.length,
+                        requests: oldRequests,
+                        error,
+                    })
+                );
+                const currentResult = await evaluateVariantWithRetry({
+                    fixture,
+                    preprocessed: currentPreprocessed,
+                    variant: "current",
+                    model,
+                    judgeModel,
+                    transport: evalTransport,
+                    timeoutMs,
+                    requests: currentRequests,
+                }).catch((error) =>
+                    buildErroredVariantResult({
+                        stats: currentStats,
+                        expectedEventCount: fixture.expectedEvents.length,
+                        requests: currentRequests,
+                        error,
+                    })
+                );
 
-            const page = {
-                name: fixture.name,
-                url: fixture.finalUrl || fixture.url,
-                expectedEventCount: fixture.expectedEvents.length,
-                old: oldResult,
-                current: currentResult,
-                savedContextChars:
-                    oldResult.contextChars - currentResult.contextChars,
-                currentVsOldContextRatio: oldResult.contextChars
-                    ? Number(
-                          (
-                              currentResult.contextChars / oldResult.contextChars
-                          ).toFixed(4)
-                      )
-                    : null,
-            };
-            pages.push(page);
-            console.log(formatComparisonLine(page));
-        }
+                const page = {
+                    name: fixture.name,
+                    url: fixture.finalUrl || fixture.url,
+                    expectedEventCount: fixture.expectedEvents.length,
+                    old: oldResult,
+                    current: currentResult,
+                    savedContextChars:
+                        oldResult.contextChars - currentResult.contextChars,
+                    currentVsOldContextRatio: oldResult.contextChars
+                        ? Number(
+                              (
+                                  currentResult.contextChars /
+                                  oldResult.contextChars
+                              ).toFixed(4)
+                          )
+                        : null,
+                };
+                console.log(formatComparisonLine(page));
+                return page;
+            }
+        );
+        pages.push(...comparedPages);
     } finally {
         cleanupDomParser();
     }
 
-    const totals = summarizeComparisonPages(pages);
+    const benchmarkEndedAt = new Date().toISOString();
+    const benchmarkEndedAtMs = performance.now();
+    const totals = summarizeComparisonPages(pages, {
+        startedAt: benchmarkStartedAt,
+        endedAt: benchmarkEndedAt,
+        startedAtMs: benchmarkStartedAtMs,
+        endedAtMs: benchmarkEndedAtMs,
+    });
     const report = {
         generatedAt: new Date().toISOString(),
         model,
         judgeModel,
+        concurrency: normalizeConcurrency(concurrency),
         ...totals,
         pages,
     };
@@ -448,6 +499,8 @@ export async function runOldNewStaticComparison({
         "old-new-static-report.json"
     ),
 } = {}) {
+    const benchmarkStartedAt = new Date().toISOString();
+    const benchmarkStartedAtMs = performance.now();
     const cleanupDomParser = await installNodeDomParser();
     const pages = [];
     try {
@@ -480,7 +533,14 @@ export async function runOldNewStaticComparison({
         cleanupDomParser();
     }
 
-    const totals = summarizeComparisonPages(pages);
+    const benchmarkEndedAt = new Date().toISOString();
+    const benchmarkEndedAtMs = performance.now();
+    const totals = summarizeComparisonPages(pages, {
+        startedAt: benchmarkStartedAt,
+        endedAt: benchmarkEndedAt,
+        startedAtMs: benchmarkStartedAtMs,
+        endedAtMs: benchmarkEndedAtMs,
+    });
     const report = {
         generatedAt: new Date().toISOString(),
         mode: "static-retention",
@@ -538,12 +598,16 @@ async function main() {
         Number.isFinite(args.timeoutMs) && args.timeoutMs > 0
             ? args.timeoutMs
             : Number(process.env.EVENTY_EVAL_TIMEOUT_MS || 60000);
+    const concurrency = normalizeConcurrency(
+        args.concurrency || process.env.EVENTY_EVAL_CONCURRENCY
+    );
     const report = await runOldNewComparison({
         transport,
         model,
         judgeModel,
         names: args.names,
         timeoutMs,
+        concurrency,
     });
 
     if (!report.passed) process.exitCode = 1;

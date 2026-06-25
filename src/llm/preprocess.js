@@ -267,7 +267,7 @@ export const MODEL_INPUT_MAX_CHARS = 18000;
 const MODEL_INPUT_MAX_BLOCK_CHARS = 4000;
 const MODEL_INPUT_SIGNAL_CHUNK_CHARS = 1400;
 const MODEL_INPUT_SIGNAL_CHUNK_MIN_SIGNALS = 8;
-const MODEL_INPUT_SIGNAL_PRE_CONTEXT_CHARS = 420;
+const MODEL_INPUT_SIGNAL_PRE_CONTEXT_CHARS = 900;
 const MODEL_INPUT_SIGNAL_POST_CONTEXT_CHARS = 95;
 const MODEL_INPUT_SIGNAL_SCORE = 8;
 const MODEL_INPUT_MAX_SCORELESS_PRIORITY_LEAD_CHARS = 800;
@@ -713,7 +713,8 @@ function chooseRawModelContent(
         ? completeEventClusterCount(normalizedHtml)
         : 0;
     const renderedBudgetKeepsBroaderEvents =
-        renderedCompleteEventCount >= Math.max(3, htmlCompleteEventCount + 2);
+        renderedCompleteEventCount >= 2 &&
+        renderedCompleteEventCount > htmlCompleteEventCount;
     const htmlShouldWinReducedBudget =
         htmlCanFitReducedBudget && !renderedBudgetKeepsBroaderEvents;
     const textLeadIsClearlyBetter =
