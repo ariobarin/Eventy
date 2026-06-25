@@ -6,6 +6,8 @@ import * as config from "../config.js";
 import manifest from "../manifest.json" with { type: "json" };
 import packageJson from "../package.json" with { type: "json" };
 
+const readmeText = fs.readFileSync(new URL("../README.md", import.meta.url), "utf8");
+
 test("public config does not ship shared quota policy", () => {
     assert.equal(Object.hasOwn(config, "SHARED_LIMITS"), false);
 });
@@ -20,6 +22,7 @@ test("package metadata is ready for public release work", () => {
     assert.equal(Object.hasOwn(packageJson, "private"), false);
     assert.equal(packageJson.version, "1.2.0");
     assert.equal(manifest.version, "1.2.0");
+    assert.match(readmeText, /Version: v1\.2\.0/);
     assert.equal(packageJson.scripts?.package, "node scripts/package-extension.mjs");
     assert.equal(packageJson.repository?.url, "git+https://github.com/ariobarin/Eventy.git");
 });

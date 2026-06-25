@@ -2,7 +2,7 @@
 
 Eventy is a Chrome extension that finds event details on webpages, images, and pasted text, then turns them into calendar-ready entries.
 
-Version: v1.1.1
+Version: v1.2.0
 
 Homepage: https://eventy.ariobarin.com/
 
