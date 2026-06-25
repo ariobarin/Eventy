@@ -1,0 +1,761 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+
+import {
+    auditRealPageFixture,
+    fixtureFileNameForEntry,
+    fixturePathForEntry,
+    formatAuditLine,
+    installNodeDomParser,
+    loadRealPageAuditFixtures,
+    loadRealPageCorpus,
+    mergeCorpusEntryIntoFixture,
+} from "../scripts/real-page-fixtures.mjs";
+import { MODEL_INPUT_MAX_CHARS } from "../src/llm/preprocess.js";
+import { preprocessForPopup } from "../src/utils/scan.js";
+
+test("real page corpus defines reusable fixture targets", async () => {
+    const corpus = await loadRealPageCorpus();
+
+    assert.ok(corpus.length >= 5);
+    let eventLabelEntryCount = 0;
+    for (const entry of corpus) {
+        assert.match(entry.name, /^[a-z0-9-]+$/);
+        assert.match(entry.url, /^https:\/\//);
+        assert.ok(Array.isArray(entry.expectedAnchors));
+        assert.ok(entry.expectedAnchors.length > 0);
+        assert.ok(Array.isArray(entry.expectedEvents));
+        if (entry.expectedEvents.length) {
+            eventLabelEntryCount += 1;
+        }
+        for (const event of entry.expectedEvents) {
+            assert.equal(typeof event.title, "string");
+            assert.notEqual(event.title.trim(), "");
+            assert.ok(Array.isArray(event.labels));
+            assert.ok(event.labels.includes(event.title));
+        }
+    }
+    assert.ok(eventLabelEntryCount >= 3);
+});
+
+test("fixture names are stable and file-system safe", () => {
+    assert.equal(
+        fixtureFileNameForEntry({ name: "Southbank What's On" }),
+        "southbank-what-s-on.json"
+    );
+    assert.equal(
+        fixtureFileNameForEntry({ name: "toronto-nathan-phillips" }),
+        "toronto-nathan-phillips.json"
+    );
+});
+
+test("audit output includes previous request baseline ratio", () => {
+    const line = formatAuditLine({
+        passed: true,
+        name: "sample",
+        contextChars: 100,
+        shrinkRatioVsText: 2,
+        shrinkRatioVsMarkdown: 0.5,
+        shrinkRatioVsPreviousContext: 0.4,
+        missingAnchors: [],
+    });
+
+    assert.match(line, /previousRatio=0\.4/);
+});
+
+test("real page fixture audit reports retained anchors and size metrics", () => {
+    const fixture = {
+        name: "sample-event-page",
+        url: "https://example.test/events",
+        title: "Sample Events",
+        lang: "en",
+        html: "",
+        text: [
+            "Navigation item privacy policy subscribe",
+            "Opening Night",
+            "26 June 2026",
+            "7:00 PM",
+            "Main Hall",
+        ].join("\n\n"),
+        expectedAnchors: ["Opening Night", "26 June 2026", "Main Hall"],
+    };
+
+    const audit = auditRealPageFixture(fixture);
+
+    assert.equal(audit.name, "sample-event-page");
+    assert.equal(audit.missingAnchors.length, 0);
+    assert.equal(audit.anchorPresence["Opening Night"], true);
+    assert.ok(audit.sourceTextChars > 0);
+    assert.ok(audit.modelInputChars > 0);
+    assert.ok(audit.contextChars > 0);
+    assert.ok(audit.contextChars <= audit.sourceTextChars);
+});
+
+test("popup preprocessing reserves model budget for large table csv snippets", async () => {
+    const cleanupDomParser = await installNodeDomParser();
+    try {
+        const text = Array.from(
+            { length: 900 },
+            (_, index) =>
+                `Calendar summary ${index}\nJune ${String(
+                    (index % 28) + 1
+                )}, 2026\n${(index % 12) + 1}:00 PM\nRoom ${index}`
+        ).join("\n\n");
+        const tableRows = Array.from(
+            { length: 420 },
+            (_, index) =>
+                `<tr><td>Long Table Event ${index} With Extra Context</td><td>June ${
+                    (index % 28) + 1
+                }, 2026</td><td>${(index % 12) + 1}:00 PM</td><td>Room ${index}</td></tr>`
+        ).join("");
+        const html = `<main><h1>Conference Schedule</h1><table><tr><th>Title</th><th>Date</th><th>Time</th><th>Room</th></tr>${tableRows}</table></main>`;
+
+        const { modelHtml, csvSnippets } = preprocessForPopup(text, html);
+        const csvChars = csvSnippets.reduce((sum, csv) => sum + csv.length, 0);
+
+        assert.ok(csvChars >= 2000);
+        assert.ok(modelHtml.length < MODEL_INPUT_MAX_CHARS);
+        assert.ok(
+            modelHtml.length + csvChars + csvSnippets.length <=
+                MODEL_INPUT_MAX_CHARS
+        );
+    } finally {
+        cleanupDomParser();
+    }
+});
+
+test("popup preprocessing reserves model budget for small table csv snippets", async () => {
+    const cleanupDomParser = await installNodeDomParser();
+    try {
+        const text = Array.from(
+            { length: 1200 },
+            (_, index) =>
+                `Calendar item ${index}\nJune ${String(
+                    (index % 28) + 1
+                )}, 2026\nRoom ${index}`
+        ).join("\n\n");
+        const html = [
+            "<main>",
+            "<table>",
+            "<tr><th>Title</th><th>Date</th><th>Room</th></tr>",
+            "<tr><td>Small Table Event One</td><td>June 1, 2026</td><td>Room A</td></tr>",
+            "<tr><td>Small Table Event Two</td><td>June 2, 2026</td><td>Room B</td></tr>",
+            "</table>",
+            "</main>",
+        ].join("");
+
+        const { modelHtml, csvSnippets } = preprocessForPopup(text, html);
+        const csvChars = csvSnippets.reduce((sum, csv) => sum + csv.length, 0);
+
+        assert.ok(csvChars > 0);
+        assert.ok(csvChars < 2000);
+        assert.ok(
+            modelHtml.length + csvChars + csvSnippets.length <=
+                MODEL_INPUT_MAX_CHARS
+        );
+    } finally {
+        cleanupDomParser();
+    }
+});
+
+test("popup preprocessing fits multiple large table csv snippets", async () => {
+    const cleanupDomParser = await installNodeDomParser();
+    try {
+        const text = Array.from(
+            { length: 1000 },
+            (_, index) =>
+                `Program overview ${index}\nJuly ${String(
+                    (index % 28) + 1
+                )}, 2026\nHall ${index}`
+        ).join("\n\n");
+        const table = (tableIndex) =>
+            `<table><tr><th>Title</th><th>Date</th><th>Time</th><th>Room</th></tr>${Array.from(
+                { length: 220 },
+                (_, rowIndex) =>
+                    `<tr><td>Table ${tableIndex} Event ${rowIndex} With Long Context</td><td>July ${
+                        (rowIndex % 28) + 1
+                    }, 2026</td><td>${(rowIndex % 12) + 1}:00 PM</td><td>Hall ${rowIndex}</td></tr>`
+            ).join("")}</table>`;
+        const html = `<main><h1>Full Program</h1>${[0, 1, 2]
+            .map(table)
+            .join("")}</main>`;
+
+        const { modelHtml, csvSnippets } = preprocessForPopup(text, html);
+        const csvChars = csvSnippets.reduce((sum, csv) => sum + csv.length, 0);
+
+        assert.ok(csvSnippets.length >= 2);
+        assert.ok(csvChars <= MODEL_INPUT_MAX_CHARS - 6000);
+        assert.ok(
+            modelHtml.length + csvChars + csvSnippets.length <=
+                MODEL_INPUT_MAX_CHARS
+        );
+    } finally {
+        cleanupDomParser();
+    }
+});
+
+test("real page fixture audit reports retained event labels", () => {
+    const fixture = {
+        name: "sample-event-label-page",
+        url: "https://example.test/events",
+        title: "Sample Events",
+        lang: "en",
+        html: "",
+        text: [
+            "Opening Night",
+            "26 June 2026",
+            "7:00 PM",
+            "Main Hall",
+            "Closing Talk",
+            "27 June 2026",
+        ].join("\n\n"),
+        expectedAnchors: ["Opening Night"],
+        expectedEvents: [
+            {
+                title: "Opening Night",
+                date: "26 June 2026",
+                time: "7:00 PM",
+                location: "Main Hall",
+            },
+            {
+                title: "Closing Talk",
+                date: "27 June 2026",
+                time: "8:00 PM",
+                location: "Side Room",
+            },
+        ],
+    };
+
+    const audit = auditRealPageFixture(fixture);
+
+    assert.equal(audit.eventLabelResults.length, 2);
+    assert.equal(audit.eventLabelResults[0].passed, true);
+    assert.equal(audit.eventLabelResults[0].sourcePassed, true);
+    assert.equal(audit.eventLabelResults[0].contextPassed, true);
+    assert.deepEqual(audit.eventLabelResults[0].missingLabels, []);
+    assert.equal(audit.eventLabelResults[1].passed, false);
+    assert.deepEqual(audit.eventLabelResults[1].missingFields, [
+        "time",
+        "location",
+    ]);
+    assert.deepEqual(audit.missingEventLabels, [
+        "Closing Talk: time=8:00 PM",
+        "Closing Talk: location=Side Room",
+    ]);
+    assert.equal(audit.passed, false);
+});
+
+test("real page fixture audit uses current corpus labels over stale snapshots", () => {
+    const fixture = {
+        name: "sample-stale-snapshot-page",
+        url: "https://example.test/old-events",
+        title: "Old Events",
+        lang: "en",
+        html: "",
+        text: "Opening Night\n\n26 June 2026\n\nMain Hall",
+        expectedAnchors: ["Old Event"],
+        expectedEvents: [
+            {
+                title: "Old Event",
+                date: "1 January 2026",
+            },
+        ],
+    };
+    const corpusEntry = {
+        name: "sample-stale-snapshot-page",
+        url: "https://example.test/events",
+        expectedAnchors: ["Opening Night"],
+        expectedEvents: [
+            {
+                title: "Opening Night",
+                date: "26 June 2026",
+                location: "Main Hall",
+                labels: ["Opening Night", "26 June 2026", "Main Hall"],
+            },
+        ],
+        maxContextChars: 30000,
+        maxPreviousContextGrowthRatio: 1,
+    };
+
+    const mergedFixture = mergeCorpusEntryIntoFixture(fixture, corpusEntry);
+    const audit = auditRealPageFixture(mergedFixture);
+
+    assert.equal(mergedFixture.url, "https://example.test/events");
+    assert.deepEqual(mergedFixture.expectedAnchors, ["Opening Night"]);
+    assert.equal(audit.passed, true);
+});
+
+test("real page fixture audit requires snapshots for every corpus entry", async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "eventy-real-pages-"));
+    try {
+        const corpusPath = path.join(tempDir, "corpus.json");
+        const fixtureDir = path.join(tempDir, "fixtures");
+        await fs.mkdir(fixtureDir);
+        await fs.writeFile(
+            corpusPath,
+            JSON.stringify(
+                [
+                    {
+                        name: "captured-page",
+                        url: "https://example.test/captured",
+                        expectedAnchors: ["Captured Event"],
+                    },
+                    {
+                        name: "missing-page",
+                        url: "https://example.test/missing",
+                        expectedAnchors: ["Missing Event"],
+                    },
+                ],
+                null,
+                2
+            )
+        );
+        await fs.writeFile(
+            fixturePathForEntry({ name: "captured-page" }, fixtureDir),
+            JSON.stringify({
+                name: "captured-page",
+                url: "https://example.test/captured",
+                html: "",
+                text: "Captured Event",
+            })
+        );
+
+        await assert.rejects(
+            () => loadRealPageAuditFixtures(corpusPath, fixtureDir),
+            /Missing captured real-page fixtures for missing-page/
+        );
+    } finally {
+        await fs.rm(tempDir, { recursive: true, force: true });
+    }
+});
+
+test("real page fixture audit filters requested names before requiring snapshots", async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "eventy-real-pages-"));
+    try {
+        const corpusPath = path.join(tempDir, "corpus.json");
+        const fixtureDir = path.join(tempDir, "fixtures");
+        await fs.mkdir(fixtureDir);
+        await fs.writeFile(
+            corpusPath,
+            JSON.stringify(
+                [
+                    {
+                        name: "captured-page",
+                        url: "https://example.test/captured",
+                        expectedAnchors: ["Captured Event"],
+                        expectedEvents: [{ title: "Captured Event", labels: [] }],
+                    },
+                    {
+                        name: "missing-page",
+                        url: "https://example.test/missing",
+                        expectedAnchors: ["Missing Event"],
+                        expectedEvents: [{ title: "Missing Event", labels: [] }],
+                    },
+                ],
+                null,
+                2
+            )
+        );
+        await fs.writeFile(
+            fixturePathForEntry({ name: "captured-page" }, fixtureDir),
+            JSON.stringify({
+                name: "captured-page",
+                url: "https://example.test/captured",
+                html: "",
+                text: "Captured Event",
+            })
+        );
+
+        const fixtures = await loadRealPageAuditFixtures(corpusPath, fixtureDir, {
+            names: ["captured-page"],
+        });
+
+        assert.equal(fixtures.length, 1);
+        assert.equal(fixtures[0].name, "captured-page");
+    } finally {
+        await fs.rm(tempDir, { recursive: true, force: true });
+    }
+});
+
+test("real page fixture audit rejects snapshots outside the corpus", async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "eventy-real-pages-"));
+    try {
+        const corpusPath = path.join(tempDir, "corpus.json");
+        const fixtureDir = path.join(tempDir, "fixtures");
+        await fs.mkdir(fixtureDir);
+        await fs.writeFile(
+            corpusPath,
+            JSON.stringify(
+                [
+                    {
+                        name: "captured-page",
+                        url: "https://example.test/captured",
+                        expectedAnchors: ["Captured Event"],
+                    },
+                ],
+                null,
+                2
+            )
+        );
+        await fs.writeFile(
+            fixturePathForEntry({ name: "captured-page" }, fixtureDir),
+            JSON.stringify({
+                name: "captured-page",
+                url: "https://example.test/captured",
+                html: "",
+                text: "Captured Event",
+            })
+        );
+        await fs.writeFile(
+            fixturePathForEntry({ name: "extra-page" }, fixtureDir),
+            JSON.stringify({
+                name: "extra-page",
+                url: "https://example.test/extra",
+                html: "",
+                text: "Extra Event",
+            })
+        );
+
+        await assert.rejects(
+            () => loadRealPageAuditFixtures(corpusPath, fixtureDir),
+            /Captured real-page fixture extra-page is not defined/
+        );
+    } finally {
+        await fs.rm(tempDir, { recursive: true, force: true });
+    }
+});
+
+test("real page fixture audit ignores generated report files", async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "eventy-real-pages-"));
+    try {
+        const corpusPath = path.join(tempDir, "corpus.json");
+        const fixtureDir = path.join(tempDir, "fixtures");
+        const entry = {
+            name: "sample-events",
+            url: "https://example.test/events",
+            expectedAnchors: ["Opening Night"],
+            expectedEvents: [],
+        };
+        await fs.mkdir(fixtureDir);
+        await fs.writeFile(corpusPath, JSON.stringify([entry]));
+        await fs.writeFile(
+            path.join(fixtureDir, fixtureFileNameForEntry(entry)),
+            JSON.stringify({
+                ...entry,
+                html: "",
+                text: "Opening Night",
+                title: "Sample Events",
+                lang: "en",
+            })
+        );
+        await fs.writeFile(
+            path.join(fixtureDir, "report.json"),
+            JSON.stringify({ generatedAt: "2026-06-20T00:00:00.000Z" })
+        );
+        await fs.writeFile(
+            path.join(fixtureDir, "llm-report.json"),
+            JSON.stringify({ generatedAt: "2026-06-20T00:00:00.000Z" })
+        );
+        await fs.writeFile(
+            path.join(fixtureDir, "old-new-llm-report.json"),
+            JSON.stringify({ generatedAt: "2026-06-20T00:00:00.000Z" })
+        );
+        await fs.writeFile(
+            path.join(fixtureDir, "old-new-llm-report-shard1.json"),
+            JSON.stringify({ generatedAt: "2026-06-20T00:00:00.000Z" })
+        );
+        await fs.writeFile(
+            path.join(fixtureDir, "llm-report-smoke.json"),
+            JSON.stringify({ generatedAt: "2026-06-20T00:00:00.000Z" })
+        );
+
+        const fixtures = await loadRealPageAuditFixtures(corpusPath, fixtureDir);
+
+        assert.equal(fixtures.length, 1);
+        assert.equal(fixtures[0].name, "sample-events");
+    } finally {
+        await fs.rm(tempDir, { recursive: true, force: true });
+    }
+});
+
+test("real page fixture audit separates source labels from retained context", () => {
+    const fixture = {
+        name: "sample-hidden-event-page",
+        url: "https://example.test/events",
+        title: "Sample Events",
+        lang: "en",
+        html: [
+            "<main>",
+            "<h1>Opening Night</h1>",
+            "<p>26 June 2026</p>",
+            "<table><tr><td>8:00 PM</td></tr></table>",
+            "</main>",
+        ].join(""),
+        text: "Opening Night\n\n26 June 2026",
+        expectedAnchors: ["Opening Night"],
+        expectedEvents: [
+            {
+                title: "Opening Night",
+                date: "26 June 2026",
+                time: "8:00 PM",
+            },
+        ],
+    };
+
+    const audit = auditRealPageFixture(fixture);
+
+    assert.equal(audit.eventLabelResults[0].sourcePassed, false);
+    assert.deepEqual(audit.eventLabelResults[0].missingSourceFields, ["time"]);
+    assert.deepEqual(audit.missingSourceEventLabels, [
+        "Opening Night: time=8:00 PM",
+    ]);
+});
+
+test("real page fixture audit matches event labels across typographic spacing", () => {
+    const fixture = {
+        name: "sample-event-spacing-page",
+        url: "https://example.test/events",
+        title: "Sample Events",
+        lang: "en",
+        html: "",
+        text: "Farmers Market\n\n3:00\u202fPM to 7:00 PM\n\nMain Plaza",
+        expectedAnchors: ["Farmers Market"],
+        expectedEvents: [
+            {
+                title: "Farmers Market",
+                time: "3:00 PM",
+                location: "Main Plaza",
+            },
+        ],
+    };
+
+    const audit = auditRealPageFixture(fixture);
+
+    assert.equal(audit.eventLabelResults[0].passed, true);
+});
+
+test("real page fixture audit matches event labels across case changes", () => {
+    const fixture = {
+        name: "sample-event-case-page",
+        url: "https://example.test/events",
+        title: "Sample Events",
+        lang: "en",
+        html: "",
+        text: "Saturday, May 16, 2026\n\nGump Fiction\n\n5-6 PM\n\nMain Stage",
+        expectedAnchors: ["Gump Fiction"],
+        expectedEvents: [
+            {
+                title: "Gump Fiction",
+                date: "SATURDAY, MAY 16, 2026",
+                time: "5-6 PM",
+                location: "Main Stage",
+            },
+        ],
+    };
+
+    const audit = auditRealPageFixture(fixture);
+
+    assert.equal(audit.eventLabelResults[0].passed, true);
+});
+
+test("real page fixture audit matches labels across punctuation spacing", () => {
+    const fixture = {
+        name: "sample-event-punctuation-spacing-page",
+        url: "https://example.test/events",
+        title: "Sample Events",
+        lang: "en",
+        html: "",
+        text: "Sample Event\n\nJune 27 , 2026 Doors: 6:00 PM\n\nMain Theater",
+        expectedAnchors: ["June 27, 2026 Doors: 6:00 PM"],
+        expectedEvents: [
+            {
+                title: "Sample Event",
+                date: "June 27, 2026",
+                time: "Doors: 6:00 PM",
+                location: "Main Theater",
+            },
+        ],
+    };
+
+    const audit = auditRealPageFixture(fixture);
+
+    assert.equal(audit.anchorPresence["June 27, 2026 Doors: 6:00 PM"], true);
+    assert.equal(audit.eventLabelResults[0].contextLabelPresence.date, true);
+    assert.equal(audit.eventLabelResults[0].contextLabelPresence.time, true);
+});
+
+test("real page fixture audit matches labels across typographic punctuation", () => {
+    const fixture = {
+        name: "sample-event-typographic-punctuation-page",
+        url: "https://example.test/events",
+        title: "Sample Events",
+        lang: "en",
+        html: "",
+        text: [
+            "Dance Night",
+            "6:00 PM \u2013 8:00 PM",
+            "Cain\u2019s Ballroom",
+            "Theatre Jean-Duceppe",
+            "Cinquieme Salle",
+        ].join("\n\n"),
+        expectedAnchors: ["6:00 PM - 8:00 PM"],
+        expectedEvents: [
+            {
+                title: "Dance Night",
+                time: "6:00 PM - 8:00 PM",
+                location: "Cain's Ballroom",
+                description: "Theatre Jean-Duceppe",
+                labels: ["Cinqui\u00e8me Salle"],
+            },
+        ],
+    };
+
+    const audit = auditRealPageFixture(fixture);
+
+    assert.equal(audit.missingSourceEventLabels.length, 0);
+    assert.equal(audit.missingEventLabels.length, 0);
+});
+
+test("real page fixture audit reports markdown baseline shrinkage", async () => {
+    const cleanupDomParser = await installNodeDomParser();
+    try {
+        const fixture = {
+            name: "markdown-baseline-page",
+            url: "https://example.test/events",
+            title: "Markdown Baseline",
+            lang: "en",
+            html: [
+                "<main>",
+                "<nav>Privacy Subscribe Account</nav>",
+                "<h1>Opening Night</h1>",
+                "<p>26 June 2026</p>",
+                "<p>Main Hall</p>",
+                "</main>",
+            ].join(""),
+            text: "Opening Night\n\n26 June 2026\n\nMain Hall",
+            expectedAnchors: ["Opening Night", "26 June 2026", "Main Hall"],
+        };
+
+        const audit = auditRealPageFixture(fixture);
+
+        assert.ok(audit.baselineMarkdownChars > 0);
+        assert.ok(audit.previousContextChars > 0);
+        assert.ok(audit.shrinkRatioVsMarkdown > 0);
+        assert.ok(audit.shrinkRatioVsPreviousContext > 0);
+        assert.ok(audit.shrinkRatioVsPreviousContext <= 1);
+        assert.ok(audit.shrinkRatioVsMarkdown <= 1);
+    } finally {
+        cleanupDomParser();
+    }
+});
+
+test("real page fixture audit reports previous context ratio as a metric", async () => {
+    const cleanupDomParser = await installNodeDomParser();
+    try {
+        const fixture = {
+            name: "small-table-growth-page",
+            url: "https://example.test/events",
+            title: "Small Table Growth",
+            lang: "en",
+            html: [
+                "<main>",
+                "<table>",
+                "<tr><th>Name</th><th>Date</th><th>Venue</th></tr>",
+                "<tr><td>Opening Night</td><td>26 June 2026</td><td>Main Hall</td></tr>",
+                "<tr><td>Closing Talk</td><td>27 June 2026</td><td>Side Room</td></tr>",
+                "</table>",
+                "</main>",
+            ].join(""),
+            text: [
+                "Opening Night",
+                "26 June 2026",
+                "Main Hall",
+                "Closing Talk",
+                "27 June 2026",
+                "Side Room",
+            ].join("\n"),
+            expectedAnchors: ["Opening Night"],
+            expectedEvents: [
+                {
+                    title: "Opening Night",
+                    date: "26 June 2026",
+                    location: "Main Hall",
+                },
+            ],
+        };
+
+        const audit = auditRealPageFixture(fixture);
+
+        assert.equal(audit.shrinkRatioVsPreviousContext, 0.7956);
+        assert.equal(audit.passed, true);
+    } finally {
+        cleanupDomParser();
+    }
+});
+
+test("real page fixture audit enforces previous context growth caps", async () => {
+    const cleanupDomParser = await installNodeDomParser();
+    try {
+        const fixture = {
+            name: "capped-table-growth-page",
+            url: "https://example.test/events",
+            title: "Capped Table Growth",
+            lang: "en",
+            html: [
+                "<main>",
+                "<table>",
+                "<tr><th>Name</th><th>Date</th><th>Venue</th></tr>",
+                "<tr><td>Opening Night</td><td>26 June 2026</td><td>Main Hall</td></tr>",
+                "<tr><td>Closing Talk</td><td>27 June 2026</td><td>Side Room</td></tr>",
+                "</table>",
+                "</main>",
+            ].join(""),
+            text: [
+                "Opening Night",
+                "26 June 2026",
+                "Main Hall",
+                "Closing Talk",
+                "27 June 2026",
+                "Side Room",
+            ].join("\n"),
+            expectedAnchors: ["Opening Night"],
+            expectedEvents: [
+                {
+                    title: "Opening Night",
+                    date: "26 June 2026",
+                    location: "Main Hall",
+                },
+            ],
+            maxPreviousContextGrowthRatio: 0.1,
+        };
+
+        const audit = auditRealPageFixture(fixture);
+
+        assert.ok(audit.shrinkRatioVsPreviousContext > 0.1);
+        assert.equal(audit.maxPreviousContextGrowthRatio, 0.1);
+        assert.equal(audit.passed, false);
+    } finally {
+        cleanupDomParser();
+    }
+});
+
+test("real page fixture audit records missing anchors", () => {
+    const fixture = {
+        name: "missing-anchor-page",
+        url: "https://example.test/events",
+        title: "Missing Anchor",
+        lang: "en",
+        html: "",
+        text: "Opening Night\n\n26 June 2026",
+        expectedAnchors: ["Opening Night", "Main Hall"],
+    };
+
+    const audit = auditRealPageFixture(fixture);
+
+    assert.deepEqual(audit.missingAnchors, ["Main Hall"]);
+    assert.equal(audit.anchorPresence["Opening Night"], true);
+    assert.equal(audit.anchorPresence["Main Hall"], false);
+});

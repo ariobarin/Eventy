@@ -3,7 +3,8 @@ import { DEBUG } from "../config.js";
 import { escapeHtml } from "./utils/string.js";
 import { applyTheme } from "./ui/theme.js";
 import { debug, warn, error } from "./utils/logger.js";
-import { htmlToMarkdown, tablesToCsvSnippets, buildModelInput } from "./llm/preprocess.js";
+import { buildModelInput } from "./llm/preprocess.js";
+import { preprocessForPopup } from "./utils/scan.js";
 import { getRequiredTabScanBlockReason, isTabScanAccessError } from "./utils/tabAccess.js";
 import {
     CARD_FADE_DURATION_MS,
@@ -413,13 +414,12 @@ async function handleScan() {
 
         DEBUG && debug("[Eventy][Popup] Scan started", { url });
 
-        // Preprocess in popup to avoid DOMParser issues in Service Worker
-        const modelInput = htmlToMarkdown(html);
-        const csvSnippets = tablesToCsvSnippets(html);
+        // Preprocess in popup to avoid DOMParser issues in the service worker.
+        const { modelHtml, csvSnippets } = preprocessForPopup(text || "", html || "");
 
         const response = await chrome.runtime.sendMessage({
             action: "scanPage",
-            modelInput,
+            modelInput: modelHtml,
             csvSnippets,
             html, // Required for background fallback
             text, // Keep text just in case, or for title context?

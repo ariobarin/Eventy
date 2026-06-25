@@ -2,7 +2,7 @@
 
 Eventy is a Chrome extension that finds event details on webpages, images, and pasted text, then turns them into calendar-ready entries.
 
-Version: v1.1.1
+Version: v1.2.0
 
 Homepage: https://eventy.ariobarin.com/
 
@@ -56,6 +56,41 @@ webstore-docs/   Chrome Web Store submission notes
 ```bash
 npm test
 ```
+
+Browser-backed UI verification launches Chrome, loads the extension from a
+temporary mock-mode copy, and runs popup and settings flows with automated
+state, interaction, and layout assertions. Screenshots and a JSON report are
+written under `tests/fixtures/ui/` for debugging failures.
+
+```bash
+npm run verify:ui
+```
+
+Use `npm run verify:ui -- --headless` for headless environments, or
+`npm run verify:ui -- --keep-browser` when inspecting the final Chrome state.
+
+Real-page verification uses local static snapshots so the test corpus can be
+audited without committing large captured pages.
+
+```bash
+npm run capture:real-pages
+npm run audit:real-pages
+```
+
+Use `npm run verify:real-pages` to recapture every corpus page and audit the
+fresh snapshots in one command. Compare retained labels and context size against
+the v1.1.1-era preprocessing baseline with `npm run compare:real-pages:static`.
+LLM judging is available through `npm run compare:real-pages:llm` when an eval
+transport is configured.
+
+For local release confidence, run `npm run verify:release`. It combines unit
+tests, static real-page comparison, the headless browser UI suite, and a live
+LLM integration eval against a small labeled real-page set. The live eval uses
+the public Eventy proxy URL and reads any required token from
+`EVENTY_EVAL_PROXY_TOKEN` or `EVENTY_TOKEN`.
+
+For an offline confidence pass that does not call an LLM, run
+`npm run verify:offline`.
 
 ## Homepage Front
 

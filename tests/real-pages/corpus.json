@@ -1,0 +1,2851 @@
+[
+    {
+        "name": "stanford-day",
+        "url": "https://events.stanford.edu/calendar/day/2026/6/21",
+        "expectedAnchors": [
+            "Moments in the History of East Asian Printing",
+            "Sun, Jun 21, 2026",
+            "Lathrop Library"
+        ]
+    },
+    {
+        "name": "stanford-live",
+        "url": "https://events.stanford.edu/department/stanford_live/calendar",
+        "expectedAnchors": [
+            "St. Lawrence Chamber Music Seminar",
+            "Tue, Jun 23, 2026",
+            "Braun Music Center"
+        ]
+    },
+    {
+        "name": "uc-berkeley-events",
+        "url": "https://events.berkeley.edu/",
+        "expectedAnchors": [
+            "JUN",
+            "Events",
+            "Time"
+        ]
+    },
+    {
+        "name": "southbank-whats-on",
+        "url": "https://www.southbankcentre.co.uk/whats-on/",
+        "expectedAnchors": [
+            "Thu 11"
+        ]
+    },
+    {
+        "name": "toronto-nathan-phillips",
+        "url": "https://www.toronto.ca/services-payments/venues-facilities-bookings/booking-city-facilities/city-squares/nathan-phillips-square/events-happening-on-nathan-phillips-square/",
+        "expectedAnchors": [
+            "TOgether 2026",
+            "June 5 to 6",
+            "Nathan Phillips Square"
+        ]
+    },
+    {
+        "name": "have-your-say-toronto",
+        "url": "https://haveyoursay.toronto.ca/events",
+        "expectedAnchors": [
+            "Milliken Regeneration Study",
+            "Jun 23, 2026",
+            "Online Event"
+        ]
+    },
+    {
+        "name": "berkeley-summer-sessions",
+        "url": "https://summer.berkeley.edu/courses/session-dates-deadlines",
+        "expectedAnchors": [
+            "2026 Academic Calendar",
+            "A - First Six-Week Session",
+            "May 26"
+        ]
+    },
+    {
+        "name": "sumter-iris-festival",
+        "url": "https://www.sumtersc.gov/tourism/things-do/festivals-events/iris-festival/2026-festival-schedule",
+        "expectedAnchors": [
+            "Main Stage",
+            "Gump Fiction"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Gump Fiction",
+                "date": "SATURDAY, MAY 16, 2026",
+                "time": "5-6 PM",
+                "location": "Main Stage"
+            }
+        ]
+    },
+    {
+        "name": "sydney-opera-great-opera-hits",
+        "url": "https://www.sydneyoperahouse.com/opera-australia/2026-season/great-opera-hits-2026",
+        "expectedAnchors": [
+            "Great Opera Hits 2026",
+            "5 July",
+            "26 October 2026",
+            "Joan Sutherland Theatre"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Great Opera Hits 2026",
+                "date": "5 July",
+                "location": "Joan Sutherland Theatre"
+            }
+        ]
+    },
+    {
+        "name": "winston-salem-summer-events",
+        "url": "https://www.cityofws.org/3696/Summer-2026-Events",
+        "expectedAnchors": [
+            "Youth Food Truck Festival",
+            "June 26, 2026",
+            "Quarry Park"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Youth Food Truck Festival",
+                "date": "June 26, 2026",
+                "time": "7:00 PM",
+                "location": "Quarry Park"
+            }
+        ]
+    },
+    {
+        "name": "portland-community-events",
+        "url": "https://www.portland.gov/transportation/permitting/portland-streets/upcoming-community-events",
+        "expectedAnchors": [
+            "Kenton Farmers Market",
+            "Every Wednesday between June 3 and September 30 in 2026",
+            "N McClellan and N Denver"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Kenton Farmers Market",
+                "date": "Every Wednesday between June 3 and September 30 in 2026",
+                "time": "3:00 PM",
+                "location": "N McClellan and N Denver"
+            },
+            {
+                "title": "South Waterfront Farmers Market",
+                "date": "Every Thursday from June to October in 2026",
+                "time": "12:00 PM",
+                "location": "S Moody Ave in Elizabeth Caruthers Park"
+            }
+        ]
+    },
+    {
+        "name": "oxford-events-all",
+        "category": "academic",
+        "url": "https://events.ox.ac.uk/",
+        "finalUrl": "https://events.ox.ac.uk/",
+        "reasonForInclusion": "Oxford uses a dense server-rendered academic listing with department, host, audience, and format metadata repeated per entry.",
+        "expectedAnchors": [
+            "Music Technology Research Opportunities & Sound Futures at Oxford",
+            "Professor Gascia Ouzounian",
+            "Bodleian iSkills",
+            "Add to my calendar"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Music Technology Research Opportunities & Sound Futures at Oxford",
+                "date": "Monday, 22 June 2026 to Tuesday, 23 June 2026",
+                "time": "11am - 11.45am",
+                "description": "A a two-day gathering on music technology research opportunities, sound in museums, and sound design for public spaces."
+            },
+            {
+                "title": "Somatic mitochondrial DNA mutations in cancer: prevalent and relevant",
+                "date": "Monday, 22 June 2026",
+                "time": "11am to 12pm",
+                "description": "Speaker(s): Prof Payam Gammage"
+            },
+            {
+                "title": "Poster clinic for medicine",
+                "date": "Monday, 22 June 2026",
+                "time": "3pm to 4pm",
+                "description": "Series: Bodleian iSkills - Workshops in Information Discovery and Scholarly Communications"
+            }
+        ],
+        "labelingNotes": "Fetched raw HTML returned status 200 and the selected titles, dates, times, speakers, and series text appeared in the normalized page body.",
+        "risk": "High event density and some duplicate-looking Oxford entries can make event boundaries harder to infer."
+    },
+    {
+        "name": "mit-events-calendar",
+        "category": "academic",
+        "url": "https://calendar.mit.edu/",
+        "finalUrl": "https://calendar.mit.edu/",
+        "reasonForInclusion": "MIT adds a Localist-style academic calendar with featured cards, stream markers, registration actions, and repeated social sharing controls.",
+        "expectedAnchors": [
+            "Summer Seminar Series on Super Pollutants",
+            "Building 55-110",
+            "Stream Available",
+            "Food Truck Wednesdays",
+            "Consciousness & Reality (C&R) Colloquium 2025-26 Series"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Summer Seminar Series on Super Pollutants",
+                "date": "Tuesday, June 23, 2026",
+                "time": "12:00pm to 1:00pm EDT",
+                "location": "Building 55-110",
+                "description": "Stream Available"
+            },
+            {
+                "title": "Food Truck Wednesdays",
+                "date": "Wednesday, June 24, 2026",
+                "time": "11:30am to 2:00pm EDT",
+                "location": "Building E23, Outside"
+            },
+            {
+                "title": "Consciousness & Reality (C&R) Colloquium 2025-26 Series",
+                "date": "Wednesday, June 24, 2026",
+                "time": "1:00pm EDT",
+                "location": "Virtual Event"
+            }
+        ],
+        "labelingNotes": "Fetched raw HTML returned status 200 and each selected card label was present near its date, time, and location.",
+        "risk": "Localist markup repeats titles in share links, so context compaction must avoid over-weighting social share duplicates."
+    },
+    {
+        "name": "princeton-events",
+        "category": "campus",
+        "url": "https://www.princeton.edu/events",
+        "finalUrl": "https://www.princeton.edu/events",
+        "reasonForInclusion": "Princeton uses a campus-wide listing where category, title, location, time, and date are presented in a flat sequence rather than card fields.",
+        "expectedAnchors": [
+            "Upcoming events",
+            "When Pages Breathe: The Rebellion Records",
+            "Chancellor Green Rotunda",
+            "Saint-Jean-Baptiste Day Celebration",
+            "Outdoor Spaces, Lakeside BBQ Deck"
+        ],
+        "expectedEvents": [
+            {
+                "title": "When Pages Breathe: The Rebellion Records",
+                "date": "Jun 22",
+                "time": "6:00 p.m.",
+                "location": "Chancellor Green Rotunda",
+                "description": "Academics & Research"
+            },
+            {
+                "title": "Guided tour: \"Nursery of Rebellion\": Princeton and the American Revolution",
+                "date": "Jun 23",
+                "time": "12:30 p.m.",
+                "location": "Milberg Gallery",
+                "description": "Academics & Research"
+            },
+            {
+                "title": "Saint-Jean-Baptiste Day Celebration",
+                "date": "Jun 24",
+                "time": "8:00 p.m.",
+                "location": "Outdoor Spaces, Lakeside BBQ Deck",
+                "description": "Cultural, Social"
+            }
+        ],
+        "labelingNotes": "Fetched raw HTML returned status 200 and snippets around each title showed the adjacent location, time, date, and campus category.",
+        "risk": "The flat text order can make it easy to attach a nearby category or location to the wrong event."
+    },
+    {
+        "name": "uoregon-events-calendar",
+        "category": "campus",
+        "url": "https://calendar.uoregon.edu/",
+        "finalUrl": "https://calendar.uoregon.edu/",
+        "reasonForInclusion": "The University of Oregon page adds another Localist implementation with trending cards, ticket labels, and academic or arts taxonomy tags.",
+        "expectedAnchors": [
+            "Symposium on Northwest American Indigenous Languages (SNAIL) 2026",
+            "McKenzie Hall, 240A",
+            "O Radiant Dawn",
+            "Mount Angel Abbey",
+            "$30 GA, Students $5"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Symposium on Northwest American Indigenous Languages (SNAIL) 2026",
+                "date": "Fri, Jun 26",
+                "time": "6:30pm to 9pm EDT",
+                "location": "McKenzie Hall, 240A",
+                "description": "Academic"
+            },
+            {
+                "title": "O Radiant Dawn",
+                "date": "Sat, Jun 27",
+                "time": "1pm EDT",
+                "location": "Mount Angel Abbey",
+                "description": "$30 GA, Students $5"
+            }
+        ],
+        "labelingNotes": "Fetched raw HTML returned status 200 and both event cards appeared with adjacent dates, locations, type tags, and pricing text.",
+        "risk": "The page repeats titles in share links and may rotate the trending order over time."
+    },
+    {
+        "name": "loc-upcoming-concerts",
+        "category": "library",
+        "url": "https://www.loc.gov/events/concerts-from-the-library-of-congress/concerts/upcoming-concerts/",
+        "finalUrl": "https://www.loc.gov/events/concerts-from-the-library-of-congress/concerts/upcoming-concerts/",
+        "reasonForInclusion": "The Library of Congress page is a government-style event list with calendar links, typed event labels, full venue strings, and rich descriptions.",
+        "expectedAnchors": [
+            "Upcoming Concerts",
+            "Live! At the Library: Fania Night: Salsa Class, Social and Fania Records Vinyl Display",
+            "Thomas Jefferson Building, Great Hall - 2nd Floor (LJ-200-E)",
+            "Event | concerts and performances",
+            "Add to calendar"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Live! At the Library: Fania Night: Salsa Class, Social and Fania Records Vinyl Display",
+                "date": "Thursday, July 16, 2026",
+                "time": "6:00 pm - 8:00 pm EDT",
+                "location": "Thomas Jefferson Building, Great Hall - 2nd Floor (LJ-200-E)",
+                "description": "Join us for a Salsa dance class and social featuring David Cuevas, director of Ardiente Dance Company, and DJ Hercules."
+            }
+        ],
+        "labelingNotes": "Fetched raw HTML returned status 200 and the concert entry exposed the title, date, time, venue, event type, and description in source text.",
+        "risk": "Low risk, although this page is a narrow concert subset rather than a full library events calendar."
+    },
+    {
+        "name": "british-library-events",
+        "category": "library",
+        "url": "https://www.bl.uk/events",
+        "finalUrl": "https://events.bl.uk/",
+        "reasonForInclusion": "The British Library redirects to a custom events storefront that mixes exhibitions, timed talks, tours, pricing, and venue labels.",
+        "expectedAnchors": [
+            "British Library, London",
+            "Fairy Tales",
+            "Start using the British Library for my business",
+            "How to Party in Pompeii, with Mary Beard and Charlotte Higgins",
+            "Inventors' Club - Daytime Edition"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Fairy Tales",
+                "date": "27 March",
+                "location": "British Library, London",
+                "description": "A family adventure through magical worlds and enchanted stories."
+            },
+            {
+                "title": "Start using the British Library for my business",
+                "date": "Monday 22 June",
+                "time": "11.00",
+                "description": "Introduction to the British Library's Business & IP Centre and a practical introduction to essential sources of business information."
+            },
+            {
+                "title": "How to Party in Pompeii, with Mary Beard and Charlotte Higgins",
+                "date": "Monday 22 June",
+                "time": "19.00",
+                "description": "The celebrated classicists dig into the food of the Romans, at this Instant Classics live recording."
+            }
+        ],
+        "labelingNotes": "Fetched raw HTML followed the redirect to events.bl.uk with status 200 and showed the selected exhibition and event entries in page text.",
+        "risk": "The page combines exhibitions and events, so extraction may need to separate long-running displays from timed programs."
+    },
+    {
+        "name": "tpl-kids-programs",
+        "category": "library",
+        "url": "https://tpl.ca/programs-and-classes/programs-for-kids-families/",
+        "finalUrl": "https://tpl.ca/programs-and-classes/programs-for-kids-families/",
+        "reasonForInclusion": "Toronto Public Library presents a public programs page with compact date tiles, branch names, all-day labels, and repeated themed series.",
+        "expectedAnchors": [
+            "Upcoming events",
+            "Solar System Stories: A Merril Collection Exhibit",
+            "Lillian H. Smith",
+            "Month long Scavenger Hunt: Follow the rainbowsaurus trail!",
+            "Fort York"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Solar System Stories: A Merril Collection Exhibit",
+                "date": "May 19th - Aug 2nd",
+                "time": "All day",
+                "location": "Lillian H. Smith"
+            },
+            {
+                "title": "Month long Scavenger Hunt: Follow the rainbowsaurus trail!",
+                "date": "Jun 1st - Jun 30th",
+                "time": "All day",
+                "location": "Jones"
+            },
+            {
+                "title": "Soccer Scavenger Hunt",
+                "date": "Jun 3rd - Jul 2nd",
+                "time": "All day",
+                "location": "Fort York"
+            }
+        ],
+        "labelingNotes": "Fetched raw HTML returned status 200 and the upcoming-events section exposed the selected titles, ranges, all-day text, and branch names.",
+        "risk": "Several items are long-running branch activities with sparse descriptions."
+    },
+    {
+        "name": "getty-whats-on",
+        "category": "museum",
+        "url": "https://www.getty.edu/whats-on/",
+        "finalUrl": "https://www.getty.edu/whats-on/",
+        "reasonForInclusion": "Getty's what-on page contains a large static client payload but exposes mixed featured events, exhibitions, tours, locations, and date ranges in text.",
+        "expectedAnchors": [
+            "Getty Soccer Watch Parties",
+            "Location: Getty Center",
+            "Bacchus Uncorked: A Roman Dinner Party Lost at Sea",
+            "Odilon Redon Salon: Words and Music",
+            "Featured Exhibitions"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Getty Soccer Watch Parties",
+                "date": "June 11 to July 19, 2026",
+                "location": "Getty Center"
+            },
+            {
+                "title": "Bacchus Uncorked: A Roman Dinner Party Lost at Sea",
+                "date": "Jul 11 and 12, 2026",
+                "location": "Getty Villa",
+                "description": "Food"
+            },
+            {
+                "title": "Odilon Redon Salon: Words and Music",
+                "date": "Saturday, Jul 18, 2026",
+                "location": "Getty Center",
+                "description": "Performance"
+            }
+        ],
+        "labelingNotes": "Fetched raw HTML returned status 200 and the featured-content text exposed all selected event titles, dates, locations, and category labels.",
+        "risk": "The HTML is very large, so it is useful for testing compaction pressure but may be brittle if Getty rotates featured content."
+    },
+    {
+        "name": "nhm-crochet-at-the-museum",
+        "category": "museum",
+        "url": "https://www.nhm.ac.uk/events/crochet-with-toft.html",
+        "finalUrl": "https://www.nhm.ac.uk/events/crochet-with-toft.html",
+        "reasonForInclusion": "The Natural History Museum detail page has a single event with ticketing copy, price, entrance, and a long descriptive body.",
+        "expectedAnchors": [
+            "Crochet at the Museum",
+            "Friday 26 June",
+            "18:30",
+            "East Entrance on Exhibition Road",
+            "Wildlife Photographer of the Year exhibition"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Crochet at the Museum",
+                "date": "Friday 26 June",
+                "time": "18:30",
+                "location": "East Entrance on Exhibition Road",
+                "description": "Crochet a striking and exclusive Arctic wolf design"
+            }
+        ],
+        "labelingNotes": "Fetched raw HTML returned status 200 and the event detail text included the title, date, start time, price, entrance, and workshop description.",
+        "risk": "Single-event detail page with no alternate events, but strong field labels."
+    },
+    {
+        "name": "tate-modern-lates",
+        "category": "museum",
+        "url": "https://www.tate.org.uk/whats-on/tate-modern/tate-modern-lates",
+        "finalUrl": "https://www.tate.org.uk/whats-on/tate-modern/tate-modern-lates",
+        "reasonForInclusion": "Tate's event detail page combines page navigation, program sections, venue details, recommended events, and ticketing context.",
+        "expectedAnchors": [
+            "Tate Modern Lates",
+            "Date & Time",
+            "26 June 2026",
+            "Turbine Hall",
+            "Bankside London SE1 9TG"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Tate Modern Lates",
+                "date": "26 June 2026",
+                "time": "18.00",
+                "location": "Tate Modern",
+                "description": "Turbine Hall"
+            }
+        ],
+        "labelingNotes": "Fetched raw HTML returned status 200 and the event detail showed title, venue, date, start time, and program anchors in the body text.",
+        "risk": "The page includes recommended related events after the main event, which may confuse extraction if sections are not preserved."
+    },
+    {
+        "name": "science-museum-early-birds",
+        "category": "museum",
+        "url": "https://www.sciencemuseum.org.uk/see-and-do/early-birds",
+        "finalUrl": "https://www.sciencemuseum.org.uk/see-and-do/early-birds",
+        "reasonForInclusion": "The Science Museum page is an accessibility-focused recurring event detail with information panels, future dates, and booking state copy.",
+        "expectedAnchors": [
+            "Early Birds",
+            "Saturday 4 July 2026",
+            "08.00-11.00",
+            "Free Accessible event",
+            "Booking opening soon"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Early Birds",
+                "date": "Saturday 4 July 2026",
+                "time": "08.00-11.00",
+                "location": "Science Museum",
+                "description": "This event is suitable for those who benefit from visiting the museum without the hustle and bustle of the general public"
+            }
+        ],
+        "labelingNotes": "Fetched raw HTML returned status 200 and the information section showed the next date, time, free accessible event label, and booking state.",
+        "risk": "The page contains future recurring dates and accessibility FAQ text that can compete with the next-event details."
+    },
+    {
+        "name": "nyc-council-calendar",
+        "category": "civic",
+        "url": "https://legistar.council.nyc.gov/Calendar.aspx",
+        "finalUrl": "https://legistar.council.nyc.gov/Calendar.aspx",
+        "reasonForInclusion": "Legistar exposes a dense public-meeting table with committee names, dates, times, rooms, and topic blurbs in a single flat page.",
+        "expectedAnchors": [
+            "Committee on Criminal Justice",
+            "Oversight - Improving Court Operations to Reduce the Jail Population.",
+            "Council Chambers - City Hall"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Committee on Criminal Justice",
+                "date": "6/25/2026",
+                "time": "10:00 AM",
+                "location": "250 Broadway - 8th Floor - Hearing Room 2",
+                "description": "Oversight - Improving Court Operations to Reduce the Jail Population."
+            },
+            {
+                "title": "Committee on Education",
+                "date": "6/24/2026",
+                "time": "1:00 PM",
+                "location": "Council Chambers - City Hall",
+                "description": "Jointly with the Committee on Technology. Multiple meeting items, please see Meeting Details for more information."
+            },
+            {
+                "title": "Committee to Combat Hate",
+                "date": "6/23/2026",
+                "time": "1:00 PM",
+                "location": "250 Broadway - 8th Floor - Hearing Room 1",
+                "description": "Oversight - Community-based Prevention and Response to Hate and Bias."
+            }
+        ],
+        "labelingNotes": "Verified directly from the visible meeting rows in the Legistar calendar list view.",
+        "risk": "Very dense table with repeated navigation and many deferred rows, but event labels are source-visible."
+    },
+    {
+        "name": "daytona-public-meetings",
+        "category": "government",
+        "url": "https://www.daytonabeach.gov/Calendar.aspx",
+        "finalUrl": "https://www.daytonabeach.gov/Calendar.aspx",
+        "reasonForInclusion": "CivicPlus calendar mixes many public-meeting entries with category labels, hidden-style detail text, and community events lower on the same page.",
+        "expectedAnchors": [
+            "Public Meetings",
+            "Special Magistrate Rental Program Meeting",
+            "Affordable Housing Advisory Committee Meeting",
+            "Planning Board Meeting"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Special Magistrate Rental Program Meeting",
+                "description": "Category: Public Meetings"
+            },
+            {
+                "title": "Affordable Housing Advisory Committee Meeting",
+                "description": "Category: Public Meetings"
+            },
+            {
+                "title": "Planning Board Meeting",
+                "description": "Category: Public Meetings"
+            }
+        ],
+        "labelingNotes": "Checked the June 2026 list rows under Public Meetings. The captured list view shows day numbers near each title, but those day-number labels are intentionally omitted because they are too weak for global substring retention checks.",
+        "risk": "CivicPlus repeats date and machine-readable timestamps, which can confuse extraction but provides strong anchors."
+    },
+    {
+        "name": "beverly-city-meetings",
+        "category": "government",
+        "url": "https://www.beverlyma.gov/Calendar.aspx",
+        "finalUrl": "https://www.beverlyma.gov/Calendar.aspx",
+        "reasonForInclusion": "City meeting list has compact repeated entries, sparse locations for some rows, and one virtual-only event note.",
+        "expectedAnchors": [
+            "City Meetings (13)",
+            "Stormwater Committee Meeting",
+            "Economic and Community Development Council Meeting",
+            "This is a Virtual Meeting ONLY!"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Special City Council Meeting",
+                "date": "June 22, 2026",
+                "time": "6:00 PM"
+            },
+            {
+                "title": "Economic and Community Development Council Meeting",
+                "date": "June 25, 2026",
+                "time": "8:30 AM - 10:00 AM"
+            },
+            {
+                "title": "Conservation Commission Meeting",
+                "date": "June 30, 2026",
+                "time": "6:30 PM",
+                "location": "This is a Virtual Meeting ONLY!"
+            }
+        ],
+        "labelingNotes": "Verified the City Meetings list entries and kept the virtual-only text as the location signal where shown.",
+        "risk": "Some locations are city-wide placeholders rather than room-level details."
+    },
+    {
+        "name": "la-mesa-city-events",
+        "category": "community",
+        "url": "https://www.cityoflamesa.gov/calendar.aspx?CID=14%2C&view=list",
+        "finalUrl": "https://www.cityoflamesa.gov/calendar.aspx?CID=14%2C&view=list",
+        "reasonForInclusion": "City Events and Meetings page combines public meetings, a farmers market, cleanup, concerts, and prose descriptions in one CivicPlus list.",
+        "expectedAnchors": [
+            "City Events & Meetings (10)",
+            "City Council Meeting",
+            "La Mesa Village Farmers Market",
+            "The La Mesa Village Farmers Market offers 60+ vendors",
+            "La Mesa's 32nd Annual Classic Car Show"
+        ],
+        "expectedEvents": [
+            {
+                "title": "City Council Meeting",
+                "date": "June 23, 2026",
+                "time": "6:00 PM",
+                "location": "Council Chambers"
+            },
+            {
+                "title": "La Mesa Village Farmers Market",
+                "date": "June 26, 2026",
+                "time": "3:00 PM - 7:30 PM",
+                "description": "The La Mesa Village Farmers Market offers 60+ vendors featuring fresh produce, baked goods, meats, cheeses, local artisans, food vendors, live music and much more!"
+            },
+            {
+                "title": "Litter Free La Mesa Cleanup Series - University Ave.",
+                "date": "June 27, 2026",
+                "time": "9:00 AM - 11:00 AM"
+            }
+        ],
+        "labelingNotes": "Verified the June 2026 City Events and Meetings list, including the farmers market prose and address-bearing meeting entries.",
+        "risk": "Some event locations are generic city placeholders, but several rows include full addresses or descriptions."
+    },
+    {
+        "name": "cambridge-farmers-markets",
+        "category": "community",
+        "url": "https://www.cambridgema.gov/cdd/parks/farmersmarkets",
+        "finalUrl": "https://www.cambridgema.gov/cdd/parks/farmersmarkets",
+        "reasonForInclusion": "Static city page presents recurring farmers markets as prose blocks with seasonal ranges, weekdays, times, locations, contacts, and benefit-program notes.",
+        "expectedAnchors": [
+            "Farmers Markets in Cambridge",
+            "Central Square Farmers Market",
+            "May 18, 2026 - November 23, 2026",
+            "Charles Hotel, 1 Bennett Street",
+            "SNAP Match Program"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Central Square Farmers Market",
+                "date": "May 18, 2026 - November 23, 2026",
+                "time": "Mondays 12:00 PM - 6:00PM",
+                "location": "Parking Lot at corner of Bishop Allen Drive and Norfolk Street",
+                "description": "Offers SNAP, SNAP Match, HIP, WIC, and Senior Coupons."
+            },
+            {
+                "title": "Charles River Farmers Market at Charles Hotel",
+                "date": "Year-Round",
+                "time": "Fridays 12:00PM - 6:00 PM and Sundays 10:00 AM. - 3:00 PM",
+                "location": "Charles Hotel, 1 Bennett Street"
+            },
+            {
+                "title": "Kendall Square Farmers Market",
+                "date": "May 28, 2026 - October 8, 2026",
+                "time": "Thursdays 12:00 PM - 6:00PM",
+                "location": "Termeer Square (Park) 675 West Kendall Street",
+                "description": "Offers SNAP, SNAP Match, HIP, WIC, and Senior Coupons."
+            }
+        ],
+        "labelingNotes": "Checked the static Farmers Markets in Cambridge section and copied the visible date ranges, recurring times, and addresses.",
+        "risk": "Recurring events are prose schedules rather than individual calendar instances."
+    },
+    {
+        "name": "utah-nonprofits-community-calendar",
+        "category": "nonprofit",
+        "url": "https://members.utahnonprofits.org/nonprofit-community-calendar",
+        "finalUrl": "https://members.utahnonprofits.org/nonprofit-community-calendar",
+        "reasonForInclusion": "GrowthZone nonprofit calendar uses compact date tiles, result counts, teaser descriptions, and a month grid with duplicated event links.",
+        "expectedAnchors": [
+            "Nonprofit Community Calendar",
+            "Results: 14",
+            "June Listening Session",
+            "Golf Fore Kids' Sake",
+            "Young Professionals: June Social Hour",
+            "2026 Utah Democracy Conference"
+        ],
+        "expectedEvents": [
+            {
+                "title": "June Listening Session",
+                "date": "June 24",
+                "time": "6:00 PM - 7:00 PM",
+                "description": "Explore the intersecting languages of quilting and synthesizers."
+            },
+            {
+                "title": "Golf Fore Kids' Sake",
+                "date": "June 25",
+                "time": "8:00 AM - 2:00 PM"
+            },
+            {
+                "title": "Young Professionals: June Social Hour",
+                "date": "June 25",
+                "time": "6:00 PM - 8:00 PM",
+                "description": "Join us for an evening of connection, conversation, and community as we partner with local LGBTQ+ organizations and leaders."
+            }
+        ],
+        "labelingNotes": "Verified titles, dates, times, and teaser text in the list view and checked that the same titles appear in the month grid.",
+        "risk": "Locations are not visible in the list view, so this is weaker for venue extraction."
+    },
+    {
+        "name": "nonprofit-center-nefl-events",
+        "category": "nonprofit",
+        "url": "https://nonprofitctr.org/inspire_events/",
+        "finalUrl": "https://nonprofitctr.org/inspire_events/",
+        "reasonForInclusion": "Nonprofit event archive mixes a featured item, current upcoming events, archived events, long descriptions, virtual locations, and physical addresses.",
+        "expectedAnchors": [
+            "Current & Upcoming",
+            "Essentials Series: Succession Planning 101",
+            "Catalyst Connect: Clay (Economic Opportunity)",
+            "Impact Clay 151 College Dr Suite 1 & 2 Orange Park, FL 32065",
+            "Board Roles & Responsibilities"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Essentials Series: Succession Planning 101",
+                "date": "Jun 23, 2026",
+                "time": "12:00PM - 1:30PM",
+                "location": "Virtual - Link upon registration",
+                "description": "This 90-minute session introduces the fundamentals of succession planning and why it is critical to nonprofit stability and continuity."
+            },
+            {
+                "title": "Catalyst Connect: Clay (Economic Opportunity)",
+                "date": "Jun 29, 2026",
+                "time": "1:00PM - 2:30PM",
+                "location": "Impact Clay 151 College Dr Suite 1 & 2 Orange Park, FL 32065",
+                "description": "This monthly discussion will take a data-driven look at the intersections of data and community experience in Clay County."
+            },
+            {
+                "title": "Board Roles & Responsibilities",
+                "date": "Jul 15, 2026",
+                "time": "12:00PM - 1:30PM",
+                "location": "Virtual. You will receive additional instructions once you complete your registration."
+            }
+        ],
+        "labelingNotes": "Verified the featured and current-upcoming rows plus their visible descriptions and location lines.",
+        "risk": "The page includes archived events below the current list, so compact context must avoid dropping the active section."
+    },
+    {
+        "name": "grand-canyon-trust-events",
+        "category": "nonprofit",
+        "url": "https://www.grandcanyontrust.org/events-calendar/",
+        "finalUrl": "https://www.grandcanyontrust.org/events-calendar/",
+        "reasonForInclusion": "Environmental nonprofit calendar combines evergreen daily participation, volunteer day trips, multi-day service trips, image alt text, and short descriptions.",
+        "expectedAnchors": [
+            "Events Calendar",
+            "From volunteer trips to film screenings and public meetings",
+            "Birdwatch in Arizona, Utah, Colorado, and New Mexico",
+            "Homestead Garden Helpers (Day Trip)",
+            "Protect Wetlands in Bears Ears National Monument (WAITLIST)"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Birdwatch in Arizona, Utah, Colorado, and New Mexico",
+                "date": "Every day",
+                "description": "Grab your binoculars and help us spot pinyon jays."
+            },
+            {
+                "title": "Homestead Garden Helpers (Day Trip)",
+                "date": "Jun 27, 2026",
+                "location": "Trust's main office in Flagstaff, Arizona",
+                "description": "Help take care of a permaculture-inspired garden at the Trust's main office in Flagstaff, Arizona."
+            },
+            {
+                "title": "Protect Wetlands in Bears Ears National Monument (WAITLIST)",
+                "date": "Jun 29, 2026 - Jul 2, 2026",
+                "location": "Manti-La Sal National Forest near Bears Ears National Monument",
+                "description": "Help protect important springs and wetlands in the Manti-La Sal National Forest near Bears Ears National Monument."
+            }
+        ],
+        "labelingNotes": "Verified the event list immediately under the Events Calendar heading and used descriptions for locations when the row did not have a separate venue field.",
+        "risk": "Times are not visible, and some locations are inferred from source-visible descriptions rather than dedicated fields."
+    },
+    {
+        "name": "nonprofit-association-midlands-events",
+        "category": "nonprofit",
+        "url": "https://www.nonprofitam.org/events",
+        "finalUrl": "https://www.nonprofitam.org/events",
+        "reasonForInclusion": "Membership association calendar has a paginated list with member-posted events, virtual policy calls, roundtables, trainings, and signature-event links.",
+        "expectedAnchors": [
+            "Upcoming Events",
+            "2026 Federal Government & Nonprofits - Weekly Updates (Virtual)",
+            "BIPOC Roundtable (Omaha)",
+            "The Art & Agony of NICRA Negotiations (Virtual)",
+            "Nonprofit Association of the Midlands (NAM)"
+        ],
+        "expectedEvents": [
+            {
+                "title": "2026 Federal Government & Nonprofits - Weekly Updates (Virtual)",
+                "date": "Jun 23",
+                "time": "8:30 AM - 9:30 AM CDT",
+                "location": "Virtual"
+            },
+            {
+                "title": "BIPOC Roundtable (Omaha)",
+                "date": "Jun 23",
+                "time": "11:30 AM - 1:00 PM CDT",
+                "location": "Omaha"
+            },
+            {
+                "title": "The Art & Agony of NICRA Negotiations (Virtual)",
+                "date": "Jun 24",
+                "time": "11:00 AM - 12:00 PM CDT",
+                "location": "Virtual"
+            }
+        ],
+        "labelingNotes": "Verified the upcoming events list and used title parentheticals for location only where the list does not expose a separate location field.",
+        "risk": "Event year is page-level 2026 and location is weaker for some rows because details are behind links."
+    },
+    {
+        "name": "southern-new-mexico-community-calendar",
+        "category": "community",
+        "url": "https://www.communityfoundationofsouthernnewmexico.org/community-calendar/",
+        "finalUrl": "https://www.communityfoundationofsouthernnewmexico.org/community-calendar/",
+        "reasonForInclusion": "Community foundation calendar is a dense month view with no-event notices, repeated day summaries, multi-day trainings, and nonprofit community submissions.",
+        "expectedAnchors": [
+            "Calendar of Events",
+            "PDN Board Training- Alamogordo",
+            "SNM Diabetes Summit",
+            "Community Event Submission"
+        ],
+        "expectedEvents": [
+            {
+                "title": "PDN Board Training- Alamogordo",
+                "date": "2026-06-26",
+                "time": "8:00 am - 2:00 pm",
+                "description": "PDN Board Training- Alamogordo"
+            },
+            {
+                "title": "SNM Diabetes Summit",
+                "date": "2026-06-26",
+                "time": "8:00 am - 2:00 pm"
+            }
+        ],
+        "labelingNotes": "Verified the June 26 month-view entries and copied visible titles, times, and teaser descriptions from the calendar body.",
+        "risk": "Month grid includes many repeated no-event notices and does not show dedicated locations for the selected future entries."
+    },
+    {
+        "name": "date-2026",
+        "category": "conference",
+        "url": "https://www.date-conference.com/",
+        "finalUrl": "https://www.date-conference.com/",
+        "reasonForInclusion": "Conference page combines non-US date format, CEST time zone text, registration desk hours, venue details, and dense program/news sections.",
+        "expectedAnchors": [
+            "Design, Automation and Test in Europe Conference",
+            "20 - 22 April 2026",
+            "Verona, Italy",
+            "Palazzo della Gran Guardia",
+            "Registration/Help Desk Opening Hours",
+            "CEST"
+        ],
+        "expectedEvents": [
+            {
+                "title": "DATE 2026",
+                "date": "20 - 22 April 2026",
+                "location": "Palazzo della Gran Guardia",
+                "description": "Design, Automation and Test in Europe Conference in Verona, Italy, with registration and help desk information in CEST."
+            }
+        ],
+        "labelingNotes": "Verified the event title, date range, Verona location, venue, and CEST registration desk hours from the fetched page text.",
+        "risk": "Post-event homepage now includes DATE 2027 and news content, so scanners must preserve the 2026 event section rather than only the newest update."
+    },
+    {
+        "name": "infocomm-2026",
+        "category": "conference",
+        "url": "https://www.infocommshow.org/",
+        "finalUrl": "https://www.infocommshow.org/",
+        "reasonForInclusion": "Trade-show page exposes parallel date ranges for education and exhibits with separate venue areas, registration copy, and a large navigation surface.",
+        "expectedAnchors": [
+            "InfoComm 2026",
+            "Las Vegas Convention Center",
+            "Education: June 13-19",
+            "Exhibits: June 17-19",
+            "Register Now",
+            "Technical Workshops"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Education",
+                "date": "June 13-19",
+                "location": "West Hall Meeting Rooms",
+                "description": "Education portion of InfoComm 2026 at the Las Vegas Convention Center."
+            },
+            {
+                "title": "Exhibits",
+                "date": "June 17-19",
+                "location": "North & Central Halls",
+                "description": "Exhibit hall portion of InfoComm 2026 at the Las Vegas Convention Center."
+            }
+        ],
+        "labelingNotes": "Verified the show name, Las Vegas venue, education dates, exhibit dates, hall names, and registration anchor from the fetched page text.",
+        "risk": "The page is already in a wrap-up state after the 2026 show, but the original date and location labels remain source-visible."
+    },
+    {
+        "name": "aashe-stars-data-quality-workshop",
+        "category": "workshop",
+        "url": "https://www.aashe.org/calendar/stars-data-quality-v3-spring-2026/",
+        "finalUrl": "https://www.aashe.org/calendar/stars-data-quality-v3-spring-2026/",
+        "reasonForInclusion": "Workshop detail page has an explicit passed-event banner, two-session virtual schedule, time zone, and descriptive registration-style body copy.",
+        "expectedAnchors": [
+            "Workshop: STARS 3.0 Data Quality Training & Certification",
+            "May 18 @ 2:00 pm - 4:30 pm EDT",
+            "Monday, May 18 and Thursday, May 21",
+            "2-day, virtual workshop",
+            "STARS version 3.0"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Workshop: STARS 3.0 Data Quality Training & Certification",
+                "date": "Monday, May 18 and Thursday, May 21",
+                "time": "2-4:30 p.m. ET",
+                "location": "virtual workshop",
+                "description": "Intermediate-to-advanced STARS workshop covering data quality, review, revision, version 3.0 differences, deadlines, and resources."
+            }
+        ],
+        "labelingNotes": "Verified the title, two workshop dates, time range, EDT/ET time zone, virtual format, and STARS 3.0 description from the page body.",
+        "risk": "Event has passed and uses both EDT and ET wording, so downstream labels may need equivalent time-zone normalization."
+    },
+    {
+        "name": "georgia-tech-endnote-workshop",
+        "category": "workshop",
+        "url": "https://libcal.library.gatech.edu/event/16971973",
+        "finalUrl": "https://libcal.library.gatech.edu/event/16971973",
+        "reasonForInclusion": "LibCal page is compact but useful because it includes disabled-JavaScript text, online registration delivery copy, and a named time zone.",
+        "expectedAnchors": [
+            "EndNote workshop",
+            "Wednesday, June 17, 2026",
+            "4:00pm - 5:00pm",
+            "Eastern Time - US & Canada",
+            "Event URL will be sent via registration email"
+        ],
+        "expectedEvents": [
+            {
+                "title": "EndNote workshop",
+                "date": "Wednesday, June 17, 2026",
+                "time": "4:00pm - 5:00pm",
+                "location": "Online",
+                "description": "Workshop demonstrating common functions of the EndNote reference management software in a Windows environment."
+            }
+        ],
+        "labelingNotes": "Verified the title, date, time, time zone, online location, registration email note, and EndNote description from the server-rendered LibCal text.",
+        "risk": "Registration has closed and the page is low-density, but the event labels are clean and visible without JavaScript."
+    },
+    {
+        "name": "dnewtech-july-2026",
+        "category": "meetup",
+        "url": "https://www.meetup.com/dnewtech/events/315255743/",
+        "finalUrl": "https://www.meetup.com/dnewtech/events/315255743/",
+        "reasonForInclusion": "Meetup page includes RSVP migration copy, recurrence wording, a street address, and a structured agenda with times.",
+        "expectedAnchors": [
+            "DNewTech - July 2026",
+            "Wednesday, Jul 8",
+            "6:30 PM to 8:30 PM EDT",
+            "Tech Town Detroit",
+            "440 Burroughs St",
+            "Please RSVP",
+            "2nd Wednesday of the month"
+        ],
+        "expectedEvents": [
+            {
+                "title": "DNewTech - July 2026",
+                "date": "Wednesday, Jul 8",
+                "time": "6:30 PM to 8:30 PM EDT",
+                "location": "Tech Town Detroit",
+                "recurrence": "2nd Wednesday of the month",
+                "description": "Detroit New Tech onsite meetup with networking, drinks, presentations, questions, community announcements, and RSVP instructions."
+            }
+        ],
+        "labelingNotes": "Verified the event title, EDT time range, Tech Town Detroit address, recurrence note, RSVP instruction, and agenda from the fetched Meetup text.",
+        "risk": "Meetup pages can change or hide details behind client behavior, and the page also points users to a Luma RSVP page."
+    },
+    {
+        "name": "reactplay-bangalore-june-2026",
+        "category": "meetup",
+        "url": "https://www.meetup.com/reactplay-bengaluru/events/315084306/",
+        "finalUrl": "https://www.meetup.com/reactplay-bengaluru/events/315084306/",
+        "reasonForInclusion": "Meetup page provides non-US date wording, IST time zone, missing-location text, RSVP instructions, and speaker-call copy.",
+        "expectedAnchors": [
+            "ReactPlay Bangalore Meetup - June 27, 2026",
+            "Saturday, Jun 27",
+            "2:00 PM to 6:00 PM IST",
+            "Needs a location",
+            "Venue sponsor: TBD",
+            "RSVP on both Meetup and Luma"
+        ],
+        "expectedEvents": [
+            {
+                "title": "ReactPlay Bangalore Meetup - June 27, 2026",
+                "date": "27th June 2026",
+                "time": "2:00 PM-6:00 PM IST",
+                "location": "Needs a location",
+                "description": "ReactPlay Bengaluru meetup calling for speakers, with talks on latest tech, networking, Q&A, and mandatory Meetup plus Luma RSVP."
+            }
+        ],
+        "labelingNotes": "Verified the title, Saturday date, IST time range, missing-location label, venue sponsor status, and RSVP note from the fetched Meetup text.",
+        "risk": "Location is intentionally unresolved and may become stale if the organizer later fills in a venue."
+    },
+    {
+        "name": "rocky-mountain-state-games-2026",
+        "category": "sports",
+        "url": "https://www.coloradospringssports.org/events/rockymountainstategames/",
+        "finalUrl": "https://www.coloradospringssports.org/events/rockymountainstategames/",
+        "reasonForInclusion": "Sports festival page combines a high-level event date, broad location, sport-list grid, participant copy, FAQ text, and merchandise links.",
+        "expectedAnchors": [
+            "Rocky Mountain State Games",
+            "over 35 different sports",
+            "Colorado Springs"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Rocky Mountain State Games",
+                "date": "July 17 - 19, 2026",
+                "location": "Various Locations across the Pikes Peak Region",
+                "description": "Colorado's largest annual multi-sport festival for athletes of all ages and abilities, with over 35 sports across premier venues."
+            }
+        ],
+        "labelingNotes": "Verified the event title, date range, Pikes Peak region location, sport count, sport list, and Colorado Springs FAQ details from fetched page text.",
+        "risk": "Specific sport schedules and venues live on linked sport pages, so this candidate is strongest for parent-event extraction."
+    },
+    {
+        "name": "state-games-of-america-2026",
+        "category": "sports",
+        "url": "https://stategames.org/",
+        "finalUrl": "https://stategames.org/",
+        "reasonForInclusion": "Sports event homepage has a national multi-sport description, multi-day date range, host organization copy, and several registration-related links.",
+        "expectedAnchors": [
+            "The State Games of America",
+            "Olympic-style sports festival",
+            "July 24 - August 2, 2026",
+            "State College, PA",
+            "Hosted by the Keystone State Games",
+            "2026 SGA Sports"
+        ],
+        "expectedEvents": [
+            {
+                "title": "The State Games of America",
+                "date": "July 24 - August 2, 2026",
+                "location": "State College, PA",
+                "description": "Olympic-style sports festival featuring athletes from across the nation and hosted by the Keystone State Games."
+            }
+        ],
+        "labelingNotes": "Verified the event title, date range, State College location, Keystone host line, sports link, and Olympic-style description from fetched page text.",
+        "risk": "Main page is high-level and sends detailed sports, admissions, and athlete check-in information to linked RaceReach and Keystone pages."
+    },
+    {
+        "name": "grand-haven-music-on-grand-2026",
+        "category": "recurring-series",
+        "url": "https://visitgrandhaven.com/events/summer-music-free-grand-haven/",
+        "finalUrl": "https://visitgrandhaven.com/events/summer-music-free-grand-haven/",
+        "reasonForInclusion": "Recurring concert series page includes a current occurrence, all series dates, free-cost metadata, location details, lineup text, related events, and a cookie banner.",
+        "expectedAnchors": [
+            "Music on the Grand 2026",
+            "June 3, 2026 @ 7:00 pm - 9:00 pm",
+            "Free live music on the waterfront every Wednesday",
+            "June Lineup",
+            "Spring Lake High School Jazz Band",
+            "Cost(s): Free"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Music on the Grand 2026",
+                "date": "June 3, 2026",
+                "time": "7:00 pm - 9:00 pm",
+                "location": "Lynne Sherwood Waterfront Stadium",
+                "recurrence": "every Wednesday in downtown Grand Haven",
+                "description": "Free live music on the waterfront every Wednesday in downtown Grand Haven with a published summer lineup."
+            }
+        ],
+        "labelingNotes": "Verified the title, occurrence date, time, recurrence sentence, lineup anchor, free cost, and waterfront stadium location from fetched Grand Haven page text.",
+        "risk": "Large tourism page includes cookie, navigation, related-event, and social sections around the actual series details."
+    },
+    {
+        "name": "san-benito-library-arts-crafts-2026",
+        "category": "recurring-series",
+        "url": "https://cityofsanbenito.com/Calendar.aspx?EID=1883&calType=0&day=17&month=6&year=2026",
+        "finalUrl": "https://cityofsanbenito.com/Calendar.aspx?EID=1883&calType=0&day=17&month=6&year=2026",
+        "reasonForInclusion": "Civic calendar event page has structured date, time, address, free cost, every-Thursday recurrence text, and no-registration copy.",
+        "expectedAnchors": [
+            "Arts & Crafts at the San Benito Public Library",
+            "Thursday, June 18, 2026",
+            "5:30 PM",
+            "101 W Rose St",
+            "Every Thursday",
+            "No registration required"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Arts & Crafts at the San Benito Public Library",
+                "date": "Thursday, June 18, 2026",
+                "time": "5:30 PM",
+                "location": "San Benito Public Library",
+                "recurrence": "Every Thursday",
+                "description": "Free creative arts and crafts workshop open to all ages with no registration required."
+            }
+        ],
+        "labelingNotes": "Verified the title, date, time, street address, weekly recurrence, free cost, and no-registration note from fetched CivicPlus calendar text.",
+        "risk": "CivicPlus calendar pages include duplicated calendar chrome and map controls around the event details."
+    },
+    {
+        "name": "sfpl-upcoming-events",
+        "category": "class-workshop-list",
+        "url": "https://sfpl.org/events",
+        "finalUrl": "https://sfpl.org/events",
+        "reasonForInclusion": "San Francisco Public Library exposes thousands of programs with repeated branch names, many same-day storytimes, workshops, activities, and virtual events.",
+        "visibleEventCountEstimate": 25,
+        "expectedAnchors": [
+            "1 - 25 of 2263 results",
+            "Social: Monday Fun Day Family Dance Party",
+            "Workshop: Fake Cake Photo Frames",
+            "Workshop: Intergenerational Mandarin Classes",
+            "Presentation: Paws and Careers: Exploring Dog Grooming as a Profession",
+            "Virtual Library",
+            "Monday, 6/22/2026, 4:00 - 5:00"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Social: Monday Fun Day Family Dance Party",
+                "date": "Monday, 6/22/2026",
+                "time": "10:00 - 11:00",
+                "location": "Glen Park",
+                "description": "Early Childhood, Family, Dance & Music"
+            },
+            {
+                "title": "Activity: Monday Morning Play",
+                "date": "Monday, 6/22/2026",
+                "time": "10:00 - 12:00",
+                "location": "North Beach",
+                "description": "Early Childhood, Play to Learn"
+            },
+            {
+                "title": "Workshop: Fake Cake Photo Frames",
+                "date": "Monday, 6/22/2026",
+                "time": "2:00 - 3:30",
+                "location": "Ortega",
+                "description": "Teen, Make + Do, Summer Stride"
+            },
+            {
+                "title": "Workshop: Intergenerational Mandarin Classes",
+                "date": "Monday, 6/22/2026",
+                "time": "3:30 - 5:30",
+                "location": "Potrero",
+                "description": "All Ages, Intergenerational, Language Learning"
+            },
+            {
+                "title": "Presentation: Paws and Careers: Exploring Dog Grooming as a Profession",
+                "date": "Monday, 6/22/2026",
+                "time": "4:00 - 5:00",
+                "location": "Virtual Library",
+                "description": "Adult, Workforce Development, Jobs & Careers"
+            }
+        ],
+        "labelingNotes": "Checked the upcoming-events result block and used the visible date, time, branch, audience, and topic labels adjacent to each program title.",
+        "risk": "The result count and first page are time-sensitive and may shift as library programs are added or completed."
+    },
+    {
+        "name": "the-web-conf-2026-full-schedule",
+        "category": "conference-agenda",
+        "url": "https://www2026.thewebconf.org/program/full-schedule.html",
+        "finalUrl": "https://www2026.thewebconf.org/program/full-schedule.html",
+        "reasonForInclusion": "The Web Conference schedule is a large agenda with many parallel tutorials and workshops sharing the same time blocks and repeated detail links.",
+        "visibleEventCountEstimate": 40,
+        "expectedAnchors": [
+            "Full Schedule",
+            "All times are in UAE time (GST, UTC+4)",
+            "Monday, June 29, 2026",
+            "10:00 - 13:30",
+            "Temporal Information Retrieval",
+            "LLM & Agents for Recommendation Systems",
+            "14:00- 17:30"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Temporal Information Retrieval And Question Answering in the Age of LLMs",
+                "date": "Monday, June 29, 2026",
+                "time": "10:00 - 13:30",
+                "location": "UAE time (GST, UTC+4)",
+                "description": "Tutorial"
+            },
+            {
+                "title": "Out-of-distribution Generalized Generative AI",
+                "date": "Monday, June 29, 2026",
+                "time": "10:00 - 13:30",
+                "location": "UAE time (GST, UTC+4)",
+                "description": "Tutorial"
+            },
+            {
+                "title": "LLM & Agents for Recommendation Systems",
+                "date": "Monday, June 29, 2026",
+                "time": "10:00 - 13:30",
+                "location": "UAE time (GST, UTC+4)",
+                "description": "Workshop"
+            },
+            {
+                "title": "Emerging Trends in Web Advertising",
+                "date": "Monday, June 29, 2026",
+                "time": "10:00 - 13:30",
+                "location": "UAE time (GST, UTC+4)",
+                "description": "Workshop"
+            },
+            {
+                "title": "Quantum-Safe, Efficient, and AI-Enhanced Blockchains for the Web",
+                "date": "Monday, June 29, 2026",
+                "time": "14:00 - 17:30",
+                "location": "UAE time (GST, UTC+4)",
+                "description": "Tutorial"
+            }
+        ],
+        "labelingNotes": "Checked the full-schedule source text under Monday, June 29, including the shared GST timezone note and the repeated session rows in the 10:00 and 14:00 blocks.",
+        "risk": "The page is very large and session rows repeat titles in detail sections, so context compaction must preserve event boundaries."
+    },
+    {
+        "name": "ottawa-jazz-program",
+        "category": "festival-schedule",
+        "url": "https://program.ottawajazzfestival.com/",
+        "finalUrl": "https://program.ottawajazzfestival.com/",
+        "reasonForInclusion": "The Ottawa Jazz Festival program is a dense music lineup with day filters, repeated times, free labels, passes mixed with performances, and many same-day shows.",
+        "visibleEventCountEstimate": 70,
+        "expectedAnchors": [
+            "Ottawa Jazz Festival",
+            "Thu, Jun 18",
+            "Rowan Bell Petrusic Trio",
+            "Charley Rose Trio",
+            "Wed, Jun 24, 6:30 p.m.",
+            "GALACTIC featuring Jelly Joseph",
+            "Free"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Rowan Bell Petrusic Trio",
+                "date": "Wed, Jun 24",
+                "time": "4:00 p.m.",
+                "description": "Free"
+            },
+            {
+                "title": "Charley Rose Trio",
+                "date": "Wed, Jun 24",
+                "time": "6:30 p.m.",
+                "description": "Dada Pulp Tour"
+            },
+            {
+                "title": "The Plastic Waste Band",
+                "date": "Wed, Jun 24",
+                "time": "6:30 p.m."
+            },
+            {
+                "title": "Orrin Evans Trio",
+                "date": "Wed, Jun 24",
+                "time": "7:00 p.m."
+            },
+            {
+                "title": "GALACTIC featuring Jelly Joseph",
+                "date": "Wed, Jun 24",
+                "time": "8:30 p.m."
+            }
+        ],
+        "labelingNotes": "Checked the program list rows around June 24 and copied titles, same-day repeated times, and visible free or tour labels from the source text.",
+        "risk": "The schedule includes ticket-pass products before performances and may change as festival programming updates."
+    },
+    {
+        "name": "place-des-arts-montreal-jazz",
+        "category": "festival-schedule",
+        "url": "https://www.placedesarts.com/en/festival/montreal-jazz-fest",
+        "finalUrl": "https://www.placedesarts.com/en/festival/montreal-jazz-fest",
+        "reasonForInclusion": "The Place des Arts festival page shows a multi-event Montreal Jazz listing with venue names, performance counts, date ranges, genres, and ticket-state labels.",
+        "visibleEventCountEstimate": 31,
+        "expectedAnchors": [
+            "Festival International de Jazz de Montreal",
+            "June 25 to July 4, 2026",
+            "31 events",
+            "Max Richter with the American Contemporary Music Ensemble",
+            "Marcus Miller | We Want Miles!",
+            "The Headhunters",
+            "Diana Krall",
+            "Salle Wilfrid-Pelletier"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Max Richter with the American Contemporary Music Ensemble",
+                "date": "June 25, 2026",
+                "location": "Salle Wilfrid-Pelletier",
+                "description": "Classical Music, Contemporary, electronic"
+            },
+            {
+                "title": "Marcus Miller | We Want Miles!",
+                "date": "June 25, 2026",
+                "location": "Maison symphonique",
+                "description": "Jazz Music"
+            },
+            {
+                "title": "The Headhunters",
+                "date": "June 25, 2026",
+                "location": "Theatre Jean-Duceppe",
+                "description": "Jazz Music, funk"
+            },
+            {
+                "title": "Kid Koala | The Storyville Mosquito",
+                "date": "June 25 to 28, 2026",
+                "location": "Cinquieme Salle",
+                "description": "6 performances"
+            },
+            {
+                "title": "Diana Krall",
+                "date": "June 26 and 27, 2026",
+                "location": "Salle Wilfrid-Pelletier",
+                "description": "2 performances"
+            }
+        ],
+        "labelingNotes": "Checked the Available now event list and matched each event to the visible date, performance count, genre, and venue text.",
+        "risk": "Only the first group of events is visible before a View more control, and some venue names include accents in the source."
+    },
+    {
+        "name": "lincoln-center-calendar",
+        "category": "festival-schedule",
+        "url": "https://www.lincolncenter.org/lincoln-center-at-home/calendar",
+        "finalUrl": "https://www.lincolncenter.org/lincoln-center-at-home/calendar",
+        "reasonForInclusion": "Lincoln Center's calendar mixes Summer for the City, film, jazz, theater, opera, repeated titles, multiple times, and many partner organizations on one page.",
+        "visibleEventCountEstimate": 50,
+        "expectedAnchors": [
+            "I Want Her Dead",
+            "El Último Sueño De Frida Y Diego",
+            "Lincoln Center 2026 Summer Gala",
+            "An Evening with John Legend",
+            "The Art of the Illusion"
+        ],
+        "expectedEvents": [
+            {
+                "title": "I Want Her Dead",
+                "date": "31",
+                "time": "12:30 pm",
+                "location": "Film at Lincoln Center"
+            },
+            {
+                "title": "El Último Sueño De Frida Y Diego",
+                "date": "Jun 1",
+                "time": "12:00 pm",
+                "location": "Film at Lincoln Center"
+            },
+            {
+                "title": "Lincoln Center 2026 Summer Gala",
+                "date": "Jun 1",
+                "time": "5:30 pm"
+            },
+            {
+                "title": "An Evening with John Legend",
+                "date": "Jun 1",
+                "time": "8:30 pm",
+                "location": "Lincoln Center Presents"
+            },
+            {
+                "title": "The Art of the Illusion: Collecting and Conserving Magic Posters at NYPL",
+                "date": "2",
+                "time": "6:30 pm",
+                "location": "The New York Public Library for the Performing Arts"
+            }
+        ],
+        "labelingNotes": "Checked retained early calendar entries and used adjacent date, organization, and time lines to label selected events.",
+        "risk": "Many partner events are interleaved and repeated on nearby dates, with some entries showing Multiple Times rather than a single time."
+    },
+    {
+        "name": "york-barbican-whats-on",
+        "category": "venue-listing",
+        "url": "https://www.yorkbarbican.co.uk/whats-on/",
+        "finalUrl": "https://www.yorkbarbican.co.uk/whats-on/",
+        "reasonForInclusion": "York Barbican lists many venue events with non-US date formats, repeated date lines, ticket links, multi-day ranges, and mixed categories.",
+        "visibleEventCountEstimate": 40,
+        "expectedAnchors": [
+            "The Night Sky Show",
+            "Sat 27 Jun 2026",
+            "Buy Tickets"
+        ],
+        "expectedEvents": [
+            {
+                "title": "The Night Sky Show",
+                "date": "Sat 27 Jun 2026",
+                "location": "York Barbican",
+                "description": "Theatrical astronomy event"
+            },
+            {
+                "title": "Rumours of Fleetwood Mac 2026",
+                "date": "Mon 29 Jun 2026",
+                "location": "York Barbican",
+                "description": "Fleetwood Mac tribute"
+            },
+            {
+                "title": "Shalamar: The Gold Tour - A Fifty Year Celebration Plus Special Guest Gwen Dickey",
+                "date": "Thu 02 Jul 2026",
+                "location": "York Barbican",
+                "description": "Special guest Gwen Dickey"
+            },
+            {
+                "title": "Lord of The Dance: 30th Anniversary",
+                "date": "Mon 06 - Wed 08 Jul 2026",
+                "location": "York Barbican",
+                "description": "30th anniversary dance tour"
+            },
+            {
+                "title": "Jinkx Monsoon - Speaking of Witch",
+                "date": "Fri 10 Jul 2026",
+                "location": "York Barbican"
+            }
+        ],
+        "labelingNotes": "Checked the source-visible event cards at the start of the calendar and paired each title with the repeated visible date line and venue context.",
+        "risk": "Most cards omit show times, and the page may rotate as new tickets are added or sold out."
+    },
+    {
+        "name": "city-vancouver-wa-calendar",
+        "category": "city-calendar",
+        "url": "https://www.cityofvancouver.us/government/calendar/",
+        "finalUrl": "https://www.cityofvancouver.us/government/calendar/",
+        "reasonForInclusion": "The City of Vancouver calendar is a very dense civic meeting list with many repeated council rows, room-specific locations, contacts, agenda links, and mixed meeting links.",
+        "visibleEventCountEstimate": 40,
+        "expectedAnchors": [
+            "Lodging Tax Advisory Committee Meeting",
+            "City Hall, Aspen Room",
+            "Culture, Arts & Heritage Commission Meeting",
+            "Planning Commission Meeting",
+            "Marine Park Engineering Conference Room"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Lodging Tax Advisory Committee Meeting",
+                "date": "Jul 8, 2026",
+                "time": "11:00am - 12:00pm",
+                "location": "City Hall, Aspen Room"
+            },
+            {
+                "title": "Culture, Arts & Heritage Commission Meeting",
+                "date": "Jul 9, 2026",
+                "time": "4:30pm - 6:30pm",
+                "location": "City Hall, Aspen Room"
+            },
+            {
+                "title": "City Council Workshop",
+                "date": "Jul 13, 2026",
+                "time": "4:00pm - 6:00pm",
+                "location": "City Hall"
+            },
+            {
+                "title": "Planning Commission Meeting",
+                "date": "Jul 14, 2026",
+                "time": "4:30pm - 8:00pm",
+                "location": "City Hall, Birch Conference Room"
+            },
+            {
+                "title": "Urban Forestry Commission Meeting",
+                "date": "Jul 15, 2026",
+                "time": "6:00pm - 8:00pm",
+                "location": "Marine Park Engineering Conference Room"
+            }
+        ],
+        "labelingNotes": "Checked consecutive July civic meeting rows and copied title, date, time, room, address, agenda, and meeting-link labels from the visible text.",
+        "risk": "The page has many repeated council meetings and contact lines, so event boundaries can be confused with adjacent rows."
+    },
+    {
+        "name": "city-of-sydney-whats-on",
+        "category": "city-calendar",
+        "url": "https://whatson.cityofsydney.nsw.gov.au/",
+        "finalUrl": "https://whatson.cityofsydney.nsw.gov.au/",
+        "reasonForInclusion": "City of Sydney's What's On page groups many event cards by section with non-US date formats, today and tomorrow labels, venues, categories, and descriptions.",
+        "visibleEventCountEstimate": 40,
+        "expectedAnchors": [
+            "What's On today",
+            "Archibald, Wynne and Sulman Prizes",
+            "Bastille Festival 2026",
+            "Outdoor vibes & markets",
+            "Hands on",
+            "Ceramics: Studio access program (6 weeks)"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Archibald, Wynne and Sulman Prizes",
+                "date": "Tomorrow",
+                "location": "Art Gallery of NSW"
+            },
+            {
+                "title": "Bastille Festival 2026",
+                "date": "16 Jul 2026",
+                "location": "Circular Quay"
+            },
+            {
+                "title": "Whale watching cruises",
+                "date": "Tomorrow",
+                "location": "Circular Quay"
+            },
+            {
+                "title": "Ceramics: Studio access program (6 weeks)",
+                "date": "30 Jul 2026",
+                "location": "Pine Street Creative Arts Centre"
+            },
+            {
+                "title": "Experimental Sculpture in Clay",
+                "date": "27 Jun 2026",
+                "location": "National Art School"
+            }
+        ],
+        "labelingNotes": "Checked the Today, Outdoor vibes, Family fun, and Hands on sections and used visible card title, venue, date, and time text.",
+        "risk": "Relative labels like Today and Tomorrow depend on capture date, and some cards are promoted section content rather than a pure chronological list."
+    },
+    {
+        "name": "pleasant-hill-summer-concerts",
+        "category": "recurring-series",
+        "url": "https://pleasanthillsummerconcerts.com/",
+        "finalUrl": "https://pleasanthillsummerconcerts.com/",
+        "reasonForInclusion": "The Pleasant Hill concert series page packs eight recurring Sunday concerts into a compact lineup with repeated times, family-zone labels, location, and season framing.",
+        "visibleEventCountEstimate": 8,
+        "expectedAnchors": [
+            "Sunset by the Lake",
+            "2026 Concert Schedule",
+            "Garageland Rodeo",
+            "AC & the Heatwave",
+            "The Floorshakers",
+            "Van Goat",
+            "Pleasant Hill City Hall"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Garageland Rodeo",
+                "date": "May 24",
+                "time": "6:00 PM - 8:00 PM",
+                "location": "Pleasant Hill City Hall",
+                "description": "Season Opener, Family Fun Zone"
+            },
+            {
+                "title": "AC & the Heatwave",
+                "date": "Jun 7",
+                "time": "6:00 PM - 8:00 PM",
+                "location": "Pleasant Hill City Hall",
+                "description": "Family Fun Zone"
+            },
+            {
+                "title": "The Floorshakers",
+                "date": "Jun 21",
+                "time": "6:00 PM - 8:00 PM",
+                "location": "Pleasant Hill City Hall",
+                "description": "Family Fun Zone"
+            },
+            {
+                "title": "Van Goat",
+                "date": "Jul 19",
+                "time": "6:00 PM - 8:00 PM",
+                "location": "Pleasant Hill City Hall",
+                "description": "Family Fun Zone"
+            },
+            {
+                "title": "The Big Jangle",
+                "date": "Aug 30",
+                "time": "6:00 PM - 8:00 PM",
+                "location": "Pleasant Hill City Hall",
+                "description": "Season Finale"
+            }
+        ],
+        "labelingNotes": "Checked the 2026 Concert Schedule line and the location block, then expanded the compact lineup into labeled recurring-series entries.",
+        "risk": "The compact lineup uses terse dates and a shared location, so later capture should preserve page-level location context."
+    },
+    {
+        "name": "huntington-plays-events",
+        "category": "theatre",
+        "url": "https://www.huntingtontheatre.org/plays-and-events/",
+        "finalUrl": "https://www.huntingtontheatre.org/plays-and-events/",
+        "reasonForInclusion": "The page mixes theatre cards, event dates, venue addresses, buy links, and season sections in a compact listing.",
+        "expectedAnchors": [
+            "WHAT'S ON",
+            "Spotlight: THE ELECTRIC CHAPEL",
+            "June 26th, 2026 at 7:30 pm",
+            "The Huntington Theatre, 264 Huntington Ave.",
+            "Honey Honey Moon Moon"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Spotlight: THE ELECTRIC CHAPEL",
+                "date": "June 26th, 2026",
+                "time": "7:30 pm",
+                "location": "The Huntington Theatre, 264 Huntington Ave.",
+                "description": "With Special Guest Lana Ja'Rae"
+            },
+            {
+                "title": "Honey Honey Moon Moon",
+                "date": "June 27 - 28, 2026",
+                "location": "The Huntington Theatre, 264 Huntington Ave.",
+                "description": "Couplet Live!"
+            },
+            {
+                "title": "Purpose",
+                "date": "September 10 - October 11, 2026",
+                "location": "The Calderwood Pavilion, 527 Tremont St."
+            }
+        ],
+        "labelingNotes": "Checked rendered lines around the event cards in local Chrome; title, date, time, and venue labels were adjacent in the page text.",
+        "risk": "Season listings can rotate as productions close or new shows go on sale."
+    },
+    {
+        "name": "berkeley-rep-shows",
+        "category": "theatre",
+        "url": "https://www.berkeleyrep.org/shows",
+        "finalUrl": "https://www.berkeleyrep.org/shows",
+        "reasonForInclusion": "The page has theatre production cards with descriptions, split date ranges, venue names, and ticket calls to action.",
+        "expectedAnchors": [
+            "WHAT'S ON",
+            "THE LUNCHBOX",
+            "A mistaken lunchbox delivery in Mumbai",
+            "Roda Theatre",
+            "Sun, May 17",
+            "LIBERATION"
+        ],
+        "expectedEvents": [
+            {
+                "title": "THE LUNCHBOX",
+                "date": "Sun, May 17",
+                "location": "Roda Theatre",
+                "description": "A mistaken lunchbox delivery in Mumbai sparks an unlikely bond between two lonely souls in this musical adaptation of the acclaimed film."
+            },
+            {
+                "title": "LIBERATION",
+                "date": "Fri, Oct 23",
+                "location": "Roda Theatre",
+                "description": "A daughter digs into her mother's unfinished feminist revolution in this bitingly funny, intensely relevant play on freedom and inheritance."
+            }
+        ],
+        "labelingNotes": "Checked rendered lines around the production list; start dates, venues, and descriptions were visible as separate card lines.",
+        "risk": "Some date ranges are split across separate start and end lines, and the card dates omit years in the rendered listing."
+    },
+    {
+        "name": "revolution-hall-shows",
+        "category": "music",
+        "url": "https://www.revolutionhall.com/",
+        "finalUrl": "https://www.revolutionhall.com/",
+        "reasonForInclusion": "The homepage combines a duplicated featured carousel with a fuller music calendar containing presenters, support acts, doors, show times, and ticket text.",
+        "expectedAnchors": [
+            "Search Shows",
+            "RX BANDITS - AND THE BATTLE BEGUN 20TH ANNIVERSARY TOUR",
+            "Tue, June 23rd, 2026",
+            "Doors: 6PM / Show: 7PM",
+            "All Ages",
+            "TICKETS FOR RX BANDITS"
+        ],
+        "expectedEvents": [
+            {
+                "title": "RX BANDITS - AND THE BATTLE BEGUN 20TH ANNIVERSARY TOUR",
+                "date": "Tue, June 23rd, 2026",
+                "time": "Doors: 6PM / Show: 7PM",
+                "location": "Revolution Hall",
+                "description": "Maps & Atlases, Real Don"
+            },
+            {
+                "title": "HEAR YOU LOUD & QUEER",
+                "date": "Wed, June 24th, 2026",
+                "time": "Doors: 6PM / Show: 7PM",
+                "description": "Hosted by Mack Lee and Ally J Ward"
+            },
+            {
+                "title": "WHOSE LIVE ANYWAY? (NIGHT 1)",
+                "date": "Thu, June 25th, 2026",
+                "time": "Doors: 7PM / Show: 8PM",
+                "location": "Revolution Hall"
+            }
+        ],
+        "labelingNotes": "Checked rendered text from the event list after the month selector; the same labels also appeared earlier in the featured carousel.",
+        "risk": "Featured events are duplicated before the full calendar, so extraction may see repeated titles."
+    },
+    {
+        "name": "old-rock-house-upcoming-shows",
+        "category": "music",
+        "url": "https://oldrockhouse.com/",
+        "finalUrl": "https://oldrockhouse.com/",
+        "reasonForInclusion": "The page provides dense live music cards with presenter prefixes, support acts, age notes, doors, show times, venues, and ticket links.",
+        "expectedAnchors": [
+            "UPCOMING SHOWS",
+            "JUN 23, 2026",
+            "SILVERADA",
+            "Doors: 7 pm // Show: 8 pm",
+            "Old Rock House"
+        ],
+        "expectedEvents": [
+            {
+                "title": "SILVERADA",
+                "date": "JUN 23, 2026",
+                "time": "Doors: 7 pm // Show: 8 pm",
+                "location": "Old Rock House",
+                "description": "with Kelsey Waldon"
+            },
+            {
+                "title": "CLUB SLAYYY",
+                "date": "JUN 27, 2026",
+                "time": "Doors: 8 pm // Show: 8 pm",
+                "location": "Old Rock House",
+                "description": "Ages 18 and up"
+            },
+            {
+                "title": "THE STRIKE",
+                "date": "JUN 30, 2026",
+                "time": "Doors: 7 pm // Show: 8 pm",
+                "location": "Old Rock House",
+                "description": "with SUM SUN"
+            }
+        ],
+        "labelingNotes": "Checked rendered lines under Upcoming Shows; each selected card had the date, title, notes, time, and venue in sequence.",
+        "risk": "The listing mixes Old Rock House and The Sovereign events, so venue retention matters."
+    },
+    {
+        "name": "cains-ballroom-upcoming-events",
+        "category": "music",
+        "url": "https://www.cainsballroom.com/",
+        "finalUrl": "https://www.cainsballroom.com/",
+        "reasonForInclusion": "The page has venue event cards preceded by cookie and box office copy, with month grouping, age restrictions, door times, and ticket actions.",
+        "expectedAnchors": [
+            "UPCOMING EVENTS",
+            "FRI, JUN 26",
+            "PUNCHIS PUNCHIS: BANDA RAVE EXPERIENCE",
+            "Doors: 9 pm",
+            "BINGO LOCO"
+        ],
+        "expectedEvents": [
+            {
+                "title": "PUNCHIS PUNCHIS: BANDA RAVE EXPERIENCE",
+                "date": "FRI, JUN 26",
+                "time": "Doors: 9 pm",
+                "location": "Cain's Ballroom",
+                "description": "Ages 18+ Only"
+            },
+            {
+                "title": "BINGO LOCO",
+                "date": "SAT, JUN 27",
+                "time": "Doors: 6 pm",
+                "location": "Cain's Ballroom",
+                "description": "Ages 21+ Only"
+            }
+        ],
+        "labelingNotes": "Checked rendered lines under Upcoming Events; the selected June items had date, title, age note, doors, and venue lines.",
+        "risk": "A cookie banner appears before the events, and the venue name may render with a typographic apostrophe."
+    },
+    {
+        "name": "capital-one-hall-events",
+        "category": "venue",
+        "url": "https://www.capitalonehall.com/events-tickets",
+        "finalUrl": "https://www.capitalonehall.com/events-tickets",
+        "reasonForInclusion": "The venue calendar has mixed comedy, music, and family cards with date plus doors on the same line, presenter notes, room names, and canceled-event noise.",
+        "expectedAnchors": [
+            "All Upcoming Events",
+            "JUNE 27, 2026 DOORS: 6:00 PM",
+            "Jim Jefferies: Son of a Carpenter Tour",
+            "Main Theater",
+            "The Vault"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Jim Jefferies: Son of a Carpenter Tour",
+                "date": "JUNE 27, 2026",
+                "time": "DOORS: 6:00 PM",
+                "location": "Main Theater",
+                "description": "presented by Outback Presents"
+            },
+            {
+                "title": "Dr. Satinder Sartaaj: Heritage Tour",
+                "date": "JULY 17, 2026",
+                "time": "DOORS: 7:00 PM",
+                "location": "Main Theater",
+                "description": "Intense Entertainment presents"
+            },
+            {
+                "title": "Given To Fly - The Pearl Jam Experience",
+                "date": "JULY 18, 2026",
+                "time": "DOORS: 7PM",
+                "location": "The Vault"
+            }
+        ],
+        "labelingNotes": "Checked rendered event-list lines; date, doors, presenter, title, and room labels were adjacent for the selected events.",
+        "risk": "Cookie copy precedes the calendar and a nearby canceled event can add competing event-like text."
+    },
+    {
+        "name": "resch-center-events",
+        "category": "venue",
+        "url": "https://www.reschcomplex.com/events/venue/resch-center-green-bay-wi",
+        "finalUrl": "https://www.reschcomplex.com/events/venue/resch-center-green-bay-wi",
+        "reasonForInclusion": "The venue page is a dense uppercase card list with date rows, event titles, special guest notes, venue location rows, and buy links.",
+        "expectedAnchors": [
+            "UPCOMING EVENTS",
+            "JUNE 27, 2026",
+            "GREEN BAY BLIZZARD 2026",
+            "RESCH CENTER, GREEN BAY, WI",
+            "RILEY GREEN: COWBOY AS IT GETS TOUR 2026"
+        ],
+        "expectedEvents": [
+            {
+                "title": "GREEN BAY BLIZZARD 2026",
+                "date": "JUNE 27, 2026",
+                "location": "RESCH CENTER, GREEN BAY, WI"
+            },
+            {
+                "title": "RILEY GREEN: COWBOY AS IT GETS TOUR 2026",
+                "date": "JULY 16, 2026",
+                "location": "RESCH CENTER, GREEN BAY, WI",
+                "description": "Special guests Justin Moore, Drake White, Hannah McFarland"
+            },
+            {
+                "title": "WWE FRIDAY NIGHT SMACKDOWN",
+                "date": "JULY 31, 2026",
+                "location": "RESCH CENTER, GREEN BAY, WI"
+            }
+        ],
+        "labelingNotes": "Checked rendered lines around the venue event list; selected items had dates, titles, and venue rows in sequence.",
+        "risk": "Most visible cards omit event times, so labels are date and venue heavy."
+    },
+    {
+        "name": "ofoam-main-stage-schedule",
+        "category": "festival",
+        "url": "https://ofoam.org/omf-info/main-stage-schedule",
+        "finalUrl": "https://ofoam.org/omf-info/main-stage-schedule",
+        "reasonForInclusion": "The festival schedule is a compact stage-style listing where each row combines time, act name, and occasional tweener notes under day headings.",
+        "expectedAnchors": [
+            "Main Stage Schedule",
+            "Fri, May 29",
+            "6:00 The Last Wild Buffalo",
+            "7:30 Sierra Hull",
+            "9:15 North Mississippi Allstars",
+            "Sat, May 30"
+        ],
+        "expectedEvents": [
+            {
+                "title": "The Last Wild Buffalo",
+                "date": "Fri, May 29",
+                "time": "6:00",
+                "location": "Main Stage"
+            },
+            {
+                "title": "Sierra Hull",
+                "date": "Fri, May 29",
+                "time": "7:30",
+                "location": "Main Stage"
+            },
+            {
+                "title": "North Mississippi Allstars",
+                "date": "Fri, May 29",
+                "time": "9:15",
+                "location": "Main Stage"
+            }
+        ],
+        "labelingNotes": "Checked rendered schedule lines; selected acts appeared under the Friday heading with time and title on the same line.",
+        "risk": "The page title provides the 2026 context, but individual day headings omit the year."
+    },
+    {
+        "name": "alaska-folk-fest-performer-schedule",
+        "category": "festival",
+        "url": "https://akfolkfest.org/psched-4",
+        "finalUrl": "https://akfolkfest.org/psched-4",
+        "reasonForInclusion": "The schedule has dense performer rows with time stamps, day labels, artist names, home-base lines, member lists, and descriptions.",
+        "expectedAnchors": [
+            "2026 Main Stage Schedule",
+            "6:30pm, Thu. Apr. 9",
+            "Holy Cricket!",
+            "Dennis and Dona Townsend",
+            "Harmiddler Brothers",
+            "Featuring:"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Holy Cricket!",
+                "date": "Thu. Apr. 9",
+                "time": "6:30pm",
+                "location": "Main Stage",
+                "description": "Juneau Featuring: Ella Kelly, Kairo Labatos, Kaylee Brown, Hayden Kado, Ruby Kresge, Robert Calivo, Lucas Parker, Hailey Gerdts, Alli Frazier"
+            },
+            {
+                "title": "Dennis and Dona Townsend",
+                "date": "Thu. Apr. 9",
+                "time": "6:45pm",
+                "location": "Main Stage",
+                "description": "Tacoma, WA Featuring: Dennis Townsend, Dona Townsend"
+            },
+            {
+                "title": "Harmiddler Brothers",
+                "date": "Thu. Apr. 9",
+                "time": "7:00pm",
+                "location": "Main Stage",
+                "description": "LA-ID-AK Featuring: Grant Dermody, Bob-o Bell, Bob Banghart"
+            }
+        ],
+        "labelingNotes": "Checked rendered lines in the 2026 performer schedule; each selected performer followed a timestamp and was followed by member or origin details.",
+        "risk": "Home-base lines and performer-member lists appear immediately after titles and may be mistaken for venue locations."
+    },
+    {
+        "name": "lake-tahoe-events-live-music",
+        "category": "festival",
+        "url": "https://www.placer.ca.gov/8232/North-Tahoe-Special-Events",
+        "finalUrl": "https://laketahoetravel.com/events/",
+        "reasonForInclusion": "The redirected events page has high-density regional cards with featured event labels, date ranges, venue locations, recurring music copy, and detail links.",
+        "expectedAnchors": [
+            "Events & Live Music",
+            "Featured Events",
+            "Northstar Summer Stage Music",
+            "JUN 19 - SEP 03, 2026",
+            "NORTHSTAR CALIFORNIA",
+            "Concerts At Commons Beach, Tahoe City"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Northstar Summer Stage Music",
+                "date": "JUN 19 - SEP 03, 2026",
+                "location": "NORTHSTAR CALIFORNIA",
+                "description": "Enjoy live music at the Northstar Summer Stage Music Series at the Village Skate Rink stage every Friday."
+            },
+            {
+                "title": "Concerts At Commons Beach, Tahoe City",
+                "date": "JUN 14 - SEP 06, 2026",
+                "location": "COMMONS BEACH",
+                "description": "FREE Live Music Every Sunday!"
+            },
+            {
+                "title": "Music on the Beach, Kings Beach",
+                "date": "JUN 19 - SEP 04, 2026",
+                "location": "KINGS BEACH STATE RECREATION AREA",
+                "description": "2026 Kings Beach Summer Music Series-Friday Evenings"
+            }
+        ],
+        "labelingNotes": "Checked rendered lines after the redirect; selected featured cards had title, date range, location, and short description lines.",
+        "risk": "The starting URL redirects to a destination events site, and the high-density seasonal listing can change."
+    },
+    {
+        "name": "chicago-park-district-event-finder",
+        "category": "civic",
+        "url": "https://www.chicagoparkdistrict.com/events",
+        "reasonForInclusion": "Chicago Park District exposes a large civic recreation event finder with recurring installations, date ranges, park addresses, and similar titles.",
+        "expectedAnchors": [
+            "Community Climb at Steelworkers",
+            "Pianos in the Parks at Bessemer",
+            "Pianos in the Parks at Gill",
+            "Pianos in the Parks at Margate"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Community Climb at Steelworkers",
+                "date": "April 25, 2026 - October 31, 2026",
+                "location": "87th at S. Lake Shore Dr. Chicago, IL 60617"
+            },
+            {
+                "title": "Pianos in the Parks at Bessemer",
+                "date": "Jun 21 - Jul 31",
+                "time": "during field house hours",
+                "location": "8930 S. Muskegon Ave. Chicago, IL 60617"
+            },
+            {
+                "title": "Pianos in the Parks at Gill",
+                "date": "Jun 21 - Jul 31",
+                "time": "during field house hours",
+                "location": "825 W. Sheridan Rd. Chicago, IL 60613"
+            },
+            {
+                "title": "Pianos in the Parks at Margate",
+                "date": "Jun 21 - Jul 31",
+                "time": "during field house hours",
+                "location": "4921 N. Marine Drive Chicago, IL 60640"
+            }
+        ],
+        "labelingNotes": "Dense-worker candidate with neutral critic acceptance; selected labels intentionally include near-duplicate recurring events with distinct parks.",
+        "risk": "Near-duplicate titles test dedupe and location separation."
+    },
+    {
+        "name": "library-of-congress-events",
+        "category": "museum",
+        "url": "https://www.loc.gov/events/",
+        "reasonForInclusion": "The Library of Congress event list has grouped dates, exhibition records, webinars, films, venues, and repeated multi-day exhibits.",
+        "expectedAnchors": [
+            "Treasures from the Stephen Sondheim Collection",
+            "American Independence in Newspapers",
+            "Fashion at the Library of Congress",
+            "Preview: Our History in the Headlines"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Treasures from the Stephen Sondheim Collection",
+                "date": "Monday, June 22, 2026",
+                "time": "8:30 am-5:00 pm EDT",
+                "location": "James Madison Building, Performing Arts Reading Room"
+            },
+            {
+                "title": "American Independence in Newspapers",
+                "date": "Tuesday, June 23, 2026",
+                "time": "10:00 am-5:00 pm EDT",
+                "location": "Thomas Jefferson Building, Great Hall - 2nd Floor (LJ-200-E)"
+            },
+            {
+                "title": "Fashion at the Library of Congress: The Threads That Connect Us",
+                "date": "Tuesday, June 23, 2026",
+                "time": "10:00 am-5:00 pm EDT",
+                "location": "Thomas Jefferson Building, Great Hall - 2nd Floor (LJ-200-E)"
+            },
+            {
+                "title": "Preview: Our History in the Headlines",
+                "date": "Wednesday, June 24, 2026",
+                "time": "12:00 pm-2:00 pm EDT",
+                "location": "James Madison Building, Newspaper & Current Periodical Reading Room"
+            }
+        ],
+        "labelingNotes": "Dense-worker candidate with neutral critic acceptance; labels cover recurring exhibits and a timed special display.",
+        "risk": "Recurring exhibit rows may need instance-level interpretation."
+    },
+    {
+        "name": "boston-gov-events",
+        "category": "civic",
+        "url": "https://www.boston.gov/events",
+        "reasonForInclusion": "Boston.gov mixes civic meetings, fitness classes, cancellations, virtual locations, prices, and physical addresses in one official calendar.",
+        "expectedAnchors": [
+            "Parks Fitness: Yoga with Carlos",
+            "Parks Fitness: Ritmo (Rhythm) and Power with Joanna",
+            "Canceled: June 22 Summer Family Bike Ride at Moakley",
+            "Jamaica Plain: 431 Pond Street Abutters Meeting"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Parks Fitness: Yoga with Carlos",
+                "date": "JUNE 22, 2026",
+                "time": "5:30pm-6:30pm"
+            },
+            {
+                "title": "Parks Fitness: Ritmo (Rhythm) and Power with Joanna",
+                "date": "JUNE 22, 2026",
+                "time": "6:00pm-7:00pm"
+            },
+            {
+                "title": "Canceled: June 22 Summer Family Bike Ride at Moakley",
+                "date": "JUNE 22, 2026",
+                "time": "6:00pm-8:00pm"
+            },
+            {
+                "title": "Jamaica Plain: 431 Pond Street Abutters Meeting",
+                "date": "JUNE 22, 2026",
+                "time": "6:00pm-7:00pm"
+            }
+        ],
+        "labelingNotes": "Dense-worker candidate with neutral critic acceptance; labels cover physical, virtual, and canceled city events.",
+        "risk": "Canceled and virtual events affect extraction policy expectations."
+    },
+    {
+        "name": "do512-family-free-events",
+        "category": "community",
+        "url": "https://family.do512.com/freethingstodothismonth",
+        "reasonForInclusion": "Do512 has a dense community calendar with free and recurring family events, external ticket links, venue names, and compact times.",
+        "expectedAnchors": [
+            "Paws to the Polls: The Great Austin Pet Election",
+            "Dungeons & Dragons Night",
+            "Kitchen Time @ The Central Library - Homemade Whole Wheat Tortillas",
+            "The Coffee Tour Run Club",
+            "Texas Farmers' Market - Mueller"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Paws to the Polls: The Great Austin Pet Election",
+                "date": "FREE - THROUGH SEP 12",
+                "time": "11:00AM",
+                "location": "Various"
+            },
+            {
+                "title": "Dungeons & Dragons Night",
+                "date": "FREE - EVERY MON",
+                "time": "6:00PM",
+                "location": "Pinballz Lake Creek"
+            },
+            {
+                "title": "Kitchen Time @ The Central Library - Homemade Whole Wheat Tortillas",
+                "date": "TODAY JUN 22",
+                "time": "6:00PM",
+                "location": "Austin Public Library Central Library"
+            },
+            {
+                "title": "The Coffee Tour Run Club",
+                "date": "SUNDAY JUN 28",
+                "time": "8:00AM",
+                "location": "Multiple Locations, Austin"
+            },
+            {
+                "title": "Texas Farmers' Market - Mueller",
+                "date": "EVERY SUN",
+                "time": "10:00AM",
+                "location": "Texas Farmers' Market at Mueller"
+            }
+        ],
+        "labelingNotes": "Dense-worker candidate marked for controller review; included only if live capture confirms labels and audit retention.",
+        "risk": "The page includes ads, ticket links, widgets, and relative dates."
+    },
+    {
+        "name": "lapl-featured-events",
+        "category": "library",
+        "url": "https://www.lapl.org/events",
+        "reasonForInclusion": "Library featured events expose title, branch, date, and time fields in compact cards.",
+        "expectedAnchors": [
+            "Central Library Soccer Celebration: Scotland vs Brazil, Group C",
+            "Central Library Centennial Festival",
+            "LA Made x La Plaza Presents: Great Day in East L.A."
+        ],
+        "expectedEvents": [
+            {
+                "title": "Central Library Soccer Celebration: Scotland vs Brazil, Group C",
+                "date": "6/24/2026",
+                "time": "3:00 PM - 5:00 PM",
+                "location": "Central Library"
+            },
+            {
+                "title": "Central Library Centennial Festival",
+                "date": "7/11/2026",
+                "time": "10:00 AM - 4:30 PM",
+                "location": "Central Library"
+            },
+            {
+                "title": "LA Made x La Plaza Presents: Great Day in East L.A.",
+                "date": "7/19/2026",
+                "time": "2:00 PM - 4:30 PM",
+                "location": "Central Library"
+            }
+        ],
+        "labelingNotes": "Multi-event worker candidate focused on the three featured cards visible on the landing page.",
+        "risk": "Featured event cards may rotate."
+    },
+    {
+        "name": "ticketmaster-united-center",
+        "category": "ticketing",
+        "url": "https://www.ticketmaster.com/united-center-tickets-chicago/venue/32882",
+        "reasonForInclusion": "Venue ticketing page mixes concerts and sports with duplicated ticket links, lineups, add-ons, and venue-level location context.",
+        "expectedAnchors": [
+            "JOJI: SOLARIS",
+            "Lionel Richie and Earth, Wind & Fire - Sing a Song All Night Long",
+            "Chicago Sky vs. Las Vegas Aces"
+        ],
+        "expectedEvents": [
+            {
+                "title": "JOJI: SOLARIS",
+                "date": "June 23, 2026",
+                "time": "6:30 PM",
+                "location": "United Center"
+            },
+            {
+                "title": "Lionel Richie and Earth, Wind & Fire - Sing a Song All Night Long",
+                "date": "June 26, 2026",
+                "time": "7:30 PM",
+                "location": "United Center"
+            },
+            {
+                "title": "Chicago Sky vs. Las Vegas Aces",
+                "date": "June 28, 2026",
+                "time": "3:00 PM",
+                "location": "United Center"
+            }
+        ],
+        "labelingNotes": "Multi-event worker candidate with mixed music and sports rows.",
+        "risk": "Ticketmaster markup may render differently by region and can include event-like parking add-ons."
+    },
+    {
+        "name": "chandler-city-events",
+        "category": "government",
+        "url": "https://www.chandleraz.gov/events",
+        "reasonForInclusion": "Municipal calendar has dense meeting rows mixed with museum programs and sparse metadata.",
+        "expectedAnchors": [
+            "Public Safety Fire Personnel Retirement Board",
+            "Public Safety Police Personnel Retirement Board",
+            "Art Tots - Quirky Critters"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Public Safety Fire Personnel Retirement Board",
+                "date": "June 24, 2026",
+                "time": "8:45 a.m."
+            },
+            {
+                "title": "Public Safety Police Personnel Retirement Board",
+                "date": "June 24, 2026",
+                "time": "9 a.m."
+            },
+            {
+                "title": "Art Tots - Quirky Critters",
+                "date": "June 24, 2026",
+                "time": "10:30 - 11:15 a.m."
+            }
+        ],
+        "labelingNotes": "Multi-event worker candidate. The selected list rows do not expose event-specific locations.",
+        "risk": "Municipal list rows may change daily."
+    },
+    {
+        "name": "queens-library-calendar",
+        "category": "library",
+        "url": "https://www.queenslibrary.org/calendar?category=calendar&fromlink=calendar&searchField=%2A&searchFilter=",
+        "reasonForInclusion": "Dense library branch program list includes audience tags, branch locations, descriptions, and many similar repeated rows.",
+        "expectedAnchors": [
+            "Baby and Toddler Playdate",
+            "Homework Help",
+            "Basic Computer Tutoring"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Baby and Toddler Playdate",
+                "date": "Jun 24",
+                "time": "11:30am - 1:00pm",
+                "location": "Corona"
+            },
+            {
+                "title": "Homework Help",
+                "date": "Jun 29",
+                "time": "2:30pm - 5:30pm",
+                "location": "Pomonok"
+            },
+            {
+                "title": "Basic Computer Tutoring",
+                "date": "Jun 23",
+                "time": "10:15am - 11:15am",
+                "location": "Mitchell-Linden"
+            }
+        ],
+        "labelingNotes": "Multi-event worker candidate revised after self-review to avoid truncated titles.",
+        "risk": "Some rows on the page truncate titles, so this fixture only uses labels reported as fully visible."
+    },
+    {
+        "name": "bam-future-events",
+        "category": "venue",
+        "url": "https://www.bam.org/",
+        "reasonForInclusion": "Arts venue homepage mixes theater, dance, puppetry, talks, kids programming, dates, descriptions, and repeated featured sections.",
+        "expectedAnchors": [
+            "adaku, part 2",
+            "La Distance",
+            "HUMAN"
+        ],
+        "expectedEvents": [
+            {
+                "title": "adaku, part 2",
+                "date": "Nov 11 - 15, 2026"
+            },
+            {
+                "title": "La Distance",
+                "date": "Nov 18 - 29, 2026"
+            },
+            {
+                "title": "HUMAN",
+                "date": "Dec 2 - 5, 2026"
+            }
+        ],
+        "labelingNotes": "Multi-event worker candidate using future homepage events after stale earlier choices were rejected.",
+        "risk": "Homepage order and featured sections may rotate."
+    },
+    {
+        "name": "fort-worth-calendar",
+        "category": "government",
+        "url": "https://www.fortworthtexas.gov/calendar",
+        "reasonForInclusion": "City calendar with civic meetings and project meetings in one listing.",
+        "expectedAnchors": [
+            "Building Standards Commission (BSC)",
+            "Fort Worth Art Commission Meeting (FWAC)",
+            "City Council Day Meeting"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Building Standards Commission (BSC)",
+                "date": "22 Jun 2026",
+                "location": "City Hall"
+            },
+            {
+                "title": "Fort Worth Art Commission Meeting (FWAC)",
+                "date": "22 Jun 2026",
+                "location": "Ella Mae Shamblee Library"
+            },
+            {
+                "title": "City Council Day Meeting",
+                "date": "23 Jun 2026"
+            }
+        ],
+        "labelingNotes": "Multi-event worker candidate with static text labels verified from fetched page text.",
+        "risk": "Calendar results and pagination may drift as dates pass."
+    },
+    {
+        "name": "baltimore-legistar-calendar",
+        "category": "government",
+        "url": "https://baltimore.legistar.com/",
+        "reasonForInclusion": "Civic meeting table with departments, dates, times, rooms, agendas, and meeting topics.",
+        "expectedAnchors": [
+            "21 records",
+            "Name Meeting Date Meeting Time",
+            "City Council Luncheon - Council President Hosting"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Baltimore City Council",
+                "date": "6/24/2026",
+                "time": "1:05 PM",
+                "description": "Special City Council Meeting"
+            },
+            {
+                "title": "Public Health & Environment Committee",
+                "date": "6/24/2026",
+                "time": "10:00 AM",
+                "location": "HEARING IS RESCHEDULED - NEW DATE JULY 1, 2026",
+                "description": "HEARING RESCHEDULED - NEW DATE JULY 1, 2026",
+                "labels": [
+                    "HEARING IS RESCHEDULED - NEW DATE JULY 1, 2026",
+                    "HEARING RESCHEDULED - NEW DATE JULY 1, 2026"
+                ]
+            },
+            {
+                "title": "Board of Estimates",
+                "date": "6/24/2026",
+                "time": "9:00 AM"
+            }
+        ],
+        "labelingNotes": "Multi-event worker candidate using Legistar table rows, including a rescheduled hearing row.",
+        "risk": "Default Legistar date range can drift and rows use meeting bodies as titles."
+    },
+    {
+        "name": "memphis-public-library-upcoming",
+        "category": "library",
+        "url": "https://memphis.librarycalendar.com/events/upcoming",
+        "reasonForInclusion": "Library calendar with many audience groups, branches, rooms, registration states, and descriptions.",
+        "expectedAnchors": [
+            "Upcoming Events",
+            "Mask Making for Tweens",
+            "Age Group: Tweens"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Learning How to Preserve Vegetables",
+                "date": "Tuesday, June 23, 2026",
+                "time": "12:00pm - 1:30pm",
+                "location": "North Library"
+            },
+            {
+                "title": "Mask Making for Tweens",
+                "date": "Tuesday, June 23, 2026",
+                "time": "2:30pm - 3:30pm",
+                "location": "Benjamin L. Hooks Central Library"
+            },
+            {
+                "title": "Make it Wednesday",
+                "date": "Wednesday, June 24, 2026",
+                "time": "4:00pm - 5:45pm",
+                "location": "Cordova Library"
+            }
+        ],
+        "labelingNotes": "Multi-event worker candidate with library branch and audience labels. Labels use the exact event title and full date lines in the captured snapshot.",
+        "risk": "Upcoming library pages rotate as events pass."
+    },
+    {
+        "name": "kansas-city-public-library-calendar",
+        "category": "library",
+        "url": "https://kclibrary.org/calendar",
+        "reasonForInclusion": "Library calendar with repeated event names at distinct branches.",
+        "expectedAnchors": [
+            "Family Storytime Tuesday, June 23, 2026 9:30am Central Library",
+            "Baby Storytime",
+            "Small Business and Nonprofit Drop-In Hours"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Family Storytime",
+                "date": "June 23, 2026",
+                "time": "9:30am",
+                "location": "Central Library"
+            },
+            {
+                "title": "Baby Storytime",
+                "date": "June 23, 2026",
+                "time": "9:30am",
+                "location": "Plaza Branch"
+            },
+            {
+                "title": "Ready, Set, Hired.",
+                "date": "June 23, 2026",
+                "time": "11:00am",
+                "location": "Lucile H. Bluford Branch"
+            }
+        ],
+        "labelingNotes": "Multi-event worker candidate focused on duplicate titles across branches.",
+        "risk": "Recurring duplicate titles and current listings may drift."
+    },
+    {
+        "name": "unc-events-calendar",
+        "category": "university",
+        "url": "https://calendar.unc.edu/",
+        "reasonForInclusion": "University calendar with workshops, virtual events, exhibits, screenings, and campus venues.",
+        "expectedAnchors": [
+            "Bachelor of Social Work Info Session",
+            "TeamOn: Research Team Onboarding",
+            "GenAI and Copyright & Data Privacy"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Bachelor of Social Work Info Session",
+                "date": "Jun 23",
+                "time": "5:15pm to 6:00pm",
+                "location": "Virtual Event"
+            },
+            {
+                "title": "SafetyFest",
+                "date": "Jun 24",
+                "time": "9am to 12pm",
+                "location": "Genome Sciences Building"
+            },
+            {
+                "title": "TeamOn: Research Team Onboarding",
+                "date": "Jun 24",
+                "time": "9am to 11am",
+                "location": "Virtual Event"
+            }
+        ],
+        "labelingNotes": "Multi-event worker candidate using Localist rows with venue metadata.",
+        "risk": "Localist calendars duplicate share text and current event lists drift."
+    },
+    {
+        "name": "cummer-museum-calendar",
+        "category": "museum",
+        "url": "https://www.cummermuseum.org/calendar/",
+        "reasonForInclusion": "Museum calendar with event categories, times, tours, workshops, and family programming.",
+        "expectedAnchors": [
+            "Upcoming events",
+            "Drop-In Tour: Highlights",
+            "America Turns 250"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Drop-In Tour: Highlights",
+                "date": "WEDNESDAY, JUNE 24, 2026",
+                "time": "01:15PM - 02:15PM",
+                "category": "ART & GARDENS"
+            },
+            {
+                "title": "Summer at the Cummer",
+                "date": "FRIDAY, JUNE 26, 2026",
+                "time": "04:00PM - 08:00PM",
+                "category": "EVENTS & FESTIVALS"
+            },
+            {
+                "title": "America Turns 250",
+                "date": "FRIDAY, JULY 3, 2026",
+                "time": "11:00AM - 04:00PM"
+            }
+        ],
+        "labelingNotes": "Multi-event worker candidate with museum category labels and tour rows. Labels use the full date and time text preserved by the captured snapshot.",
+        "risk": "Calendar widget includes duplicate blocks and may shift dates."
+    },
+    {
+        "name": "portland-museum-events-calendar",
+        "category": "museum",
+        "url": "https://www.portlandmuseum.org/events-calendar/",
+        "reasonForInclusion": "Museum event list with films, member events, prices, venue addresses, and repeated showtimes.",
+        "expectedAnchors": [
+            "PMA Films: Exhibition on Screen: Turner & Constable",
+            "PMA Films: The Currents",
+            "Bernard Osher Foundation Auditorium"
+        ],
+        "expectedEvents": [
+            {
+                "title": "PMA Films: Exhibition on Screen: Turner & Constable",
+                "date": "June 24",
+                "time": "12:30 pm - 2:15 pm"
+            },
+            {
+                "title": "PMA Films: The Currents",
+                "date": "June 24",
+                "time": "3:00 pm - 4:45 pm"
+            },
+            {
+                "title": "PMA Book Club",
+                "date": "June 25",
+                "time": "11:00 am - 12:30 pm"
+            }
+        ],
+        "labelingNotes": "Multi-event worker candidate with repeated film event rows. Labels match the captured month-day and time format.",
+        "risk": "Ticket prices and date windows may drift."
+    },
+    {
+        "name": "first-avenue-shows",
+        "category": "venue",
+        "url": "https://first-avenue.com/shows/",
+        "reasonForInclusion": "Ticketed venue listing with many concerts, rooms, support acts, and month navigation.",
+        "expectedAnchors": [
+            "Viewing 93 shows in June 2026",
+            "Toadies The Charmer Tour",
+            "Prince Celebration 2026 Kick-Off Party"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Toadies The Charmer Tour",
+                "date": "Jun 2",
+                "location": "First Avenue"
+            },
+            {
+                "title": "By Storm",
+                "date": "Jun 2",
+                "location": "7th St Entry"
+            },
+            {
+                "title": "Prince Celebration 2026 Kick-Off Party ft. Chaka Khan",
+                "date": "Jun 3",
+                "location": "First Avenue"
+            }
+        ],
+        "labelingNotes": "Multi-event worker candidate focused on venue show listings.",
+        "risk": "Venue page can change monthly and past shows may rotate out."
+    },
+    {
+        "name": "pycon-2026-talks-schedule",
+        "category": "conference",
+        "url": "https://us.pycon.org/2026/schedule/talks/",
+        "reasonForInclusion": "Conference schedule with parallel tracks, rooms, speakers, breaks, and dense session rows.",
+        "expectedAnchors": [
+            "PyCon US 2026 Talks Schedule",
+            "Room 103ABC",
+            "PEP 750 - T-strings"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Mind the gap! Why static typing requires more than just adding annotations",
+                "location": "Room 103ABC"
+            },
+            {
+                "title": "GPU Communications for Python",
+                "location": "Room 104AB"
+            },
+            {
+                "title": "PEP 750 - T-strings: safer and smarter string processing",
+                "location": "Room 103ABC"
+            }
+        ],
+        "labelingNotes": "Multi-event worker candidate using a dense conference schedule.",
+        "risk": "Dense parallel sessions can be over-condensed and archived schedules can receive corrections."
+    },
+    {
+        "name": "whitney-events-calendar",
+        "category": "museum",
+        "url": "https://whitney.org/events",
+        "reasonForInclusion": "Museum events page with multiple tours and member programs in one dense calendar listing.",
+        "expectedAnchors": [
+            "Exhibition Tour: \"Untitled\" (America)",
+            "Exhibition Tour: Whitney Biennial 2026",
+            "Installation Tour of Whitney Biennial 2026"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Exhibition Tour: \"Untitled\" (America)",
+                "date": "Tuesday, June 23, 2026",
+                "time": "12 pm"
+            },
+            {
+                "title": "Exhibition Tour: Whitney Biennial 2026",
+                "date": "Tuesday, June 23, 2026",
+                "time": "1 pm"
+            },
+            {
+                "title": "Installation Tour of Whitney Biennial 2026",
+                "date": "Wednesday, June 24, 2026",
+                "time": "6:30 pm"
+            }
+        ],
+        "labelingNotes": "Multi-event worker candidate with tour labels and visible times from the rendered page.",
+        "risk": "Museum calendar order can rotate and recurring tour names can repeat across days."
+    },
+    {
+        "name": "cleveland-museum-whats-on",
+        "category": "museum",
+        "url": "https://www.clevelandart.org/whats-on/all",
+        "reasonForInclusion": "Museum whats-on page mixes exhibitions, tours, date ranges, timed programs, and gallery locations.",
+        "expectedAnchors": [
+            "Martin Puryear: Nexus",
+            "Manet & Morisot",
+            "Pintoricchio Magnified: An Immersive Conservation Experience"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Martin Puryear: Nexus",
+                "date": "Apr 12",
+                "location": "003 Special Exhibition Hall"
+            },
+            {
+                "title": "Manet & Morisot",
+                "date": "Mar 29",
+                "location": "004 Special Exhibition Gallery"
+            },
+            {
+                "title": "Pintoricchio Magnified: An Immersive Conservation Experience",
+                "location": "115 Manuscripts and Textiles"
+            }
+        ],
+        "labelingNotes": "Multi-event worker candidate using visible title, date, and location blocks from rendered exhibition cards.",
+        "risk": "The page mixes exhibitions and events and may reorder listings."
+    },
+    {
+        "name": "fairfax-library-calendar",
+        "category": "library",
+        "url": "https://librarycalendar.fairfaxcounty.gov/",
+        "reasonForInclusion": "Library calendar with all-day entries, recurring programs, rooms, branches, descriptions, and virtual events.",
+        "expectedAnchors": [
+            "Second Chance Seed Library",
+            "In-Person One-to-One English Conversation (Reston Regional Library)",
+            "Learn to Ride @ Tysons-Pimmit Regional Library"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Second Chance Seed Library",
+                "date": "Monday, June 22, 2026",
+                "time": "All Day Event",
+                "location": "John Marshall Library"
+            },
+            {
+                "title": "In-Person One-to-One English Conversation (Reston Regional Library)",
+                "date": "Tuesday, June 23, 2026",
+                "time": "10:00am - 11:00am",
+                "location": "Reston Large Print Area"
+            },
+            {
+                "title": "Learn to Ride @ Tysons-Pimmit Regional Library",
+                "date": "Tuesday, June 23, 2026",
+                "time": "10:00am - 11:00am",
+                "location": "Tysons-Pimmit Regional Library"
+            }
+        ],
+        "labelingNotes": "Multi-event worker candidate with branch and room metadata preserved in rendered text.",
+        "risk": "Library events rotate and recurring rows include show-more-date wording."
+    },
+    {
+        "name": "flcc-events",
+        "category": "college",
+        "url": "https://www.flcc.edu/events/",
+        "reasonForInclusion": "College events page with public programs, online items, academic dates, date headings, and locations.",
+        "expectedAnchors": [
+            "POP! Art: Tavern Signs",
+            "Summer Session I (4-Week) Ends",
+            "Thought Leader Pop-Up"
+        ],
+        "expectedEvents": [
+            {
+                "title": "POP! Art: Tavern Signs",
+                "date": "Tuesday, June 23, 2026",
+                "time": "6:00 pm",
+                "location": "ArtSpace36"
+            },
+            {
+                "title": "Summer Session I (4-Week) Ends",
+                "date": "Thursday, June 25, 2026",
+                "time": "All Day",
+                "location": "All Locations"
+            },
+            {
+                "title": "Thought Leader Pop-Up",
+                "date": "Thursday, June 25, 2026",
+                "time": "5:00 pm",
+                "location": "Empire Coffee & Donuts"
+            }
+        ],
+        "labelingNotes": "Multi-event worker candidate covering academic and public event styles on one page.",
+        "risk": "College listings can drift as current events pass."
+    },
+    {
+        "name": "fosdem-2026-events",
+        "category": "conference",
+        "url": "https://fosdem.org/2026/schedule/events/",
+        "reasonForInclusion": "Large static conference schedule with many sessions, rooms, days, starts, ends, and speakers.",
+        "expectedAnchors": [
+            "Welcome to FOSDEM 2026",
+            "FOSS in times of war, scarcity and (adversarial) AI",
+            "Evolving Git for the next decade"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Welcome to FOSDEM 2026",
+                "date": "Saturday",
+                "time": "09:30",
+                "location": "Janson"
+            },
+            {
+                "title": "FOSS in times of war, scarcity and (adversarial) AI",
+                "date": "Saturday",
+                "time": "10:00",
+                "location": "Janson"
+            },
+            {
+                "title": "Evolving Git for the next decade",
+                "date": "Saturday",
+                "time": "11:00",
+                "location": "Janson"
+            }
+        ],
+        "labelingNotes": "Multi-event worker candidate using a dense static conference table.",
+        "risk": "Conference schedules can receive corrections, but this URL is date-specific."
+    },
+    {
+        "name": "mladla-2026-schedule",
+        "category": "conference",
+        "url": "https://mladlacon2026.sched.com/list/simple",
+        "reasonForInclusion": "Conference schedule with rooms, speakers, parallel sessions, and social events in a simple list view.",
+        "expectedAnchors": [
+            "Registration Table Open",
+            "#MyReasonWhyDE Facilitator Training",
+            "From Zero to Festival: How One Library Pulled Off a Big Event With No Budget"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Registration Table Open",
+                "date": "Wednesday, May 6",
+                "time": "8:00am EDT",
+                "location": "Chesapeake/Choptank Foyer"
+            },
+            {
+                "title": "#MyReasonWhyDE Facilitator Training",
+                "date": "Wednesday, May 6",
+                "time": "9:00am EDT",
+                "location": "Brigantine Board Room"
+            },
+            {
+                "title": "From Zero to Festival: How One Library Pulled Off a Big Event With No Budget",
+                "date": "Wednesday, May 6",
+                "time": "9:00am EDT",
+                "location": "Windjammer"
+            }
+        ],
+        "labelingNotes": "Multi-event worker candidate using one Sched list page with concrete rooms and times.",
+        "risk": "Sched pages can include many repeated speaker and sponsor links."
+    },
+    {
+        "name": "python-events-index",
+        "category": "conference",
+        "url": "https://www.python.org/events/",
+        "reasonForInclusion": "Official Python event index with several international conferences and user group events in a compact listing.",
+        "expectedAnchors": [
+            "Python Leiden User Group",
+            "Python Norte 2026",
+            "SciPy 2026",
+            "EuroPython 2026"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Python Leiden User Group",
+                "date": "02 July",
+                "time": "5:15pm UTC - 8pm UTC",
+                "location": "Leiden, The Netherlands"
+            },
+            {
+                "title": "Python Norte 2026",
+                "date": "03 July - 05 July",
+                "location": "Ananindeua, Para, Brazil"
+            },
+            {
+                "title": "SciPy 2026",
+                "date": "13 July - 19 July",
+                "location": "Minneapolis, MN, USA"
+            },
+            {
+                "title": "EuroPython 2026",
+                "date": "13 July - 19 July",
+                "location": "Krakow, Poland"
+            }
+        ],
+        "labelingNotes": "Multi-event scout candidate with neutral critic acceptance; selected labels cover user groups and conferences with date ranges and international locations.",
+        "risk": "Official event index is rolling, so this fixture should rely on the captured snapshot rather than live page order."
+    },
+    {
+        "name": "mcasd-events",
+        "category": "museum",
+        "url": "https://mcasd.org/events",
+        "reasonForInclusion": "Museum event page with filters, month grouping, art workshops, offsite programming, and timed social events.",
+        "expectedAnchors": [
+            "Reflections: Giants",
+            "Teen Art Collective Showcase",
+            "Free Second Sunday",
+            "Contemporary Thinkers Social Mixer"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Reflections: Giants | 55+ Art Workshops",
+                "date": "June 5 to June 26, 2026"
+            },
+            {
+                "title": "Teen Art Collective Showcase",
+                "date": "June 5 to June 28, 2026"
+            },
+            {
+                "title": "Free Second Sunday",
+                "date": "July 12, 2026",
+                "time": "11:00 am"
+            },
+            {
+                "title": "Contemporary Thinkers Social Mixer, Vol. 3",
+                "date": "June 26, 2026",
+                "time": "5:00 pm"
+            }
+        ],
+        "labelingNotes": "Multi-event scout candidate with neutral critic acceptance; labels intentionally include untimed date ranges and current timed programs.",
+        "risk": "Filter controls and implicit museum location can compete with event card text."
+    },
+    {
+        "name": "illinois-calendar-list",
+        "category": "university",
+        "url": "https://calendars.illinois.edu/list/5749",
+        "reasonForInclusion": "University calendar list with date-grouped entries, career fairs, receptions, public science events, and recurring-looking rows.",
+        "expectedAnchors": [
+            "Men's World Cup Viewings",
+            "Quick Start Workshop: Using the Pope Tech Accessibility Tool",
+            "Writing Dissertation Proposals",
+            "Understanding Illinois' new cannabis, hemp laws and research implications"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Men's World Cup Viewings",
+                "date": "Monday, June 22, 2026",
+                "time": "All Day",
+                "location": "Courtyard Cafe"
+            },
+            {
+                "title": "Quick Start Workshop: Using the Pope Tech Accessibility Tool",
+                "date": "Tuesday, June 23, 2026",
+                "time": "10:00 - 11:00 am"
+            },
+            {
+                "title": "Writing Dissertation Proposals",
+                "date": "Tuesday, June 23, 2026",
+                "time": "3:00 - 4:15 pm",
+                "location": "Online via Zoom"
+            },
+            {
+                "title": "Understanding Illinois' new cannabis, hemp laws and research implications",
+                "date": "Wednesday, June 24, 2026",
+                "time": "2:00 - 3:00 pm"
+            }
+        ],
+        "labelingNotes": "Multi-event scout candidate with neutral critic acceptance; labels use the first visible date groups in the captured snapshot to avoid arbitrary late-page selection pressure.",
+        "risk": "Long university calendars can contain recurring rows and many valid events beyond the expected non-exhaustive labels."
+    },
+    {
+        "name": "utd-comet-calendar",
+        "category": "university",
+        "url": "https://calendar.utdallas.edu/",
+        "reasonForInclusion": "University Localist calendar with featured cards, filter chrome, exhibits, student lounge events, virtual events, and workshops.",
+        "expectedAnchors": [
+            "Throughlines-Nebula Gallery Exhibit",
+            "World Cup at the ICP Student Lounge",
+            "Virtual Information Session: How the Office of Graduate Education Can Work for You",
+            "CREATE: A Four-Week Expressive Arts Workshop"
+        ],
+        "expectedEvents": [
+            {
+                "title": "Throughlines-Nebula Gallery Exhibit",
+                "date": "Monday, June 22, 2026",
+                "time": "8am to 5pm",
+                "location": "Nebula Gallery (MC 3.504), McDermott Library- Special Collections, 3rd floor"
+            },
+            {
+                "title": "World Cup at the ICP Student Lounge",
+                "date": "Monday, June 22, 2026",
+                "time": "12pm",
+                "location": "Student Services Building (SSB), 2.4"
+            },
+            {
+                "title": "Virtual Information Session: How the Office of Graduate Education Can Work for You",
+                "date": "Thu, Jun 25, 2026",
+                "time": "9am to 10am",
+                "location": "Virtual"
+            },
+            {
+                "title": "CREATE: A Four-Week Expressive Arts Workshop",
+                "date": "Thu, Jun 25, 2026",
+                "time": "2pm to 3:20pm"
+            }
+        ],
+        "labelingNotes": "Multi-event scout candidate with neutral critic acceptance; selected labels include featured and list-view cards.",
+        "risk": "Localist share links and filter controls repeat titles, and the current page can roll as events pass."
+    }
+]

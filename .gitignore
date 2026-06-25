@@ -7,3 +7,7 @@ coverage/
 .DS_Store
 nul
 test.html
+tests/fixtures/real-pages/*.json
+tests/fixtures/real-pages/*.png
+tests/fixtures/real-pages/reports/
+tests/fixtures/ui/
