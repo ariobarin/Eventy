@@ -57,6 +57,18 @@ webstore-docs/   Chrome Web Store submission notes
 npm test
 ```
 
+Browser-backed UI verification launches Chrome, loads the extension from a
+temporary mock-mode copy, and runs popup and settings flows with automated
+state, interaction, and layout assertions. Screenshots and a JSON report are
+written under `tests/fixtures/ui/` for debugging failures.
+
+```bash
+npm run verify:ui
+```
+
+Use `npm run verify:ui -- --headless` for headless environments, or
+`npm run verify:ui -- --keep-browser` when inspecting the final Chrome state.
+
 Real-page verification uses local static snapshots so the test corpus can be
 audited without committing large captured pages.
 
@@ -70,6 +82,9 @@ fresh snapshots in one command. Compare retained labels and context size against
 the v1.1.1-era preprocessing baseline with `npm run compare:real-pages:static`.
 LLM judging is available through `npm run compare:real-pages:llm` when an eval
 transport is configured.
+
+For local release confidence, run `npm run verify:release`. It combines unit
+tests, static real-page comparison, and the headless browser UI suite.
 
 ## Homepage Front
 

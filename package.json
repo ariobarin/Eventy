@@ -20,6 +20,8 @@
         "compare:real-pages:static": "node scripts/compare-real-pages-old-new.mjs --static",
         "eval:real-pages:llm": "node scripts/eval-real-pages-with-llm.mjs",
         "compare:real-pages:llm": "node scripts/compare-real-pages-old-new.mjs",
+        "verify:ui": "node scripts/verify-extension-ui.mjs",
+        "verify:release": "npm test && npm run compare:real-pages:static && npm run verify:ui -- --headless",
         "package": "node scripts/package-extension.mjs",
         "deploy:home": "npx wrangler@4.101.0 deploy --config wrangler.home.jsonc"
     },

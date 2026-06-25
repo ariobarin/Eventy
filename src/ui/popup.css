@@ -13,6 +13,18 @@ body:not(.settings-page) {
     flex-direction: column;
 }
 
+body:not(.settings-page):has(.results-section.scanning) {
+    min-height: 330px;
+}
+
+body:not(.settings-page):has(.results-section.has-results) {
+    min-height: 390px;
+}
+
+body:not(.settings-page):has(.custom-context-section:not(.hidden)) {
+    min-height: 244px;
+}
+
 /* Popup header */
 .popup-header {
     display: flex;
