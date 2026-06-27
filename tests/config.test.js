@@ -20,9 +20,9 @@ test("extension only declares the Eventy proxy host", () => {
 
 test("package metadata is ready for public release work", () => {
     assert.equal(Object.hasOwn(packageJson, "private"), false);
-    assert.equal(packageJson.version, "1.2.0");
-    assert.equal(manifest.version, "1.2.0");
-    assert.match(readmeText, /Version: v1\.2\.0/);
+    assert.equal(packageJson.version, "1.2.1");
+    assert.equal(manifest.version, "1.2.1");
+    assert.match(readmeText, /Version: v1\.2\.1/);
     assert.equal(packageJson.scripts?.package, "node scripts/package-extension.mjs");
     assert.equal(packageJson.repository?.url, "git+https://github.com/ariobarin/Eventy.git");
 });

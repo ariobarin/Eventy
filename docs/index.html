@@ -4,11 +4,47 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Eventy</title>
-    <meta name="description" content="Turn pages, text, and images into calendar events.">
+    <title>Eventy: AI event extractor for any calendar</title>
+    <meta name="description"
+        content="Eventy is a Chrome extension that turns web pages, selected text, emails, flyers, or screenshots into Google Calendar or iCalendar events with AI.">
     <link rel="canonical" href="https://eventy.ariobarin.com/">
     <link rel="icon" type="image/png" sizes="128x128" href="./assets/icon128.png">
     <link rel="apple-touch-icon" href="./assets/icon128.png">
+    <meta property="og:title" content="Eventy: AI event extractor for any calendar">
+    <meta property="og:description"
+        content="Eventy is a Chrome extension that turns web pages, selected text, emails, flyers, or screenshots into Google Calendar or iCalendar events with AI.">
+    <meta property="og:url" content="https://eventy.ariobarin.com/">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://eventy.ariobarin.com/assets/eventy-social-preview.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Eventy turning page details into a calendar event">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Eventy: AI event extractor for any calendar">
+    <meta name="twitter:description"
+        content="Eventy is a Chrome extension that turns web pages, selected text, emails, flyers, or screenshots into Google Calendar or iCalendar events with AI.">
+    <meta name="twitter:image" content="https://eventy.ariobarin.com/assets/eventy-social-preview.png">
+    <meta name="twitter:image:alt" content="Eventy turning page details into a calendar event">
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Eventy",
+            "description": "Eventy is a Chrome extension that turns web pages, selected text, emails, flyers, or screenshots into Google Calendar or iCalendar events with AI.",
+            "url": "https://eventy.ariobarin.com/",
+            "applicationCategory": "UtilitiesApplication",
+            "operatingSystem": "Chrome",
+            "browserRequirements": "Requires Google Chrome or a Chromium-based browser",
+            "downloadUrl": "https://chromewebstore.google.com/detail/eventy/kfancgcbhdkeohknmidbnioccmmoknjl",
+            "softwareVersion": "1.2.1",
+            "image": "https://eventy.ariobarin.com/assets/eventy-social-preview.png",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+            }
+        }
+    </script>
     <style>
         :root {
             color-scheme: light;
@@ -383,6 +419,66 @@
             color: var(--green);
         }
 
+        .content-band {
+            width: min(1120px, calc(100% - 40px));
+            margin: 0 auto;
+            padding: 18px 0 28px;
+        }
+
+        .section-title {
+            max-width: 680px;
+            margin: 0 0 22px;
+            font-size: 1.52rem;
+            line-height: 1.28;
+        }
+
+        .section-copy {
+            max-width: 720px;
+            margin: 0 0 24px;
+            color: #3f4956;
+            font-size: 1rem;
+            line-height: 1.75;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1px;
+            border: 1px solid var(--line);
+            background: var(--line);
+        }
+
+        .feature-item {
+            min-height: 176px;
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.86);
+        }
+
+        .feature-item h3 {
+            margin: 0 0 10px;
+            font-size: 1.02rem;
+            line-height: 1.3;
+        }
+
+        .feature-item p {
+            margin: 0;
+            color: #4b5563;
+            line-height: 1.65;
+        }
+
+        .support-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 22px;
+            margin-top: 12px;
+        }
+
+        .support-row a {
+            color: var(--blue);
+            font-weight: 780;
+            text-underline-offset: 4px;
+        }
+
         footer {
             width: min(1120px, calc(100% - 40px));
             margin: 0 auto;
@@ -461,6 +557,7 @@
         @media (max-width: 560px) {
             .site-header,
             .hero-inner,
+            .content-band,
             footer {
                 width: min(100% - 28px, 540px);
             }
@@ -528,6 +625,15 @@
 
             .calendar-grid {
                 gap: 5px;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .feature-item {
+                min-height: auto;
+                padding: 20px;
             }
         }
 
@@ -614,6 +720,59 @@
                     </div>
                 </div>
 
+            </div>
+        </section>
+
+        <section class="content-band" aria-labelledby="eventy-workflow-title">
+            <h2 class="section-title" id="eventy-workflow-title">AI event extraction for the places plans show up.</h2>
+            <p class="section-copy">
+                Eventy is a Chrome extension for turning messy event details into calendar-ready entries. It works
+                from web pages, selected text, emails, flyers, screenshots, and images, then lets you review the result
+                before anything reaches your calendar.
+            </p>
+
+            <div class="feature-grid">
+                <article class="feature-item">
+                    <h3>Scan web pages and selected text</h3>
+                    <p>
+                        Use Eventy as an AI event extractor on event pages, newsletters, email views, and posts. Scan a
+                        full page or highlight only the text you want parsed.
+                    </p>
+                </article>
+                <article class="feature-item">
+                    <h3>Read flyers, screenshots, and images</h3>
+                    <p>
+                        Send a flyer, poster, screenshot, or event image through the extension and turn the visible
+                        date, time, title, and location into structured event fields.
+                    </p>
+                </article>
+                <article class="feature-item">
+                    <h3>Review before adding</h3>
+                    <p>
+                        Eventy separates upcoming and past results, preserves useful details, and gives you a chance to
+                        choose the events you want before creating anything.
+                    </p>
+                </article>
+                <article class="feature-item">
+                    <h3>Export to Google Calendar or iCalendar</h3>
+                    <p>
+                        Add selected events to Google Calendar or download iCalendar files for Apple Calendar, Outlook,
+                        iCloud, and other calendars that understand .ics files.
+                    </p>
+                </article>
+            </div>
+        </section>
+
+        <section class="content-band" aria-labelledby="eventy-privacy-title">
+            <h2 class="section-title" id="eventy-privacy-title">Privacy and control stay part of the workflow.</h2>
+            <p class="section-copy">
+                Eventy scans only when you ask it to scan. You can use the shared service or bring your own OpenRouter
+                key, review extracted details before export, and disconnect Google Calendar access from the extension
+                settings at any time.
+            </p>
+            <div class="support-row" aria-label="Support links">
+                <a href="https://github.com/ariobarin/Eventy/issues">Report an issue on GitHub</a>
+                <a href="mailto:eventy.sup@gmail.com">eventy.sup@gmail.com</a>
             </div>
         </section>
     </main>

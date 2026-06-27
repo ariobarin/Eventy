@@ -4,7 +4,7 @@ Eventy processes webpage or selected text only when you use the "Scan" action. T
 
 Data handling:
 
--   No third-party trackers are embedded. We do not sell or share your personal information.
+-   The Eventy extension does not embed third-party trackers or run extension analytics in the browser. The product website may use Cloudflare traffic measurement and security tooling. We do not sell or share your personal information.
 -   Minimal Google scope used: https://www.googleapis.com/auth/calendar.events (create events only).
 -   **BYOK (Bring Your Own Key):** If you provide your own OpenRouter API key, it is transmitted securely via our Cloudflare Worker proxy to authenticate your requests. We do not store your API key on our servers; it is passed through to OpenRouter.
 -   **Image Scanning:** Images you choose to scan are processed by our proxy and LLM provider to extract event details. We do not store these images.
