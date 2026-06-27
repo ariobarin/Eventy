@@ -1,6 +1,6 @@
-AI-powered event extraction from webpages, emails, images, and posters - straight to your calendar.
+Turn web pages, selected text, emails, flyers, and screenshots into Google Calendar or iCalendar events with AI.
 
-Never manually copy event details again. Eventy uses AI to instantly extract dates, times, locations, and descriptions from virtually any source - webpages, emails, event flyers, concert posters, even screenshots. Select the events you want and add them to Google Calendar or export to iCalendar (.ics) for Outlook, Apple Calendar, and more.
+Eventy is a Chrome extension that uses AI to extract dates, times, locations, and descriptions from the places event details usually appear: web pages, selected text, emails, event flyers, concert posters, and screenshots. Review the events you want, then add them to Google Calendar or export iCalendar (.ics) files for Outlook, Apple Calendar, iCloud, and more.
 
 QUICK START
 1. Navigate to any page with event information.
@@ -39,5 +39,6 @@ POWER USER OPTIONS
 
 PRIVACY FIRST
 • Scans only when you activate it - never runs in the background.
-• No tracking, no analytics, no data collection.
-• Your event data stays in your browser until you export it.
+• No extension analytics or background tracking.
+• Review extracted details before export.
+• Stored results and settings stay in your browser.

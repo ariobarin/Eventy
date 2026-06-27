@@ -859,7 +859,16 @@ addSelectedBtn?.addEventListener("click", async () => {
                 return !Number.isNaN(i) ? currentEvents[i] : null;
             })
             .filter(Boolean);
-        if (selected.length) await openCalendarEventsInBackground(selected);
+        if (selected.length) {
+            await openCalendarEventsInBackground(selected, {
+                onIcsDownloadStarted: ({ count }) => {
+                    const message = count === 1
+                        ? "After it downloads, open the .ics file to add it to your calendar."
+                        : "After they download, open the .ics files to add them to your calendar.";
+                    showToast(message, "info");
+                },
+            });
+        }
     } catch (e) {
         error(e);
     }

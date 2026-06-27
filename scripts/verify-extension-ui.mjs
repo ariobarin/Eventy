@@ -766,6 +766,61 @@ async function main() {
             return { open: openEvidence, restored, scanned };
         });
 
+        await runCase(results, "iCalendar download shows open-file guidance", async () => {
+            await clearExtensionStorage(browser, extensionId);
+            const page = await browser.newPage();
+            await page.goto(`${fixtureServer.origin}/event-page.html`, {
+                waitUntil: "domcontentloaded",
+            });
+            const popup = await openExtensionPopup(browser, page, extensionId, extension);
+            const popupDiagnostics = await attachPageDiagnostics(popup, "icalendar-popup");
+            await waitForScanAvailability(popup);
+            await popup.evaluate(async () => {
+                await chrome.storage.sync.set({
+                    settings: {
+                        defaultCalendar: "icloud",
+                    },
+                });
+            });
+
+            await popup.click("#scanBtn");
+            await waitForVisibleResults(popup);
+
+            const firstCardPoint = await popup.$eval(".event-card", (card) => {
+                card.scrollIntoView({ block: "center", inline: "nearest" });
+                const rect = card.getBoundingClientRect();
+                return {
+                    x: rect.left + rect.width / 2,
+                    y: rect.top + rect.height / 2,
+                };
+            });
+            await popup.mouse.click(firstCardPoint.x, firstCardPoint.y);
+            await popup.waitForFunction(
+                () => document.querySelectorAll(".event-card.selected").length === 1 &&
+                    document.getElementById("addSelectedBtn")?.disabled === false,
+                { timeout: options.timeoutMs }
+            );
+
+            await popup.click("#addSelectedBtn");
+            await popup.waitForFunction(
+                () => {
+                    const toast = document.getElementById("toast");
+                    return toast?.classList.contains("visible") &&
+                        toast.innerText.includes("After it downloads, open the .ics file");
+                },
+                { timeout: options.timeoutMs }
+            );
+
+            const notice = await captureEvidence(popup, reportDir, "icalendar-download-notice");
+            assert.equal(notice.state.toast.visible, true);
+            assert.match(notice.state.toast.text, /After it downloads, open the \.ics file/);
+            assertNoPopupOverflow(notice.state);
+            assertNoUnexpectedErrors(popupDiagnostics);
+            await closePage(popup);
+            await closePage(page);
+            return notice;
+        });
+
         await runCase(results, "settings button opens usable settings page", async () => {
             await clearExtensionStorage(browser, extensionId);
             const page = await browser.newPage();
