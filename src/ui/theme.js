@@ -27,33 +27,3 @@ export function applyTheme(theme) {
         });
     });
 }
-
-// Self-executing function to load theme immediately
-// This replaces the separate theme-loader.js file
-(async () => {
-    if (typeof chrome === 'undefined' || !chrome.storage) return;
-    
-    try {
-        const result = await chrome.storage.sync.get("settings");
-        const settings = result.settings || {};
-        const theme = settings.darkModeSettings || "auto";
-
-        const body = document.body;
-        if (body) {
-            body.classList.remove("light-mode", "dark-mode", "auto-mode");
-            body.classList.add(theme === "light" ? "light-mode" : theme === "dark" ? "dark-mode" : "auto-mode");
-        }
-    } catch (error) {
-        console.error("Error loading theme:", error);
-        if (document.body) {
-            document.body.classList.add("auto-mode");
-        }
-    } finally {
-        if (document.body) {
-            document.body.classList.remove("theme-loading");
-            requestAnimationFrame(() => {
-                document.body.classList.add("theme-loaded");
-            });
-        }
-    }
-})();

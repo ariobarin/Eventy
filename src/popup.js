@@ -355,16 +355,12 @@ function showSkeletonCards(count = 3) {
 }
 
 // Ensure Settings button works immediately on popup load
-settingsBtn?.addEventListener(
-    "click",
-    () => {
-        try {
-            const url = chrome.runtime.getURL("src/ui/settings.html");
-            chrome.tabs.create({ url });
-        } catch (_) { }
-    },
-    { once: true }
-);
+settingsBtn?.addEventListener("click", () => {
+    try {
+        const url = chrome.runtime.getURL("src/ui/settings.html");
+        chrome.tabs.create({ url });
+    } catch (_) { }
+});
 
 // Quota exceeded panel - link to settings with BYOK section
 const quotaSettingsBtn = document.getElementById("quotaSettingsBtn");
@@ -547,14 +543,19 @@ function transitionFromSkeletonsToResults(events) {
 
     // Wait for fade out, then render event cards
     setTimeout(async () => {
-        upcomingEventsListEl.innerHTML = "";
-        if (pastEventsListEl) pastEventsListEl.innerHTML = "";
-        await renderEvents(events);
+        try {
+            upcomingEventsListEl.innerHTML = "";
+            if (pastEventsListEl) pastEventsListEl.innerHTML = "";
+            await renderEvents(events);
 
-        // Transition to results loaded state
-        // This removes 'scanning' class and adds 'has-results'
-        // Button appears smoothly via CSS transitions
-        setState(UI_STATE.RESULTS_LOADED);
+            // Transition to results loaded state
+            // This removes 'scanning' class and adds 'has-results'
+            // Button appears smoothly via CSS transitions
+            setState(UI_STATE.RESULTS_LOADED);
+        } catch (e) {
+            error("Failed to render events:", e);
+            setState(UI_STATE.IDLE);
+        }
     }, SKELETON_FADE_DURATION_MS + skeletons.length * SKELETON_STAGGER_DELAY_MS);
 }
 
