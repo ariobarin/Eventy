@@ -174,7 +174,6 @@ export async function renderEventLists(
         isEventPast,
         createCard,
         updateButtonStates,
-        formatDateHeader,
     }
 ) {
     if (!upcomingEventsListEl || !pastEventsListEl) return;

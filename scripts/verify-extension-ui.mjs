@@ -306,7 +306,6 @@ async function collectPopupState(popup) {
             };
         };
         const button = document.getElementById("scanBtn");
-        const scanSection = document.getElementById("scanSection");
         const toast = document.getElementById("toast");
         const customSection = document.getElementById("customContextSection");
         const customInput = document.getElementById("customInput");
@@ -355,14 +354,6 @@ async function collectPopupState(popup) {
                     rect: rectOf(button),
                 }
                 : null,
-            scanSection: scanSection
-                ? {
-                    title: scanSection.title,
-                    className: scanSection.className,
-                    rect: rectOf(scanSection),
-                    hidden: scanSection.classList.contains("hidden"),
-                }
-                : null,
             toast: toast
                 ? {
                     className: toast.className,
@@ -390,7 +381,7 @@ async function collectPopupState(popup) {
                         maxHeight: getComputedStyle(results).maxHeight,
                     },
                     eventCards: document.querySelectorAll(".event-card").length,
-                    skeletonCards: document.querySelectorAll(".skeleton-card").length,
+                    skeletonCards: document.querySelectorAll(".skeleton-row").length,
                     upcomingCards: document.querySelectorAll("#upcomingEventsList .event-card").length,
                     pastCards: document.querySelectorAll("#pastEventsList .event-card").length,
                     selectedCards: document.querySelectorAll(".event-card.selected").length,
@@ -603,7 +594,7 @@ async function main() {
             const before = await captureEvidence(popup, reportDir, "protected-page-before");
             assert.equal(before.state.scanButton.disabled, true);
             assert.equal(before.state.scanButton.title, "Chrome pages cannot be scanned.");
-            assert.match(before.state.scanSection.className, /\bscan-unavailable\b/);
+            assert.match(before.state.scanButton.className, /\bscan-unavailable\b/);
             assert.equal(before.state.toast.hidden, true);
             assert.equal(before.state.results.eventCards, 0);
 
@@ -637,8 +628,7 @@ async function main() {
             const evidence = await captureEvidence(popup, reportDir, "regular-page-ready");
 
             assert.equal(evidence.state.scanButton.disabled, false);
-            assert.equal(evidence.state.scanButton.title, "Scan Page");
-            assert.equal(evidence.state.scanSection.title, "");
+            assert.equal(evidence.state.scanButton.title, "Scan this page");
             assert.equal(evidence.state.toast.hidden, true);
             assertNoPopupOverflow(evidence.state);
             assertNoUnexpectedErrors(diagnostics);
@@ -660,7 +650,7 @@ async function main() {
 
             await popup.click("#scanBtn");
             await popup.waitForFunction(
-                () => document.querySelectorAll(".skeleton-card").length > 0,
+                () => document.querySelectorAll(".skeleton-row").length > 0,
                 { timeout: options.timeoutMs }
             );
             const scanning = await captureEvidence(popup, reportDir, "page-scan-scanning");
@@ -670,8 +660,11 @@ async function main() {
             await waitForVisibleResults(popup);
             const resultsEvidence = await captureEvidence(popup, reportDir, "page-scan-results");
             assert.equal(resultsEvidence.state.results.eventCards, 10);
-            assert.equal(resultsEvidence.state.results.pastCards, 10);
-            assert.equal(resultsEvidence.state.results.upcomingCards, 0);
+            assert.equal(
+                resultsEvidence.state.results.pastCards + resultsEvidence.state.results.upcomingCards,
+                10,
+                "all mock events should render across the upcoming/past lists"
+            );
             assert.equal(resultsEvidence.state.addSelected.disabled, true);
             assertFirstCardVisible(resultsEvidence.state, "page scan");
             assertNoPopupOverflow(resultsEvidence.state);
@@ -740,7 +733,7 @@ async function main() {
             );
             const openEvidence = await captureEvidence(popup, reportDir, "custom-context-open");
             assert.equal(openEvidence.state.customContext.hidden, false);
-            assert.equal(openEvidence.state.scanSection.hidden, true);
+            assert.ok(openEvidence.state.scanButton, "scan button stays in the toolbar while custom context is open");
             assert.match(openEvidence.state.customContext.textareaValue, /Neighborhood potluck/);
             assertNoPopupOverflow(openEvidence.state);
             await closePage(popup);

@@ -23,7 +23,6 @@ import {
 } from "./popup/constants.js";
 import { loadCache, saveCache } from "./popup/cacheStore.js";
 import {
-    formatDateHeader as formatPopupDateHeader,
     formatTimeOnly as formatPopupTimeOnly,
     isEventPast as isPopupEventPast,
 } from "./popup/dateTime.js";
@@ -197,27 +196,22 @@ function updateWeekStrip(events) {
     // Build a map of date -> color for events this week
     const dateColorMap = {};
     if (events) {
-        for (const ev of events) {
-            if (ev.startDate) {
-                const card = resultsEl?.querySelector(`.event-card[data-idx]`);
-                // Find the card for this event and get its color
-                const allCards = resultsEl?.querySelectorAll(".event-card");
-                if (allCards) {
-                    allCards.forEach(c => {
-                        const idx = Number(c.dataset.idx);
-                        if (events[idx] === ev && c.dataset.color) {
-                            dateColorMap[ev.startDate] = c.dataset.color;
-                        }
-                    });
+        const allCards = resultsEl?.querySelectorAll(".event-card");
+        if (allCards) {
+            allCards.forEach(c => {
+                const idx = Number(c.dataset.idx);
+                const ev = events[idx];
+                if (ev?.startDate && c.dataset.color) {
+                    dateColorMap[ev.startDate] = c.dataset.color;
                 }
-            }
+            });
         }
     }
 
     for (let i = 0; i < 7; i++) {
         const d = new Date(monday);
         d.setDate(monday.getDate() + i);
-        const dateStr = d.toISOString().split("T")[0];
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
         const isSunday = d.getDay() === 0;
         const dotColor = dateColorMap[dateStr];
 
@@ -398,10 +392,6 @@ function isEventPast(event) {
     return isPopupEventPast(event, { warn, error });
 }
 
-function formatDateHeader(dateStr) {
-    return formatPopupDateHeader(dateStr);
-}
-
 function formatTimeOnly(timeStr) {
     return formatPopupTimeOnly(timeStr, getTimeFormatPreference());
 }
@@ -580,7 +570,6 @@ async function renderEvents(events) {
             isPast,
         }),
         updateButtonStates,
-        formatDateHeader,
     });
 
     if (result) {
