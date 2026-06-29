@@ -37,6 +37,9 @@ export function createEventCard(
     wrapper.className = 'event-card';
     wrapper.dataset.idx = String(idx);
     wrapper.dataset.color = c.hex;
+    wrapper.setAttribute('role', 'button');
+    wrapper.setAttribute('tabindex', '0');
+    wrapper.setAttribute('aria-pressed', 'false');
 
     const startTime = formatTimeOnly(ev.startTime || '');
     const endTime = formatTimeOnly(ev.endTime || '');
@@ -75,12 +78,7 @@ export function createEventCard(
         ? `<span class="ev-badge">Multi-day</span>`
         : '';
 
-    // Hand-drawn red circle shown when the event is selected. A turbulence +
-    // displacement filter gives it a natural, slightly irregular wobble.
-    const circleSvg = `<svg class="ev-circle" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><defs><filter id="evc-${idx}" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.013 0.019" numOctaves="2" seed="${(idx * 37) % 100}" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="3.4" xChannelSelector="R" yChannelSelector="G"/></filter></defs><ellipse cx="50" cy="50" rx="43" ry="42" vector-effect="non-scaling-stroke" fill="none" stroke="#DA3B2C" stroke-width="2.6" stroke-linecap="round" filter="url(#evc-${idx})"/></svg>`;
-
     wrapper.innerHTML = `
-        ${circleSvg}
         <div class="date-chip">
             <div class="date-chip-month" style="background:${c.hex}">${escapeHtml(monthAbbr)}</div>
             <div class="date-chip-day">${escapeHtml(dayNum)}</div>
@@ -92,9 +90,18 @@ export function createEventCard(
         </div>
     `;
 
-    wrapper.addEventListener('click', () => {
-        wrapper.classList.toggle('selected');
+    const toggleSelected = () => {
+        const selected = wrapper.classList.toggle('selected');
+        wrapper.setAttribute('aria-pressed', String(selected));
         onToggle(wrapper);
+    };
+
+    wrapper.addEventListener('click', toggleSelected);
+    wrapper.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleSelected();
+        }
     });
 
     return wrapper;
@@ -254,11 +261,15 @@ export function restoreSelection(selectedIdxs, { resultsEl, updateButtonStates }
     const cards = resultsEl?.querySelectorAll('.event-card');
     let firstSelected = null;
     if (cards) {
-        cards.forEach((el) => el.classList.remove('selected'));
+        cards.forEach((el) => {
+            el.classList.remove('selected');
+            el.setAttribute('aria-pressed', 'false');
+        });
         selectedIdxs.forEach((i) => {
             const el = resultsEl?.querySelector(`.event-card[data-idx="${i}"]`);
             if (el) {
                 el.classList.add('selected');
+                el.setAttribute('aria-pressed', 'true');
                 if (!firstSelected) firstSelected = el;
             }
         });

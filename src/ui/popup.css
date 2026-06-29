@@ -315,24 +315,64 @@ body.auto-mode .event-card:hover {
     opacity: var(--past-opacity);
 }
 
-/* ---- Hand-drawn selection circle ---- */
-.ev-circle {
-    position: absolute;
-    top: 0;
-    left: -6px;
-    right: -6px;
-    bottom: 0;
-    width: calc(100% + 12px);
-    height: 100%;
-    overflow: visible;
-    pointer-events: none;
-    transform: rotate(-1deg);
-    transform-origin: center;
-    display: none;
+/* ---- Selection: highlighter wash ---- */
+:root {
+    --hl-wash: linear-gradient(178deg,
+        transparent 6%,
+        rgba(255, 160, 60, .55) 18%,
+        rgba(255, 160, 60, .55) 84%,
+        transparent 96%);
 }
 
-.event-card.selected .ev-circle {
-    display: block;
+/* keep the chip + text above the wash */
+.event-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* the highlighter streak */
+.event-card::before {
+    content: "";
+    position: absolute;
+    inset: 6px -6px;
+    z-index: 0;
+    border-radius: 4px;
+    background: var(--hl-wash);
+    transform: rotate(-0.4deg);
+    mix-blend-mode: multiply;
+    opacity: 0;
+    transition: opacity .12s ease;
+    pointer-events: none;
+}
+
+.event-card.selected::before { opacity: 1; }
+
+/* on a selected row, drop the per-title swipe (avoid double-marking) */
+.event-card.selected .ev-title-highlight { background: none; }
+
+/* deepen the handwritten meta so it reads over orange */
+.event-card.selected .ev-note { color: #7E3A0F !important; }
+
+/* dark mode: multiply would muddy a dark page — switch to screen + lower alpha */
+body.dark-mode .event-card::before,
+body.auto-mode .event-card::before {
+    mix-blend-mode: screen;
+    background: linear-gradient(178deg,
+        transparent 6%,
+        rgba(255, 160, 60, .26) 18%,
+        rgba(255, 160, 60, .26) 84%,
+        transparent 96%);
+}
+
+@media (prefers-color-scheme: dark) {
+    body.auto-mode .event-card::before {
+        mix-blend-mode: screen;
+        background: linear-gradient(178deg,
+            transparent 6%,
+            rgba(255, 160, 60, .26) 18%,
+            rgba(255, 160, 60, .26) 84%,
+            transparent 96%);
+    }
 }
 
 /* ---- Date chip ---- */

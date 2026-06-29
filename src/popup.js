@@ -987,9 +987,11 @@ function selectAndScrollToEvent(eventIndex) {
     const allCards = resultsEl?.querySelectorAll(".event-card");
     allCards?.forEach(c => {
         c.classList.remove("selected");
+        c.setAttribute("aria-pressed", "false");
     });
 
     card.classList.add("selected");
+    card.setAttribute("aria-pressed", "true");
 
     scrollToCard(card);
     updateButtonStates();
