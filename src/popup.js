@@ -440,6 +440,10 @@ settingsBtn?.addEventListener("click", () => {
     } catch (_) { }
 });
 
+// Empty-state buttons reuse the toolbar scan / paste entrypoints
+document.getElementById("ev-scan-primary")?.addEventListener("click", () => scanBtn?.click());
+document.getElementById("ev-paste-link")?.addEventListener("click", () => customContextBtn?.click());
+
 document.getElementById("quotaSettingsBtn")?.addEventListener("click", () => {
     try {
         const url = chrome.runtime.getURL("src/ui/settings.html") + "?section=api";

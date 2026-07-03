@@ -421,9 +421,9 @@ body.auto-mode .event-card::before {
 }
 
 .ev-note {
-    font-family: 'Caveat', cursive;
-    font-size: 17px;
-    line-height: 1.05;
+    font-family: 'Kalam', cursive;
+    font-size: 14px;
+    line-height: 1.15;
     margin-top: 3px;
 }
 
@@ -504,8 +504,8 @@ body.auto-mode .event-card::before {
 }
 
 .footer-selected {
-    font-family: 'Caveat', cursive;
-    font-size: 18px;
+    font-family: 'Kalam', cursive;
+    font-size: 15px;
     color: var(--footer-text);
 }
 
@@ -954,4 +954,118 @@ body.auto-mode #toast.toast-info {
     background: rgba(59, 130, 246, 0.1);
     border-color: rgba(59, 130, 246, 0.2);
     color: #93c5fd;
+}
+
+/* ===========================================
+   Empty state — idle view before any scan
+   =========================================== */
+.empty-state {
+    position: relative;
+}
+
+.empty-body {
+    position: relative;
+    padding: 6px 22px 0;
+    background-image: repeating-linear-gradient(180deg,
+        transparent 0, transparent 33px,
+        var(--ruled-line) 33px, var(--ruled-line) 34px);
+}
+
+.empty-doodle {
+    position: absolute;
+    top: 2px;
+    right: 30px;
+    width: 104px;
+    height: 80px;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.empty-hero {
+    text-align: center;
+    padding: 36px 4px 30px;
+}
+
+.empty-note {
+    margin: 0;
+    font-family: 'Kalam', cursive;
+    font-size: 17px;
+    color: #B6803F;
+    transform: rotate(-2deg);
+}
+
+.empty-title {
+    margin: 8px 0 0;
+    font-weight: 800;
+    font-size: 23px;
+    color: var(--ink);
+}
+
+.empty-sub {
+    margin: 9px auto 0;
+    max-width: 280px;
+    font-weight: 500;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--ink-muted);
+}
+
+/* primary CTA — hard pop-shadow sticker */
+.empty-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+    padding: 12px 22px;
+    border-radius: 22px;
+    background: var(--brand);
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    font-family: inherit;
+    border: 3px solid #2A333A;
+    cursor: pointer;
+    box-shadow: 4px 4px 0 #2A333A;
+    transition: transform .1s ease, box-shadow .1s ease;
+}
+
+.empty-cta:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0 #2A333A;
+}
+
+.empty-cta:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 #2A333A;
+}
+
+.empty-or {
+    margin: 14px 0 0;
+    font-size: 13px;
+    color: var(--ink-muted);
+}
+
+.empty-link {
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 600;
+    color: var(--ink);
+    border-bottom: 1.5px solid var(--ruled-line);
+}
+
+.empty-foot {
+    padding: 11px 18px;
+    text-align: center;
+    border-top: 1px solid var(--ruled-line);
+    font-size: 11px;
+    color: var(--ink-muted);
+}
+
+/* hide the empty state once results are shown or the paste panel opens */
+.planner-page:has(#results.open) #emptyState,
+.planner-page:has(#customContextSection:not(.hidden)) #emptyState {
+    display: none;
 }
