@@ -1,6 +1,159 @@
-/* Minimalist theme with orange accent */
+/* ===========================================
+   Font faces — bundled woff2 (no external requests in MV3)
+   =========================================== */
+@font-face {
+    font-family: 'Hanken Grotesk';
+    font-style: normal;
+    font-weight: 400 800;
+    font-display: swap;
+    src: url(./fonts/hanken-grotesk-latin.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Hanken Grotesk';
+    font-style: normal;
+    font-weight: 400 800;
+    font-display: swap;
+    src: url(./fonts/hanken-grotesk-latin-ext.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: 'Kalam';
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: url(./fonts/kalam-latin-300.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Kalam';
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: url(./fonts/kalam-latin-ext-300.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: 'Kalam';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(./fonts/kalam-latin-400.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Kalam';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(./fonts/kalam-latin-ext-400.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: 'Kalam';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url(./fonts/kalam-latin-700.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Kalam';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url(./fonts/kalam-latin-ext-700.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* ===========================================
+   CSS custom properties — Light mode (default)
+   =========================================== */
 :root {
-    /* Light mode colors */
+    /* Brand */
+    --brand: #F4691F;
+    --brand-deep: #C25E15;
+    --brand-bright: #FF9A52;
+
+    /* Desk & Page */
+    --desk: linear-gradient(155deg, #B0BFB4, #96AA9C 65%, #869a8d);
+    --paper: #FAF7EE;
+    --ruled-line: rgba(122, 150, 168, .28);
+
+    /* Ink */
+    --ink: #29343A;
+    --ink-muted: #6E7C84;
+    --ink-secondary: #7E8A82;
+
+    /* Controls */
+    --tab-track: #ECE7DA;
+    --tab-active: #fff;
+    --tab-active-text: #29343A;
+    --tab-inactive-text: #94A097;
+    --tab-shadow: 0 1px 2px rgba(0, 0, 0, .12);
+
+    /* Checkbox */
+    --checkbox-bg: #fff;
+    --checkbox-border: #B9C2BC;
+
+    /* Date chip */
+    --chip-cell-bg: #fff;
+    --chip-cell-text: #29343A;
+    --chip-border: rgba(0, 0, 0, .10);
+    --chip-shadow: 0 2px 4px rgba(0, 0, 0, .12);
+
+    /* Ghost buttons */
+    --ghost-bg: #fff;
+    --ghost-border: #C9D0C9;
+    --ghost-text: #5d6b62;
+
+    /* Scan button (primary icon) */
+    --scan-bg: #29343A;
+    --scan-text: #FAF7EE;
+
+    /* Footer */
+    --footer-bg: rgba(250, 247, 238, .96);
+    --footer-border: rgba(122, 150, 168, .30);
+    --footer-text: #41514A;
+    --footer-muted: #7E8A82;
+
+    /* Page shadows */
+    --page-shadow: 0 16px 30px rgba(35, 50, 45, .30), 0 3px 8px rgba(0, 0, 0, .18);
+    --cta-shadow: 0 2px 0 rgba(0, 0, 0, .20);
+
+    /* Week strip */
+    --week-divider: 1px dashed rgba(122, 150, 168, .45);
+    --weekday-text: #9AA7A0;
+    --sunday-text: #C5908F;
+
+    /* Coil gradient */
+    --coil-gradient: linear-gradient(180deg, #ffc287 0%, #f4842f 45%, #c25e15 100%);
+    --coil-shadow: inset -1.5px 0 1.5px rgba(255, 255, 255, .75),
+        inset 1.5px 0 2px rgba(0, 0, 0, .25),
+        0 2px 3px rgba(0, 0, 0, .22);
+
+    /* Badge */
+    --badge-text: #7E8A82;
+    --badge-border: #CBD3CC;
+
+    /* Desk inset */
+    --desk-inset: inset 0 1px 0 rgba(255, 255, 255, .22);
+
+    /* Past opacity */
+    --past-opacity: .72;
+
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-base: 200ms ease;
+
+    /* Legacy vars (for settings page, toast, etc.) */
     --bg: #ffffff;
     --bg-secondary: #fafafa;
     --text: #1a1a1a;
@@ -8,28 +161,56 @@
     --border: #e5e5e5;
     --border-light: #f5f5f5;
     --bg-hover: #f0f0f0;
-
-    /* Orange accent colors */
-    --accent-primary: #ff6b35;
-    --accent-hover: #ff5722;
-    --accent-light: #fff4f0;
-    --accent-lighter: #fffaf8;
-    --accent-date: #e64a19;
-
-    /* Shadows and effects */
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-    --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.08);
-
-    /* Transitions */
-    --transition-fast: 150ms ease;
-    --transition-base: 200ms ease;
-    --transition-slow: 250ms ease;
+    --accent-primary: #F4691F;
+    --accent-hover: #e05a12;
+    --highlight: rgba(255, 190, 50, .22);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, .04);
 }
 
-/* Dark mode colors */
+/* ===========================================
+   Dark mode
+   =========================================== */
 @media (prefers-color-scheme: dark) {
-    body.auto-mode {
+    body.auto-mode:not(.settings-page) {
+        --desk: linear-gradient(155deg, #232B2F, #1A2023 65%, #141A1C);
+        --paper: #232B2F;
+        --ruled-line: rgba(255, 255, 255, .07);
+        --ink: #EAEEEA;
+        --ink-muted: #8C9A93;
+        --ink-secondary: #7E8C85;
+        --tab-track: #2C353A;
+        --tab-active: #3C474D;
+        --tab-active-text: #EAEEEA;
+        --tab-inactive-text: #7E8C85;
+        --tab-shadow: 0 1px 2px rgba(0, 0, 0, .3);
+        --checkbox-bg: #2A3338;
+        --checkbox-border: rgba(255, 255, 255, .22);
+        --chip-cell-bg: #ECEFE8;
+        --chip-cell-text: #242B30;
+        --chip-border: rgba(255, 255, 255, .08);
+        --chip-shadow: 0 2px 5px rgba(0, 0, 0, .35);
+        --ghost-bg: #2C353A;
+        --ghost-border: rgba(255, 255, 255, .12);
+        --ghost-text: #9AA8A1;
+        --scan-bg: var(--brand);
+        --scan-text: #fff;
+        --footer-bg: #1E2528;
+        --footer-border: rgba(255, 255, 255, .10);
+        --footer-text: #BFC9C3;
+        --footer-muted: #8C9A93;
+        --page-shadow: 0 16px 32px rgba(0, 0, 0, .55), 0 3px 8px rgba(0, 0, 0, .4);
+        --cta-shadow: 0 2px 0 rgba(0, 0, 0, .35);
+        --week-divider: 1px dashed rgba(255, 255, 255, .12);
+        --weekday-text: #7E8C85;
+        --coil-gradient: linear-gradient(180deg, #ffb877, #f4842f, #b0530f);
+        --coil-shadow: inset -1.5px 0 1.5px rgba(255, 255, 255, .55),
+            inset 1.5px 0 2px rgba(0, 0, 0, .4),
+            0 2px 4px rgba(0, 0, 0, .45);
+        --badge-text: #8C9A93;
+        --badge-border: rgba(255, 255, 255, .16);
+        --desk-inset: inset 0 1px 0 rgba(255, 255, 255, .06);
+        --past-opacity: .6;
+        --brand-bright: #FF9A52;
         --bg: #171717;
         --bg-secondary: #262626;
         --bg-hover: #333333;
@@ -37,16 +218,52 @@
         --text-secondary: #a3a3a3;
         --border: #404040;
         --border-light: #2a2a2a;
-        --accent-light: rgba(255, 107, 53, 0.15);
-        --accent-lighter: rgba(255, 107, 53, 0.08);
-        --accent-date: #ff8a65;
-        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
-        --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.6);
-        --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.7);
+        --accent-primary: #F4691F;
+        --accent-hover: #e05a12;
+        --highlight: rgba(255, 180, 50, .12);
     }
 }
 
-body.dark-mode {
+body.dark-mode:not(.settings-page) {
+    --desk: linear-gradient(155deg, #232B2F, #1A2023 65%, #141A1C);
+    --paper: #232B2F;
+    --ruled-line: rgba(255, 255, 255, .07);
+    --ink: #EAEEEA;
+    --ink-muted: #8C9A93;
+    --ink-secondary: #7E8C85;
+    --tab-track: #2C353A;
+    --tab-active: #3C474D;
+    --tab-active-text: #EAEEEA;
+    --tab-inactive-text: #7E8C85;
+    --tab-shadow: 0 1px 2px rgba(0, 0, 0, .3);
+    --checkbox-bg: #2A3338;
+    --checkbox-border: rgba(255, 255, 255, .22);
+    --chip-cell-bg: #ECEFE8;
+    --chip-cell-text: #242B30;
+    --chip-border: rgba(255, 255, 255, .08);
+    --chip-shadow: 0 2px 5px rgba(0, 0, 0, .35);
+    --ghost-bg: #2C353A;
+    --ghost-border: rgba(255, 255, 255, .12);
+    --ghost-text: #9AA8A1;
+    --scan-bg: var(--brand);
+    --scan-text: #fff;
+    --footer-bg: #1E2528;
+    --footer-border: rgba(255, 255, 255, .10);
+    --footer-text: #BFC9C3;
+    --footer-muted: #8C9A93;
+    --page-shadow: 0 16px 32px rgba(0, 0, 0, .55), 0 3px 8px rgba(0, 0, 0, .4);
+    --cta-shadow: 0 2px 0 rgba(0, 0, 0, .35);
+    --week-divider: 1px dashed rgba(255, 255, 255, .12);
+    --weekday-text: #7E8C85;
+    --coil-gradient: linear-gradient(180deg, #ffb877, #f4842f, #b0530f);
+    --coil-shadow: inset -1.5px 0 1.5px rgba(255, 255, 255, .55),
+        inset 1.5px 0 2px rgba(0, 0, 0, .4),
+        0 2px 4px rgba(0, 0, 0, .45);
+    --badge-text: #8C9A93;
+    --badge-border: rgba(255, 255, 255, .16);
+    --desk-inset: inset 0 1px 0 rgba(255, 255, 255, .06);
+    --past-opacity: .6;
+    --brand-bright: #FF9A52;
     --bg: #171717;
     --bg-secondary: #262626;
     --bg-hover: #333333;
@@ -54,32 +271,53 @@ body.dark-mode {
     --text-secondary: #a3a3a3;
     --border: #404040;
     --border-light: #2a2a2a;
-    --accent-light: rgba(255, 107, 53, 0.15);
-    --accent-lighter: rgba(255, 107, 53, 0.08);
-    --accent-date: #ff8a65;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
-    --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.6);
-    --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.7);
+    --accent-primary: #F4691F;
+    --accent-hover: #e05a12;
+    --highlight: rgba(255, 180, 50, .12);
 }
 
-body.light-mode {
+/* Settings page keeps the old simple variables */
+body.light-mode.settings-page,
+body.auto-mode.settings-page {
     --bg: #ffffff;
     --bg-secondary: #fafafa;
     --text: #1a1a1a;
     --text-secondary: #737373;
     --border: #e5e5e5;
     --border-light: #f5f5f5;
-    --accent-light: #fff4f0;
-    --accent-lighter: #fffaf8;
+    --accent-primary: #F4691F;
+    --accent-hover: #e05a12;
 }
 
-/* Base styles */
-* {
+@media (prefers-color-scheme: dark) {
+    body.auto-mode.settings-page {
+        --bg: #171717;
+        --bg-secondary: #262626;
+        --bg-hover: #333333;
+        --text: #fafafa;
+        --text-secondary: #a3a3a3;
+        --border: #404040;
+        --border-light: #2a2a2a;
+    }
+}
+
+body.dark-mode.settings-page {
+    --bg: #171717;
+    --bg-secondary: #262626;
+    --bg-hover: #333333;
+    --text: #fafafa;
+    --text-secondary: #a3a3a3;
+    --border: #404040;
+    --border-light: #2a2a2a;
+}
+
+/* ===========================================
+   Base reset & typography
+   =========================================== */
+*,
+*::before,
+*::after {
     box-sizing: border-box;
-}
-
-html {
-    scroll-behavior: smooth;
 }
 
 html,
@@ -89,10 +327,8 @@ body {
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-        "Helvetica Neue", Arial, sans-serif;
-    color: var(--text);
-    background: var(--bg);
+    font-family: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -107,16 +343,13 @@ body.theme-loaded {
     transition: opacity 200ms ease-in;
 }
 
-/* Typography */
 h1 {
-    font-size: 17px;
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: 800;
     margin: 0;
-    color: var(--text);
-    letter-spacing: -0.01em;
+    letter-spacing: -.2px;
 }
 
-/* Button styles */
 button {
     display: inline-flex;
     align-items: center;
@@ -142,7 +375,7 @@ button:not(:disabled):active {
 }
 
 button:focus-visible {
-    outline: 2px solid var(--accent-primary);
+    outline: 2px solid var(--brand);
     outline-offset: 2px;
 }
 
@@ -151,39 +384,10 @@ button svg {
 }
 
 @keyframes spin {
-    from {
-        transform: translate(-50%, -50%) rotate(0deg);
-    }
-
-    to {
-        transform: translate(-50%, -50%) rotate(360deg);
-    }
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
-/* Smooth theme transition */
-body:not(.theme-loading) {
-    transition: background-color var(--transition-slow),
-        color var(--transition-slow);
-}
-
-/* Fade in animation for initial load */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-body:not(.theme-loading) {
-    animation: fadeIn var(--transition-slow) ease-out;
-}
-
-/* Generic hidden class */
 .hidden {
     display: none !important;
 }

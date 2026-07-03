@@ -10,120 +10,160 @@
 </head>
 
 <body class="auto-mode theme-loading">
-    <header class="popup-header">
-        <div class="logo-section">
-            <img src="../../assets/icon32.png" alt="Eventy logo" width="20" height="20" class="logo-icon" />
-            <h1>Eventy</h1>
-        </div>
-        <div class="header-buttons">
-            <button id="customContextBtn" class="icon-button" title="Add Custom Context">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-            </button>
-            <button id="settingsBtn" class="icon-button" title="Settings">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path
-                        d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z">
-                    </path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-            </button>
-        </div>
-    </header>
+    <div class="desk-mat">
+        <!-- Spiral binding -->
+        <div class="spiral-binding" id="spiralBinding"></div>
 
-    <div id="scanSection" class="scan-section scan-unavailable" title="Checking page scan availability.">
-        <button id="scanBtn" class="primary-button" disabled title="Checking page scan availability.">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.35-4.35"></path>
-            </svg>
-            <span>Scan Page</span>
-        </button>
-    </div>
+        <!-- Page -->
+        <div class="planner-page">
+            <div class="page-top-shadow"></div>
 
-    <div id="customContextSection" class="custom-context-section hidden">
-        <div class="custom-input-wrapper">
-            <textarea id="customInput"
-                placeholder="Paste event text, invitation details, or flyer content here..."></textarea>
+            <!-- Header / toolbar -->
+            <header class="popup-header">
+                <div class="header-row">
+                    <div class="logo-section">
+                        <img class="logo-mark" src="../../assets/icon32.png" alt="Eventy" />
+                        <span class="logo-wordmark">Eventy</span>
+                    </div>
+                    <div class="toolbar-buttons">
+                        <button id="scanBtn" class="toolbar-btn primary" title="Scan this page">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8" />
+                                <path d="M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8" />
+                                <path d="M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16" />
+                                <path d="M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16" />
+                                <path d="M4 12h16" />
+                            </svg>
+                        </button>
+                        <button id="customContextBtn" class="toolbar-btn ghost" title="Paste text">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="6" y="4" width="12" height="16" rx="2" />
+                                <path d="M9 4V3.2A1.2 1.2 0 0 1 10.2 2h3.6A1.2 1.2 0 0 1 15 3.2V4" />
+                                <path d="M9 11h6" />
+                                <path d="M9 15h4" />
+                            </svg>
+                        </button>
+                        <button id="settingsBtn" class="toolbar-btn ghost" title="Settings">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </header>
 
-            <div class="file-input-container">
-                <input type="file" id="mediaInput" multiple accept="image/*" class="hidden-input">
-                <label for="mediaInput" class="file-input-label-icon" title="Add photos">
+            <!-- Empty state — shown until a scan starts or text is pasted -->
+            <div id="emptyState" class="empty-state">
+                <div class="empty-body">
+                    <svg class="empty-doodle" aria-hidden="true" viewBox="0 0 110 84">
+                        <path d="M0 -11 C 1.6 -3.3, 3.3 -1.6, 11 0 C 3.3 1.6, 1.6 3.3, 0 11 C -1.6 3.3, -3.3 1.6, -11 0 C -3.3 -1.6, -1.6 -3.3, 0 -11 Z" transform="translate(36 40) rotate(-8)" fill="#F4842F"/>
+                        <path d="M0 -11 C 1.6 -3.3, 3.3 -1.6, 11 0 C 3.3 1.6, 1.6 3.3, 0 11 C -1.6 3.3, -3.3 1.6, -11 0 C -3.3 -1.6, -1.6 -3.3, 0 -11 Z" transform="translate(76 18) scale(.6)" fill="#F4842F" opacity=".85"/>
+                        <path d="M0 -11 C 1.6 -3.3, 3.3 -1.6, 11 0 C 3.3 1.6, 1.6 3.3, 0 11 C -1.6 3.3, -3.3 1.6, -11 0 C -3.3 -1.6, -1.6 -3.3, 0 -11 Z" transform="translate(72 58) scale(.42)" fill="#E0392B" opacity=".6"/>
+                    </svg>
+                    <div class="empty-hero">
+                        <p class="empty-note">a fresh page &#10038;</p>
+                        <h1 class="empty-title">Nothing scanned yet</h1>
+                        <p class="empty-sub">Eventy reads the page you&rsquo;re on and pulls out any events, like
+                            talks, deadlines and meetups, ready for your calendar.</p>
+                        <button class="empty-cta" id="ev-scan-primary" type="button">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z" />
+                                <path d="M16 8 2 22" />
+                                <path d="M17.5 15H9" />
+                            </svg>
+                            Scan this page
+                        </button>
+                        <p class="empty-or">or <button class="empty-link" id="ev-paste-link" type="button">paste it
+                                in</button></p>
+                    </div>
+                </div>
+                <footer class="empty-foot" id="ev-quota">18 free scans left this week</footer>
+            </div>
+
+            <!-- Custom context section (paste/image) — hidden by default -->
+            <div id="customContextSection" class="custom-context-section hidden">
+                <div class="custom-input-wrapper">
+                    <textarea id="customInput"
+                        placeholder="Paste event text, invitation details, or flyer content here..."></textarea>
+                    <div class="file-input-container">
+                        <input type="file" id="mediaInput" multiple accept="image/*" class="hidden-input">
+                        <label for="mediaInput" class="file-input-label-icon" title="Add photos">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                        </label>
+                    </div>
+                </div>
+                <div id="imagePreviewContainer" class="image-preview-container"></div>
+                <button id="scanMediaBtn" class="scan-media-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                        <polyline points="21 15 16 10 5 21"></polyline>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
                     </svg>
-                </label>
+                    <span>Scan Media</span>
+                </button>
             </div>
-        </div>
 
-        <div id="imagePreviewContainer" class="image-preview-container"></div>
+            <!-- Results section -->
+            <div id="results" class="results-section">
+                <!-- Quota exceeded -->
+                <div id="quotaExceeded" class="quota-exceeded-panel hidden">
+                    <div class="quota-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </div>
+                    <h3 class="quota-title">Daily Limit Reached</h3>
+                    <p class="quota-message">You've used all your free scans for today. Limits reset at midnight UTC.
+                    </p>
+                    <button id="quotaSettingsBtn" class="quota-action-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4">
+                            </path>
+                        </svg>
+                        <span>Use Your Own API Key</span>
+                    </button>
+                </div>
 
-        <button id="scanMediaBtn" class="primary-button">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" y1="3" x2="12" y2="15"></line>
-            </svg>
-            <span>Scan Media</span>
-        </button>
-    </div>
+                <!-- Segmented toggle -->
+                <div class="segment-toggle" id="segmentToggle">
+                    <button class="segment-pill active" data-tab="upcoming" id="tabUpcoming">Upcoming</button>
+                    <button class="segment-pill" data-tab="past" id="tabPast">Past</button>
+                </div>
 
-    <div id="results" class="results-section">
-        <div id="quotaExceeded" class="quota-exceeded-panel hidden">
-            <div class="quota-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
+                <!-- Ruled event lists -->
+                <div class="ruled-list" id="ruledList">
+                    <div id="upcomingEventsList" class="upcoming-list"></div>
+                    <div id="pastEventsList" class="past-list hidden"></div>
+                </div>
+
+                <!-- Week strip -->
+                <div class="week-strip" id="weekStrip"></div>
+
+                <!-- Footer -->
+                <div class="planner-footer" id="plannerFooter">
+                    <div class="footer-selected" id="footerSelected">0 selected</div>
+                    <div class="footer-actions">
+                        <button class="cta-btn" id="addSelectedBtn" disabled>Add to Calendar</button>
+                    </div>
+                </div>
             </div>
-            <h3 class="quota-title">Daily Limit Reached</h3>
-            <p class="quota-message">You've used all your free scans for today. Limits reset at midnight UTC.</p>
-            <button id="quotaSettingsBtn" class="quota-action-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
-                </svg>
-                <span>Use Your Own API Key</span>
-            </button>
-        </div>
-
-        <div id="upcomingEvents" class="events-section">
-            <h2 class="section-title">Upcoming Events</h2>
-            <div id="upcomingEventsList" class="events-list"></div>
-        </div>
-
-        <div id="pastEvents" class="events-section">
-            <h2 class="section-title">Past Events</h2>
-            <div id="pastEventsList" class="events-list"></div>
-        </div>
-
-        <div id="actionButtons" class="action-buttons-container">
-            <button id="addSelectedBtn" class="action-button">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M8 2v4"></path>
-                    <path d="M16 2v4"></path>
-                    <rect width="18" height="18" x="3" y="4" rx="2"></rect>
-                    <path d="M3 10h18"></path>
-                    <path d="M8 14h.01"></path>
-                    <path d="M12 14h.01"></path>
-                    <path d="M16 14h.01"></path>
-                    <path d="M8 18h.01"></path>
-                    <path d="M12 18h.01"></path>
-                    <path d="M16 18h.01"></path>
-                </svg>
-                <span>Add to Calendar</span>
-            </button>
-
         </div>
     </div>
 

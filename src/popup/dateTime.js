@@ -67,6 +67,52 @@ export function isEventPast(event, { now = new Date(), warn = () => { }, error =
     }
 }
 
+export function formatDateHeader(dateStr) {
+    if (!dateStr) return "";
+    try {
+        const d = new Date(`${dateStr}T00:00:00`);
+        if (Number.isNaN(d.getTime())) return dateStr;
+
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        const diffDays = Math.round((target - today) / 86400000);
+
+        if (diffDays === 0) return "Today";
+        if (diffDays === -1) return "Yesterday";
+        if (diffDays === 1) return "Tomorrow";
+
+        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        return `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}`;
+    } catch (_) {
+        return dateStr;
+    }
+}
+
+export function formatTimeOnly(timeStr, timeFormat = "12") {
+    if (!timeStr) return "";
+    const normalized = normalizeTimeStr(timeStr);
+    if (!normalized) return timeStr;
+
+    const parts = normalized.split(":");
+    if (parts.length < 2) return timeStr;
+
+    const hours = parseInt(parts[0], 10);
+    const minutes = parts[1].substring(0, 2);
+
+    if (Number.isNaN(hours)) return timeStr;
+
+    if (timeFormat === "24") {
+        return `${String(hours).padStart(2, "0")}:${minutes}`;
+    }
+
+    const period = hours >= 12 ? "PM" : "AM";
+    let h12 = hours % 12;
+    if (h12 === 0) h12 = 12;
+    return `${h12}:${minutes} ${period}`;
+}
+
 function normalizeTimeStr(timeStr) {
     if (!timeStr) return null;
     const match = timeStr.match(/(\d{1,2})(?::(\d{2}))?(?::(\d{2}))?\s*([AP]M)/i);
