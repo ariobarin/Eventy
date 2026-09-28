@@ -2,9 +2,9 @@
     {
         "title": "Team Sync Meeting",
         "preview": "Team Sync",
-        "startDate": "2025-10-01",
+        "startDate": "2026-06-25",
         "startTime": "09:00",
-        "endDate": "2025-10-01",
+        "endDate": "2026-06-25",
         "endTime": "10:00",
         "location": "Zoom",
         "description": "Weekly team sync. Review progress and blockers.",
@@ -13,9 +13,9 @@
     {
         "title": "Product Launch Webinar",
         "preview": "Launch Webinar",
-        "startDate": "2025-10-03",
+        "startDate": "2026-06-26",
         "startTime": "13:30",
-        "endDate": "2025-10-03",
+        "endDate": "2026-06-26",
         "endTime": "14:30",
         "location": "YouTube Live",
         "description": "Launch overview and live Q&A"
@@ -23,7 +23,7 @@
     {
         "title": "Coffee with Alex",
         "preview": "Coffee w/ Alex",
-        "startDate": "2025-10-05",
+        "startDate": "2026-06-27",
         "startTime": "08:15",
         "location": "Blue Bottle, 3rd St.",
         "description": "Catch-up"
@@ -31,9 +31,9 @@
     {
         "title": "Design Review",
         "preview": "Design Review",
-        "startDate": "2025-10-06",
+        "startDate": "2026-06-28",
         "startTime": "15:00",
-        "endDate": "2025-10-06",
+        "endDate": "2026-06-28",
         "endTime": "16:00",
         "location": "Conference Room B",
         "description": "Review new UI mockups with the design team."
@@ -41,7 +41,7 @@
     {
         "title": "Dentist Appointment",
         "preview": "Dentist",
-        "startDate": "2025-10-07",
+        "startDate": "2026-06-28",
         "startTime": "11:30",
         "location": "Downtown Dental Clinic",
         "description": "Routine cleaning and checkup"
@@ -49,9 +49,9 @@
     {
         "title": "Yoga Class",
         "preview": "Yoga",
-        "startDate": "2025-10-08",
+        "startDate": "2026-06-29",
         "startTime": "18:00",
-        "endDate": "2025-10-08",
+        "endDate": "2026-06-29",
         "endTime": "19:00",
         "location": "Sunrise Yoga Studio",
         "description": "Vinyasa flow class"
@@ -59,7 +59,7 @@
     {
         "title": "Board Game Night",
         "preview": "Board Games",
-        "startDate": "2025-10-09",
+        "startDate": "2026-06-30",
         "startTime": "19:30",
         "location": "Sam's House",
         "description": "Bring your favorite board game!"
@@ -67,9 +67,9 @@
     {
         "title": "Marketing Strategy Session",
         "preview": "Marketing Strategy",
-        "startDate": "2025-10-10",
+        "startDate": "2026-07-01",
         "startTime": "10:00",
-        "endDate": "2025-10-10",
+        "endDate": "2026-07-01",
         "endTime": "12:00",
         "location": "Office 2A",
         "description": "Plan Q4 campaigns"
@@ -77,9 +77,9 @@
     {
         "title": "Parent-Teacher Conference",
         "preview": "Parent-Teacher Conf",
-        "startDate": "2025-10-11",
+        "startDate": "2026-07-02",
         "startTime": "16:00",
-        "endDate": "2025-10-11",
+        "endDate": "2026-07-02",
         "endTime": "16:30",
         "location": "Lincoln Elementary",
         "description": "Discuss progress with Ms. Lee"
@@ -87,9 +87,9 @@
     {
         "title": "Birthday Party: Jamie",
         "preview": "Jamie Birthday",
-        "startDate": "2025-10-12",
+        "startDate": "2026-07-05",
         "startTime": "14:00",
-        "endDate": "2025-10-12",
+        "endDate": "2026-07-05",
         "endTime": "17:00",
         "location": "Central Park, Picnic Area 3",
         "description": "Potluck and games"
