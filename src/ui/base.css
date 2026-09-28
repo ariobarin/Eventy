@@ -107,7 +107,6 @@
     --chip-cell-bg: #fff;
     --chip-cell-text: #29343A;
     --chip-border: rgba(0, 0, 0, .10);
-    --chip-shadow: 0 2px 4px rgba(0, 0, 0, .12);
 
     /* Ghost buttons */
     --ghost-bg: #fff;
@@ -188,7 +187,6 @@
         --chip-cell-bg: #ECEFE8;
         --chip-cell-text: #242B30;
         --chip-border: rgba(255, 255, 255, .08);
-        --chip-shadow: 0 2px 5px rgba(0, 0, 0, .35);
         --ghost-bg: #2C353A;
         --ghost-border: rgba(255, 255, 255, .12);
         --ghost-text: #9AA8A1;
@@ -241,7 +239,6 @@ body.dark-mode:not(.settings-page) {
     --chip-cell-bg: #ECEFE8;
     --chip-cell-text: #242B30;
     --chip-border: rgba(255, 255, 255, .08);
-    --chip-shadow: 0 2px 5px rgba(0, 0, 0, .35);
     --ghost-bg: #2C353A;
     --ghost-border: rgba(255, 255, 255, .12);
     --ghost-text: #9AA8A1;

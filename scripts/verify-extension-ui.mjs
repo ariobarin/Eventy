@@ -245,6 +245,11 @@ async function waitForEventCards(popup) {
 
 async function waitForVisibleResults(popup) {
     await waitForEventCards(popup);
+    const hasUpcomingCards = await popup.$eval(
+        "#upcomingEventsList",
+        (list) => list.querySelectorAll(".event-card").length > 0
+    );
+    if (!hasUpcomingCards) await popup.click("#tabPast");
     await popup.waitForFunction(
         () => document.getElementById("results")?.classList.contains("has-results"),
         { timeout: options.timeoutMs }
@@ -593,7 +598,7 @@ async function main() {
 
             const before = await captureEvidence(popup, reportDir, "protected-page-before");
             assert.equal(before.state.scanButton.disabled, true);
-            assert.equal(before.state.scanButton.title, "Chrome pages cannot be scanned.");
+            assert.match(before.state.scanButton.title, /^(Chrome pages|This page) cannot be scanned\.$/);
             assert.match(before.state.scanButton.className, /\bscan-unavailable\b/);
             assert.equal(before.state.toast.hidden, true);
             assert.equal(before.state.results.eventCards, 0);

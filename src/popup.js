@@ -57,7 +57,6 @@ const tabUpcoming = document.getElementById("tabUpcoming");
 const tabPast = document.getElementById("tabPast");
 const footerSelectedEl = document.getElementById("footerSelected");
 const spiralBindingEl = document.getElementById("spiralBinding");
-const ruledListEl = document.getElementById("ruledList");
 
 const popupSettingsStore = createPopupSettingsStore();
 const ensureSettingsLoaded = popupSettingsStore.ensureSettingsLoaded;
@@ -259,6 +258,7 @@ function updateToggleLabels(upcomingCount, pastCount) {
 // ===========================================
 function transitionToScanning() {
     scanBtn?.classList.add("scanning");
+    applyScanButtonAvailability();
 
     const existingCards = resultsEl?.querySelectorAll(".event-card");
     const hasExistingCards = existingCards && existingCards.length > 0;

@@ -186,20 +186,123 @@ body.auto-mode .toolbar-btn.primary {
 }
 
 /* ===========================================
-   Month section header (group inside the list)
+   Month sticky notes
    =========================================== */
 .month-section-header {
-    font-weight: 800;
-    font-size: 19px;
-    letter-spacing: 1.5px;
+    font-family: 'Kalam', cursive;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0;
+    line-height: 1.1;
     color: var(--ink);
-    margin: 14px 0 4px;
-    padding: 0;
-    text-transform: uppercase;
+    white-space: nowrap;
 }
 
-.month-section-header:first-child {
-    margin-top: 2px;
+.month-section {
+    position: relative;
+    background: var(--note-paper, #FFF1BC);
+    border: 1px solid rgba(74, 67, 41, .08);
+    border-radius: 2px;
+    box-shadow: 2px 3px 0 rgba(52, 59, 55, .08), 2px 5px 9px rgba(52, 59, 55, .12);
+    margin: 10px 2px 16px;
+    padding: 0 12px 10px;
+}
+
+.month-section::before {
+    content: "";
+    position: absolute;
+    top: -5px;
+    right: 22px;
+    width: 38px;
+    height: 10px;
+    background: rgba(255, 255, 255, .52);
+    border: 1px solid rgba(97, 87, 58, .07);
+    transform: rotate(5deg);
+    pointer-events: none;
+}
+
+.month-section::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 17px;
+    height: 17px;
+    background: linear-gradient(135deg, rgba(74, 67, 41, .13) 0 49%, var(--paper) 50%);
+    pointer-events: none;
+}
+
+.month-section[data-note-tone="0"] { --note-paper: #FFF1BC; }
+
+.month-section[data-note-tone="1"] { --note-paper: #DCF0E8; }
+
+.month-section[data-note-tone="2"] { --note-paper: #F9E0D9; }
+
+.month-section[data-note-tone="3"] { --note-paper: #E8E2F5; }
+
+body.dark-mode .month-section {
+    --note-paper: #494337;
+}
+
+body.dark-mode .month-section[data-note-tone="1"] { --note-paper: #334942; }
+
+body.dark-mode .month-section[data-note-tone="2"] { --note-paper: #503C3A; }
+
+body.dark-mode .month-section[data-note-tone="3"] { --note-paper: #403D54; }
+
+@media (prefers-color-scheme: dark) {
+    body.auto-mode .month-section { --note-paper: #494337; }
+
+    body.auto-mode .month-section[data-note-tone="1"] { --note-paper: #334942; }
+
+    body.auto-mode .month-section[data-note-tone="2"] { --note-paper: #503C3A; }
+
+    body.auto-mode .month-section[data-note-tone="3"] { --note-paper: #403D54; }
+}
+
+.month-section-header {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    background: var(--note-paper);
+    border-radius: 2px 2px 0 0;
+    margin: 0 -12px 3px;
+    padding: 11px 12px 12px;
+}
+
+.month-section-header::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: 14px;
+    background: linear-gradient(var(--note-paper), transparent);
+    pointer-events: none;
+}
+
+.month-section-label {
+    display: inline-block;
+    position: relative;
+    transform: rotate(-.7deg);
+    padding: 0 2px;
+    background: linear-gradient(177deg,
+        transparent 56%, rgba(244, 132, 47, .44) 59%,
+        rgba(244, 132, 47, .44) 87%, transparent 91%);
+}
+
+body.dark-mode .month-section-label {
+    background: linear-gradient(177deg,
+        transparent 56%, rgba(255, 169, 86, .36) 59%,
+        rgba(255, 169, 86, .36) 87%, transparent 91%);
+}
+
+@media (prefers-color-scheme: dark) {
+    body.auto-mode .month-section-label {
+        background: linear-gradient(177deg,
+            transparent 56%, rgba(255, 169, 86, .36) 59%,
+            rgba(255, 169, 86, .36) 87%, transparent 91%);
+    }
 }
 
 .month-year {
@@ -248,11 +351,7 @@ body.dark-mode .month-year { color: var(--brand-bright); }
    Ruled event list
    =========================================== */
 .ruled-list {
-    background-image: repeating-linear-gradient(180deg,
-            transparent 0, transparent 31px,
-            var(--ruled-line) 31px, var(--ruled-line) 32px);
-    background-attachment: local;
-    padding: 2px 16px 6px;
+    padding: 0 16px 10px;
     min-height: 120px;
     max-height: 300px;
     overflow-y: auto;
@@ -347,9 +446,6 @@ body.auto-mode .event-card:hover {
 
 .event-card.selected::before { opacity: 1; }
 
-/* on a selected row, drop the per-title swipe (avoid double-marking) */
-.event-card.selected .ev-title-highlight { background: none; }
-
 /* deepen the handwritten meta so it reads over orange */
 .event-card.selected .ev-note { color: #7E3A0F !important; }
 
@@ -381,12 +477,11 @@ body.auto-mode .event-card::before {
     border-radius: 7px;
     overflow: hidden;
     border: 1px solid var(--chip-border);
-    box-shadow: var(--chip-shadow);
     text-align: center;
     flex-shrink: 0;
 }
 
-.date-chip-month {
+.date-chip-weekday {
     color: #fff;
     font-weight: 800;
     font-size: 9px;
@@ -410,14 +505,24 @@ body.auto-mode .event-card::before {
 }
 
 .ev-title {
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
     font-weight: 600;
     font-size: 15px;
     color: var(--ink);
     line-height: 1.25;
 }
 
-.ev-title-highlight {
+.ev-title-sharpie {
+    background:
+        linear-gradient(179.5deg,
+            transparent 81%, var(--ink) 83%,
+            var(--ink) 89%, transparent 91%),
+        linear-gradient(180.3deg,
+            transparent 85%, var(--ink) 87%,
+            var(--ink) 91%, transparent 93%);
     padding: 0 2px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
 }
 
 .ev-note {
@@ -429,6 +534,13 @@ body.auto-mode .event-card::before {
 
 .ev-time {
     font-weight: 700;
+    color: var(--ink);
+    background: linear-gradient(178deg,
+        transparent 3%, var(--time-highlight) 8%,
+        var(--time-highlight) 92%, transparent 97%);
+    padding: 0 3px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
 }
 
 .ev-badge {

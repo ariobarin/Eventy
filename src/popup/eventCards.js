@@ -5,7 +5,7 @@ const EVENT_COLORS = [
     { hex: '#F0479A', ink: '#D62E84', rgba: 'rgba(240,71,154,.38)' },
 ];
 
-const PAST_COLOR = { hex: '#9AA7A0', ink: '#8A968F', rgba: 'rgba(154,167,160,.30)' };
+const PAST_COLOR = { hex: '#9AA7A0', ink: '#8A968F', rgba: 'rgba(154,167,160,.36)' };
 
 let colorIndex = 0;
 
@@ -45,7 +45,7 @@ export function createEventCard(
     const endTime = formatTimeOnly(ev.endTime || '');
     const location = ev.location || '';
     const title = ev.title || 'Untitled';
-    const monthAbbr = formatMonthAbbr(ev.startDate);
+    const weekdayAbbr = formatWeekdayAbbr(ev.startDate);
     const dayNum = formatDayNum(ev.startDate);
 
     // Time range including end time
@@ -56,17 +56,12 @@ export function createEventCard(
 
     // Build note HTML: bold time · location — description
     const noteHtmlParts = [];
-    if (timeRange) noteHtmlParts.push(`<span class="ev-time">${escapeHtml(timeRange)}</span>`);
+    if (timeRange) noteHtmlParts.push(`<span class="ev-time" style="--time-highlight:${c.rgba}">${escapeHtml(timeRange)}</span>`);
     if (location) noteHtmlParts.push(escapeHtml(location));
     let noteHtml = noteHtmlParts.join(' · ');
     if (ev.description && ev.description.length < 40) {
         noteHtml += noteHtml ? ' — ' + escapeHtml(ev.description) : escapeHtml(ev.description);
     }
-
-    // Highlighter swipe on title (for non-past events with color)
-    const titleHtml = !isPast
-        ? `<span class="ev-title-highlight" style="background:linear-gradient(180deg,transparent 52%,${c.rgba} 52%,${c.rgba} 92%,transparent 92%)">${escapeHtml(title)}</span>`
-        : escapeHtml(title);
 
     // Recurrence badge
     const badgeHtml = ev.recurrence
@@ -80,11 +75,11 @@ export function createEventCard(
 
     wrapper.innerHTML = `
         <div class="date-chip">
-            <div class="date-chip-month" style="background:${c.hex}">${escapeHtml(monthAbbr)}</div>
+            <div class="date-chip-weekday" style="background:${c.hex}">${escapeHtml(weekdayAbbr)}</div>
             <div class="date-chip-day">${escapeHtml(dayNum)}</div>
         </div>
         <div class="ev-content">
-            <div class="ev-title">${titleHtml}</div>
+            <div class="ev-title"><span class="ev-title-sharpie">${escapeHtml(title)}</span></div>
             ${noteHtml ? `<div class="ev-note" style="color:${c.ink}">${noteHtml}</div>` : ''}
             ${badgeHtml}${multiDayHtml}
         </div>
@@ -107,13 +102,12 @@ export function createEventCard(
     return wrapper;
 }
 
-function formatMonthAbbr(dateStr) {
+function formatWeekdayAbbr(dateStr) {
     if (!dateStr) return '???';
     try {
         const d = new Date(`${dateStr}T00:00:00`);
         if (isNaN(d.getTime())) return '???';
-        return ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
-            'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'][d.getMonth()];
+        return ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][d.getDay()];
     } catch { return '???'; }
 }
 
@@ -135,8 +129,8 @@ function monthKeyFromEvent(ev) {
     return String(s).slice(0, 7);
 }
 
-function createMonthSectionHeader(ev) {
-    const header = document.createElement('div');
+function createMonthSectionHeader(ev, doc) {
+    const header = doc.createElement('div');
     header.className = 'month-section-header';
     const s = ev?.startDate;
     let label = 'No date';
@@ -144,11 +138,11 @@ function createMonthSectionHeader(ev) {
     if (s) {
         const d = new Date(`${s}T00:00:00`);
         if (!isNaN(d.getTime())) {
-            label = MONTHS_FULL[d.getMonth()].toUpperCase();
+            label = MONTHS_FULL[d.getMonth()];
             yearHtml = ` <span class="month-year">${d.getFullYear()}</span>`;
         }
     }
-    header.innerHTML = `${label}${yearHtml}`;
+    header.innerHTML = `<span class="month-section-label">${label}${yearHtml}</span>`;
     return header;
 }
 
@@ -177,6 +171,8 @@ export async function renderEventLists(
     }
 ) {
     if (!upcomingEventsListEl || !pastEventsListEl) return;
+
+    const doc = upcomingEventsListEl.ownerDocument;
 
     upcomingEventsListEl.innerHTML = '';
     pastEventsListEl.innerHTML = '';
@@ -211,23 +207,37 @@ export async function renderEventLists(
     sortItems(pastEvents, false);
 
     let lastUpcomingKey = null;
+    let upcomingSection = null;
+    let upcomingNoteIndex = 0;
     for (const { event, originalIndex, color } of upcomingEvents) {
         const key = monthKeyFromEvent(event);
         if (key !== lastUpcomingKey) {
-            upcomingEventsListEl.appendChild(createMonthSectionHeader(event));
+            upcomingSection = doc.createElement('section');
+            upcomingSection.className = 'month-section';
+            upcomingSection.dataset.noteTone = String(upcomingNoteIndex % 4);
+            upcomingNoteIndex++;
+            upcomingSection.appendChild(createMonthSectionHeader(event, doc));
+            upcomingEventsListEl.appendChild(upcomingSection);
             lastUpcomingKey = key;
         }
-        upcomingEventsListEl.appendChild(createCard(event, originalIndex, color, false));
+        upcomingSection.appendChild(createCard(event, originalIndex, color, false));
     }
 
     let lastPastKey = null;
+    let pastSection = null;
+    let pastNoteIndex = 0;
     for (const { event, originalIndex, color } of pastEvents) {
         const key = monthKeyFromEvent(event);
         if (key !== lastPastKey) {
-            pastEventsListEl.appendChild(createMonthSectionHeader(event));
+            pastSection = doc.createElement('section');
+            pastSection.className = 'month-section';
+            pastSection.dataset.noteTone = String(pastNoteIndex % 4);
+            pastNoteIndex++;
+            pastSection.appendChild(createMonthSectionHeader(event, doc));
+            pastEventsListEl.appendChild(pastSection);
             lastPastKey = key;
         }
-        pastEventsListEl.appendChild(createCard(event, originalIndex, color, true));
+        pastSection.appendChild(createCard(event, originalIndex, color, true));
     }
 
     updateButtonStates();

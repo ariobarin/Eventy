@@ -35,6 +35,42 @@ test("popup date formatting stays behavior compatible", async () => {
     assert.equal(formatDateTime("not-a-date", "19:30", "12"), "not-a-date 19:30");
 });
 
+test("event chips show weekdays and month sections keep their own cards", async () => {
+    const { createEventCard, renderEventLists } = await import("../src/popup/eventCards.js");
+    const dom = new JSDOM('<div id="upcoming"></div><div id="past"></div>');
+    const doc = dom.window.document;
+    const upcomingEventsListEl = doc.getElementById("upcoming");
+    const pastEventsListEl = doc.getElementById("past");
+    const events = [
+        { title: "October event", startDate: "2026-10-03" },
+        { title: "September event", startDate: "2026-09-29" },
+        { title: "Past event", startDate: "2026-08-17" },
+    ];
+
+    await renderEventLists(events, {
+        upcomingEventsListEl,
+        pastEventsListEl,
+        isEventPast: (event) => event.title === "Past event",
+        createCard: (event, idx, color, isPast) => createEventCard(event, idx, {
+            doc,
+            escapeHtml: (value) => value,
+            formatTimeOnly: (value) => value,
+            color,
+            isPast,
+        }),
+        updateButtonStates: () => {},
+    });
+
+    const upcomingSections = [...upcomingEventsListEl.querySelectorAll(".month-section")];
+    assert.equal(upcomingSections.length, 2);
+    assert.match(upcomingSections[0].querySelector(".month-section-header").textContent, /September 2026/);
+    assert.equal(upcomingSections[0].querySelector(".date-chip-weekday").textContent, "TUE");
+    assert.equal(upcomingSections[0].querySelector(".date-chip-day").textContent, "29");
+    assert.match(upcomingSections[1].querySelector(".month-section-header").textContent, /October 2026/);
+    assert.equal(upcomingSections[1].querySelector(".date-chip-weekday").textContent, "SAT");
+    assert.equal(pastEventsListEl.querySelector(".month-section .date-chip-weekday").textContent, "MON");
+});
+
 test("popup toast module preserves visible and hidden states", async () => {
     const { showToast, hideToast } = await import("../src/popup/toast.js");
     const dom = new JSDOM(`
