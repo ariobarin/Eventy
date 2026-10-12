@@ -139,3 +139,89 @@ test("popup scan poller completes from fresh URL results", async () => {
     await timeoutIds[0]();
     assert.deepEqual(completed.events, storedEvents);
 });
+
+test("popup scan poller keeps waiting past 30 seconds and accepts a ready result at its deadline", async () => {
+    const { createScanPoller } = await import("../src/popup/scanPolling.js");
+    const scheduled = [];
+    const warnings = [];
+    let now = 31_000;
+    let completed = null;
+    let failures = 0;
+    const poller = createScanPoller({
+        storage: {
+            async get() {
+                return {
+                    "eventy-scan:https://example.test": now >= 80_000
+                        ? { events: [{ title: "Late event" }], ts: now }
+                        : undefined,
+                    "eventy-scanning:https://example.test": { startTime: 0 },
+                };
+            },
+        },
+        nowFn: () => now,
+        setTimeoutFn: (callback) => {
+            scheduled.push(callback);
+            return scheduled.length;
+        },
+        warn: (message) => warnings.push(message),
+    });
+
+    await poller.pollForResults(
+        "https://example.test",
+        null,
+        (result) => { completed = result; },
+        () => { failures++; },
+        { minimumResultTs: 0, startedAt: 0 }
+    );
+
+    await scheduled.shift()();
+    assert.equal(failures, 0);
+    assert.equal(scheduled.length, 1);
+
+    now = 80_000;
+    await scheduled.shift()();
+    assert.equal(completed.events[0].title, "Late event");
+    assert.equal(failures, 0);
+    assert.deepEqual(warnings, []);
+});
+
+test("deferred scan poller waits for a slow scan to finish", async () => {
+    const { createScanPoller } = await import("../src/popup/scanPolling.js");
+    const scheduled = [];
+    const removed = [];
+    let now = 31_000;
+    let completed = null;
+    let failures = 0;
+    const storageKey = "eventy-highlight-results";
+    const poller = createScanPoller({
+        storage: {
+            async get() {
+                return { [storageKey]: now >= 62_000
+                    ? { status: "complete", events: [{ title: "Late highlight" }] }
+                    : { status: "scanning", ts: 0 } };
+            },
+            async remove(key) { removed.push(key); },
+        },
+        nowFn: () => now,
+        setTimeoutFn: (callback) => {
+            scheduled.push(callback);
+            return scheduled.length;
+        },
+    });
+
+    await poller.pollForResults(null, storageKey,
+        (result) => { completed = result; },
+        () => { failures++; },
+        { startedAt: 0 }
+    );
+
+    await scheduled.shift()();
+    assert.equal(failures, 0);
+    assert.equal(scheduled.length, 1);
+
+    now = 62_000;
+    await scheduled.shift()();
+    assert.equal(completed.events[0].title, "Late highlight");
+    assert.deepEqual(removed, [storageKey]);
+    assert.equal(failures, 0);
+});

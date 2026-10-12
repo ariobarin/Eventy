@@ -83,7 +83,6 @@
     --brand-bright: #FF9A52;
 
     /* Desk & Page */
-    --desk: linear-gradient(155deg, #B0BFB4, #96AA9C 65%, #869a8d);
     --paper: #FAF7EE;
     --ruled-line: rgba(122, 150, 168, .28);
 
@@ -94,10 +93,8 @@
 
     /* Controls */
     --tab-track: #ECE7DA;
-    --tab-active: #fff;
-    --tab-active-text: #29343A;
     --tab-inactive-text: #94A097;
-    --tab-shadow: 0 1px 2px rgba(0, 0, 0, .12);
+    --tab-highlight: rgba(244, 132, 47, .38);
 
     /* Checkbox */
     --checkbox-bg: #fff;
@@ -123,27 +120,12 @@
     --footer-text: #41514A;
     --footer-muted: #7E8A82;
 
-    /* Page shadows */
-    --page-shadow: 0 16px 30px rgba(35, 50, 45, .30), 0 3px 8px rgba(0, 0, 0, .18);
+    /* Button shadow */
     --cta-shadow: 0 2px 0 rgba(0, 0, 0, .20);
-
-    /* Week strip */
-    --week-divider: 1px dashed rgba(122, 150, 168, .45);
-    --weekday-text: #9AA7A0;
-    --sunday-text: #C5908F;
-
-    /* Coil gradient */
-    --coil-gradient: linear-gradient(180deg, #ffc287 0%, #f4842f 45%, #c25e15 100%);
-    --coil-shadow: inset -1.5px 0 1.5px rgba(255, 255, 255, .75),
-        inset 1.5px 0 2px rgba(0, 0, 0, .25),
-        0 2px 3px rgba(0, 0, 0, .22);
 
     /* Badge */
     --badge-text: #7E8A82;
     --badge-border: #CBD3CC;
-
-    /* Desk inset */
-    --desk-inset: inset 0 1px 0 rgba(255, 255, 255, .22);
 
     /* Past opacity */
     --past-opacity: .72;
@@ -171,17 +153,14 @@
    =========================================== */
 @media (prefers-color-scheme: dark) {
     body.auto-mode:not(.settings-page) {
-        --desk: linear-gradient(155deg, #232B2F, #1A2023 65%, #141A1C);
         --paper: #232B2F;
         --ruled-line: rgba(255, 255, 255, .07);
         --ink: #EAEEEA;
         --ink-muted: #8C9A93;
         --ink-secondary: #7E8C85;
         --tab-track: #2C353A;
-        --tab-active: #3C474D;
-        --tab-active-text: #EAEEEA;
         --tab-inactive-text: #7E8C85;
-        --tab-shadow: 0 1px 2px rgba(0, 0, 0, .3);
+        --tab-highlight: rgba(255, 154, 82, .42);
         --checkbox-bg: #2A3338;
         --checkbox-border: rgba(255, 255, 255, .22);
         --chip-cell-bg: #ECEFE8;
@@ -196,17 +175,9 @@
         --footer-border: rgba(255, 255, 255, .10);
         --footer-text: #BFC9C3;
         --footer-muted: #8C9A93;
-        --page-shadow: 0 16px 32px rgba(0, 0, 0, .55), 0 3px 8px rgba(0, 0, 0, .4);
         --cta-shadow: 0 2px 0 rgba(0, 0, 0, .35);
-        --week-divider: 1px dashed rgba(255, 255, 255, .12);
-        --weekday-text: #7E8C85;
-        --coil-gradient: linear-gradient(180deg, #ffb877, #f4842f, #b0530f);
-        --coil-shadow: inset -1.5px 0 1.5px rgba(255, 255, 255, .55),
-            inset 1.5px 0 2px rgba(0, 0, 0, .4),
-            0 2px 4px rgba(0, 0, 0, .45);
         --badge-text: #8C9A93;
         --badge-border: rgba(255, 255, 255, .16);
-        --desk-inset: inset 0 1px 0 rgba(255, 255, 255, .06);
         --past-opacity: .6;
         --brand-bright: #FF9A52;
         --bg: #171717;
@@ -223,17 +194,14 @@
 }
 
 body.dark-mode:not(.settings-page) {
-    --desk: linear-gradient(155deg, #232B2F, #1A2023 65%, #141A1C);
     --paper: #232B2F;
     --ruled-line: rgba(255, 255, 255, .07);
     --ink: #EAEEEA;
     --ink-muted: #8C9A93;
     --ink-secondary: #7E8C85;
     --tab-track: #2C353A;
-    --tab-active: #3C474D;
-    --tab-active-text: #EAEEEA;
     --tab-inactive-text: #7E8C85;
-    --tab-shadow: 0 1px 2px rgba(0, 0, 0, .3);
+    --tab-highlight: rgba(255, 154, 82, .42);
     --checkbox-bg: #2A3338;
     --checkbox-border: rgba(255, 255, 255, .22);
     --chip-cell-bg: #ECEFE8;
@@ -248,17 +216,9 @@ body.dark-mode:not(.settings-page) {
     --footer-border: rgba(255, 255, 255, .10);
     --footer-text: #BFC9C3;
     --footer-muted: #8C9A93;
-    --page-shadow: 0 16px 32px rgba(0, 0, 0, .55), 0 3px 8px rgba(0, 0, 0, .4);
     --cta-shadow: 0 2px 0 rgba(0, 0, 0, .35);
-    --week-divider: 1px dashed rgba(255, 255, 255, .12);
-    --weekday-text: #7E8C85;
-    --coil-gradient: linear-gradient(180deg, #ffb877, #f4842f, #b0530f);
-    --coil-shadow: inset -1.5px 0 1.5px rgba(255, 255, 255, .55),
-        inset 1.5px 0 2px rgba(0, 0, 0, .4),
-        0 2px 4px rgba(0, 0, 0, .45);
     --badge-text: #8C9A93;
     --badge-border: rgba(255, 255, 255, .16);
-    --desk-inset: inset 0 1px 0 rgba(255, 255, 255, .06);
     --past-opacity: .6;
     --brand-bright: #FF9A52;
     --bg: #171717;

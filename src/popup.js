@@ -7,8 +7,6 @@ import { buildModelInput } from "./llm/preprocess.js";
 import { preprocessForPopup } from "./utils/scan.js";
 import { getRequiredTabScanBlockReason, isTabScanAccessError } from "./utils/tabAccess.js";
 import {
-    CARD_FADE_DURATION_MS,
-    CARD_STAGGER_DELAY_MS,
     HIGHLIGHT_RESULTS_KEY,
     IDLE_STATE_CLEANUP_DELAY_MS,
     IMAGE_RESULTS_KEY,
@@ -17,8 +15,6 @@ import {
     KEY_CUSTOM_VIEW_ACTIVE,
     RESULTS_BUTTON_APPEAR_DELAY_MS,
     SCAN_AVAILABILITY_CHECKING_MESSAGE,
-    SKELETON_FADE_DURATION_MS,
-    SKELETON_STAGGER_DELAY_MS,
     UI_STATE,
 } from "./popup/constants.js";
 import { loadCache, saveCache } from "./popup/cacheStore.js";
@@ -31,7 +27,6 @@ import {
     renderEventLists,
     restoreSelection as restoreEventSelection,
     scrollToCard,
-    resetColorIndex,
 } from "./popup/eventCards.js";
 import { createScanPoller } from "./popup/scanPolling.js";
 import { createPopupSettingsStore } from "./popup/settingsStore.js";
@@ -44,6 +39,7 @@ import { hideToast, showToast } from "./popup/toast.js";
 const scanBtn = document.getElementById("scanBtn");
 const upcomingEventsListEl = document.getElementById("upcomingEventsList");
 const pastEventsListEl = document.getElementById("pastEventsList");
+const ruledListEl = document.getElementById("ruledList");
 const resultsEl = document.getElementById("results");
 const addSelectedBtn = document.getElementById("addSelectedBtn");
 
@@ -56,26 +52,12 @@ const scanMediaBtn = document.getElementById("scanMediaBtn");
 const tabUpcoming = document.getElementById("tabUpcoming");
 const tabPast = document.getElementById("tabPast");
 const footerSelectedEl = document.getElementById("footerSelected");
-const spiralBindingEl = document.getElementById("spiralBinding");
 
 const popupSettingsStore = createPopupSettingsStore();
 const ensureSettingsLoaded = popupSettingsStore.ensureSettingsLoaded;
 const getTimeFormatPreference = popupSettingsStore.getTimeFormatPreference;
 
 ensureSettingsLoaded();
-
-// ===========================================
-// Generate spiral coils
-// ===========================================
-function generateSpiral() {
-    if (!spiralBindingEl) return;
-    for (let i = 0; i < 18; i++) {
-        const coil = document.createElement("div");
-        coil.className = "coil";
-        spiralBindingEl.appendChild(coil);
-    }
-}
-generateSpiral();
 
 // ===========================================
 // Restore persistent state
@@ -131,10 +113,13 @@ function applyScanButtonAvailability() {
         ? reason
         : isChecking
             ? SCAN_AVAILABILITY_CHECKING_MESSAGE
-            : "Scan this page";
+            : isBusy
+                ? "Scanning page…"
+                : "Scan this page";
 
     scanBtn.disabled = isBusy || isUnavailable || isChecking;
     scanBtn.title = title;
+    scanBtn.setAttribute("aria-busy", String(isBusy));
     scanBtn.classList.toggle("scan-unavailable", isUnavailable || isChecking);
 }
 
@@ -169,61 +154,14 @@ function switchTab(tab) {
     activeTab = tab;
     tabUpcoming?.classList.toggle("active", tab === "upcoming");
     tabPast?.classList.toggle("active", tab === "past");
+    tabUpcoming?.setAttribute("aria-pressed", String(tab === "upcoming"));
+    tabPast?.setAttribute("aria-pressed", String(tab === "past"));
     upcomingEventsListEl?.classList.toggle("hidden", tab !== "upcoming");
     pastEventsListEl?.classList.toggle("hidden", tab !== "past");
 }
 
 tabUpcoming?.addEventListener("click", () => switchTab("upcoming"));
 tabPast?.addEventListener("click", () => switchTab("past"));
-
-// ===========================================
-// Week strip
-// ===========================================
-function updateWeekStrip(events) {
-    const weekStripEl = document.getElementById("weekStrip");
-    if (!weekStripEl) return;
-    weekStripEl.innerHTML = "";
-
-    // Find the Monday of the current week
-    const now = new Date();
-    const dayOfWeek = now.getDay();
-    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + mondayOffset);
-
-    const dayLetters = ["M", "T", "W", "T", "F", "S", "S"];
-
-    // Build a map of date -> color for events this week
-    const dateColorMap = {};
-    if (events) {
-        const allCards = resultsEl?.querySelectorAll(".event-card");
-        if (allCards) {
-            allCards.forEach(c => {
-                const idx = Number(c.dataset.idx);
-                const ev = events[idx];
-                if (ev?.startDate && c.dataset.color) {
-                    dateColorMap[ev.startDate] = c.dataset.color;
-                }
-            });
-        }
-    }
-
-    for (let i = 0; i < 7; i++) {
-        const d = new Date(monday);
-        d.setDate(monday.getDate() + i);
-        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-        const isSunday = d.getDay() === 0;
-        const dotColor = dateColorMap[dateStr];
-
-        const col = document.createElement("div");
-        col.className = "week-day";
-        col.innerHTML = `
-            <div class="week-day-letter">${dayLetters[i]}</div>
-            <div class="week-day-num${isSunday ? ' sunday' : ''}">${d.getDate()}</div>
-            <div class="week-dot-container">${dotColor ? `<div class="week-dot" style="background:${dotColor}"></div>` : ''}</div>
-        `;
-        weekStripEl.appendChild(col);
-    }
-}
 
 // ===========================================
 // Footer update
@@ -259,33 +197,11 @@ function updateToggleLabels(upcomingCount, pastCount) {
 function transitionToScanning() {
     scanBtn?.classList.add("scanning");
     applyScanButtonAvailability();
-
-    const existingCards = resultsEl?.querySelectorAll(".event-card");
-    const hasExistingCards = existingCards && existingCards.length > 0;
-
     resultsEl?.classList.remove("has-results");
     resultsEl?.classList.add("open", "scanning");
-
-    if (hasExistingCards) {
-        const allItems = resultsEl?.querySelectorAll(".event-card") || [];
-        allItems.forEach((el, i) => {
-            setTimeout(() => {
-                el.style.transition = `opacity ${CARD_FADE_DURATION_MS}ms ease, transform ${CARD_FADE_DURATION_MS}ms ease`;
-                el.style.opacity = "0";
-                el.style.transform = "scale(0.95)";
-            }, i * CARD_STAGGER_DELAY_MS);
-        });
-
-        setTimeout(() => {
-            if (upcomingEventsListEl) upcomingEventsListEl.innerHTML = "";
-            if (pastEventsListEl) pastEventsListEl.innerHTML = "";
-            showSkeletonCards();
-        }, CARD_FADE_DURATION_MS + existingCards.length * CARD_STAGGER_DELAY_MS);
-    } else {
-        if (upcomingEventsListEl) upcomingEventsListEl.innerHTML = "";
-        if (pastEventsListEl) pastEventsListEl.innerHTML = "";
-        requestAnimationFrame(() => showSkeletonCards());
-    }
+    if (upcomingEventsListEl) upcomingEventsListEl.innerHTML = "";
+    if (pastEventsListEl) pastEventsListEl.innerHTML = "";
+    if (ruledListEl) ruledListEl.scrollTop = 0;
 }
 
 function setState(newState) {
@@ -397,40 +313,6 @@ function formatTimeOnly(timeStr) {
 }
 
 // ===========================================
-// Skeleton cards
-// ===========================================
-function createSkeletonRow(delay) {
-    const row = document.createElement("div");
-    row.className = "skeleton-row";
-    row.style.animationDelay = `${delay}ms`;
-    row.innerHTML = `
-        <div class="skeleton-checkbox"></div>
-        <div class="skeleton-chip"></div>
-        <div class="skeleton-content">
-            <div class="skeleton-line title"></div>
-            <div class="skeleton-line note"></div>
-        </div>
-    `;
-    return row;
-}
-
-function showSkeletonCards() {
-    // Show skeletons in whichever list is active
-    const targetEl = activeTab === "upcoming" ? upcomingEventsListEl : pastEventsListEl;
-    if (!targetEl) return;
-
-    // Also make sure the active list is visible
-    upcomingEventsListEl?.classList.toggle("hidden", activeTab !== "upcoming");
-    pastEventsListEl?.classList.toggle("hidden", activeTab !== "past");
-
-    targetEl.innerHTML = "";
-    for (let i = 0; i < 3; i++) {
-        targetEl.appendChild(createSkeletonRow(i * 80));
-    }
-
-}
-
-// ===========================================
 // Settings & navigation buttons
 // ===========================================
 settingsBtn?.addEventListener("click", () => {
@@ -512,7 +394,7 @@ async function handleScan() {
             return;
         }
 
-        transitionFromSkeletonsToResults(events);
+        transitionFromWritingToResults(events);
         await saveCache(url, events, []);
 
         if (tab?.id && events.length > 0) {
@@ -578,37 +460,20 @@ async function renderEvents(events) {
 
     if (result) {
         updateToggleLabels(result.upcomingCount, result.pastCount);
-        updateWeekStrip(events);
     }
 }
 
-function transitionFromSkeletonsToResults(events) {
+async function transitionFromWritingToResults(events) {
     if (!upcomingEventsListEl) return;
 
-    const skeletons = resultsEl.querySelectorAll(".skeleton-row");
-    skeletons.forEach((skeleton, i) => {
-        setTimeout(() => {
-            skeleton.style.transition = `opacity ${SKELETON_FADE_DURATION_MS}ms ease, transform ${SKELETON_FADE_DURATION_MS}ms ease`;
-            skeleton.style.opacity = "0";
-            skeleton.style.transform = "scale(0.95)";
-        }, i * SKELETON_STAGGER_DELAY_MS);
-    });
-
-    setTimeout(async () => {
-        try {
-            upcomingEventsListEl.innerHTML = "";
-            if (pastEventsListEl) pastEventsListEl.innerHTML = "";
-            await renderEvents(events);
-
-            // Switch to upcoming tab
-            switchTab("upcoming");
-
-            setState(UI_STATE.RESULTS_LOADED);
-        } catch (e) {
-            error("Failed to render events:", e);
-            setState(UI_STATE.IDLE);
-        }
-    }, SKELETON_FADE_DURATION_MS + skeletons.length * SKELETON_STAGGER_DELAY_MS);
+    try {
+        await renderEvents(events);
+        switchTab("upcoming");
+        setState(UI_STATE.RESULTS_LOADED);
+    } catch (e) {
+        error("Failed to render events:", e);
+        setState(UI_STATE.IDLE);
+    }
 }
 
 function persistSelection(events) {
@@ -832,7 +697,7 @@ scanMediaBtn?.addEventListener("click", async () => {
             return;
         }
 
-        transitionFromSkeletonsToResults(events);
+        transitionFromWritingToResults(events);
     } catch (e) {
         error(e);
         const errorStr = e.message || String(e);
@@ -898,12 +763,12 @@ async function checkForInProgressScan() {
                 if (cached.events.length === 0) {
                     setState(UI_STATE.IDLE);
                 } else {
-                    transitionFromSkeletonsToResults(cached.events);
+                    transitionFromWritingToResults(cached.events);
                     restoreSelection(cached.selected);
                 }
             },
             () => setState(UI_STATE.IDLE),
-            { minimumResultTs: isScanning.startTime }
+            { minimumResultTs: isScanning.startTime, startedAt: isScanning.startTime }
         );
 
         return true;
@@ -925,7 +790,7 @@ function displayDeferredResults(events) {
         setState(UI_STATE.IDLE);
         return false;
     }
-    transitionFromSkeletonsToResults(events);
+    transitionFromWritingToResults(events);
     return true;
 }
 
@@ -941,7 +806,8 @@ async function tryLoadDeferredResults(storageKey) {
                 null,
                 storageKey,
                 (stored) => displayDeferredResults(stored.events),
-                () => setState(UI_STATE.IDLE)
+                () => setState(UI_STATE.IDLE),
+                { startedAt: stored.ts }
             );
             return true;
         }

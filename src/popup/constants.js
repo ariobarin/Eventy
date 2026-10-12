@@ -1,8 +1,3 @@
-export const CARD_FADE_DURATION_MS = 150;
-export const CARD_STAGGER_DELAY_MS = 20;
-export const SKELETON_FADE_DURATION_MS = 200;
-export const SKELETON_STAGGER_DELAY_MS = 30;
-export const SKELETON_APPEARANCE_STAGGER_MS = 80;
 export const RESULTS_BUTTON_APPEAR_DELAY_MS = 50;
 export const IDLE_STATE_CLEANUP_DELAY_MS = 400;
 
@@ -13,7 +8,7 @@ export const SCAN_POLL_INITIAL_INTERVAL_MS = 200;
 export const SCAN_POLL_MAX_INTERVAL_MS = 1000;
 export const SCAN_POLL_BACKOFF_MULTIPLIER = 1.5;
 export const SCAN_POLL_MAX_ATTEMPTS = 150;
-export const SCAN_POLL_TIMEOUT_MS = 30000;
+export const SCAN_POLL_TIMEOUT_MS = 75000;
 
 export const DEFAULT_POPUP_SETTINGS = Object.freeze({
     timeFormat: "12",

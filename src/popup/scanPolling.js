@@ -32,7 +32,7 @@ export function createScanPoller({
     async function pollForResults(url, storageKey, onComplete, onError, options = {}) {
         let currentInterval = SCAN_POLL_INITIAL_INTERVAL_MS;
         let attempts = 0;
-        const startTime = nowFn();
+        const startTime = Number.isFinite(options.startedAt) ? options.startedAt : nowFn();
         const isDeferred = !url;
 
         const cleanup = () => {
@@ -43,18 +43,6 @@ export function createScanPoller({
         const poll = async () => {
             try {
                 attempts++;
-                const elapsedTime = nowFn() - startTime;
-
-                if (attempts >= SCAN_POLL_MAX_ATTEMPTS || elapsedTime >= SCAN_POLL_TIMEOUT_MS) {
-                    warn(`[Eventy] Polling timeout after ${attempts} attempts (${elapsedTime}ms)`);
-                    cleanup();
-                    if (isDeferred) {
-                        await storage.remove(storageKey);
-                    }
-                    onError();
-                    return;
-                }
-
                 let isReady = false;
                 let resultData = null;
 
@@ -63,6 +51,7 @@ export function createScanPoller({
                     const stored = result[storageKey];
 
                     if (!stored) {
+                        cleanup();
                         onError();
                         return;
                     }
@@ -73,9 +62,9 @@ export function createScanPoller({
                         await storage.remove(storageKey);
                     } else if (stored.status === "error") {
                         await storage.remove(storageKey);
+                        cleanup();
                         if (isRateLimitMessage(stored)) {
                             onQuotaExceeded();
-                            cleanup();
                             return;
                         }
                         onError();
@@ -102,6 +91,17 @@ export function createScanPoller({
                 if (isReady) {
                     cleanup();
                     onComplete(resultData);
+                    return;
+                }
+
+                const elapsedTime = nowFn() - startTime;
+                if (attempts >= SCAN_POLL_MAX_ATTEMPTS || elapsedTime >= SCAN_POLL_TIMEOUT_MS) {
+                    warn(`[Eventy] Polling timeout after ${attempts} attempts (${elapsedTime}ms)`);
+                    cleanup();
+                    if (isDeferred) {
+                        await storage.remove(storageKey);
+                    }
+                    onError();
                     return;
                 }
 

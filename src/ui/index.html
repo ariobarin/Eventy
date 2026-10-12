@@ -10,14 +10,9 @@
 </head>
 
 <body class="auto-mode theme-loading">
-    <div class="desk-mat">
-        <!-- Spiral binding -->
-        <div class="spiral-binding" id="spiralBinding"></div>
-
+    <div class="notebook-shell">
         <!-- Page -->
         <div class="planner-page">
-            <div class="page-top-shadow"></div>
-
             <!-- Header / toolbar -->
             <header class="popup-header">
                 <div class="header-row">
@@ -143,18 +138,34 @@
 
                 <!-- Segmented toggle -->
                 <div class="segment-toggle" id="segmentToggle">
-                    <button class="segment-pill active" data-tab="upcoming" id="tabUpcoming">Upcoming</button>
-                    <button class="segment-pill" data-tab="past" id="tabPast">Past</button>
+                    <button class="segment-pill active" data-tab="upcoming" id="tabUpcoming" aria-pressed="true">Upcoming</button>
+                    <button class="segment-pill" data-tab="past" id="tabPast" aria-pressed="false">Past</button>
                 </div>
 
                 <!-- Month notes -->
                 <div class="ruled-list" id="ruledList">
+                    <div class="writing-loader" id="writingLoader" role="status" aria-live="polite">
+                        <svg class="writing-scene" viewBox="0 -30 260 200" aria-hidden="true">
+                            <g class="writing-marks">
+                                <path class="writing-mark writing-mark-one" d="M30 45 C36 36 39 52 45 43 S56 35 63 43 S75 50 83 42 S96 37 104 43 S117 49 125 42 S138 36 146 43 S159 48 167 42 S180 37 188 43 S201 47 210 42" />
+                                <path class="writing-mark writing-mark-two" d="M30 79 C37 70 41 87 49 78 S62 71 70 79 S83 85 91 77 S104 72 112 79 S125 84 133 76 S146 73 154 79 S168 84 177 77 S186 73 191 79" />
+                                <path class="writing-mark writing-mark-three" d="M30 113 C38 104 42 121 50 112 S63 104 72 113 S85 119 94 111 S107 106 116 113 S129 119 138 111 S151 106 160 113 S173 119 182 111 S196 106 205 113" />
+                            </g>
+                            <g class="writing-quill">
+                                <g transform="scale(.75)">
+                                    <path class="writing-shaft" d="M0 0 C1 -5 3 -12 7 -20 L10 -22 L11 -18 C9 -12 5 -4 0 0 Z" />
+                                    <path class="writing-feather" d="M8 -12 C1 -17 -3 -25 -2 -34 L0 -31 C-3 -41 2 -50 8 -56 L9 -51 C14 -62 25 -70 36 -73 C32 -67 29 -60 27 -53 L31 -57 C29 -45 25 -36 21 -29 L24 -32 C20 -22 15 -15 8 -12 Z" />
+                                    <path class="writing-feather-shade" d="M8 -12 C15 -26 23 -53 36 -73 C32 -59 26 -38 19 -25 C15 -18 11 -14 8 -12 Z" />
+                                    <path class="writing-feather-barbs" d="M-1 -33 L3 -25 M8 -56 L11 -49 M28 -53 L23 -47 M22 -30 L18 -27" />
+                                    <path class="writing-feather-spine" d="M5 -7 C8 -27 18 -55 36 -73" />
+                                </g>
+                            </g>
+                        </svg>
+                        <p class="writing-caption">Writing your agenda…</p>
+                    </div>
                     <div id="upcomingEventsList" class="upcoming-list"></div>
                     <div id="pastEventsList" class="past-list hidden"></div>
                 </div>
-
-                <!-- Week strip -->
-                <div class="week-strip" id="weekStrip"></div>
 
                 <!-- Footer -->
                 <div class="planner-footer" id="plannerFooter">

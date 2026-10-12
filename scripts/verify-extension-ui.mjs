@@ -387,6 +387,7 @@ async function collectPopupState(popup) {
                     },
                     eventCards: document.querySelectorAll(".event-card").length,
                     skeletonCards: document.querySelectorAll(".skeleton-row").length,
+                    writingLoaderVisible: getComputedStyle(document.getElementById("writingLoader")).display !== "none",
                     upcomingCards: document.querySelectorAll("#upcomingEventsList .event-card").length,
                     pastCards: document.querySelectorAll("#pastEventsList .event-card").length,
                     selectedCards: document.querySelectorAll(".event-card.selected").length,
@@ -608,6 +609,7 @@ async function main() {
             const after = await captureEvidence(popup, reportDir, "protected-page-after-click");
             assert.equal(after.state.toast.hidden, true);
             assert.equal(after.state.results.skeletonCards, 0);
+            assert.equal(after.state.results.writingLoaderVisible, false);
             assert.ok(
                 Math.abs(after.state.body.scrollHeight - before.state.body.scrollHeight) <= 2,
                 "blocked-page popup height should stay stable"
@@ -655,12 +657,13 @@ async function main() {
 
             await popup.click("#scanBtn");
             await popup.waitForFunction(
-                () => document.querySelectorAll(".skeleton-row").length > 0,
+                () => getComputedStyle(document.getElementById("writingLoader")).display !== "none",
                 { timeout: options.timeoutMs }
             );
             const scanning = await captureEvidence(popup, reportDir, "page-scan-scanning");
             assert.equal(scanning.state.scanButton.disabled, true);
-            assert.ok(scanning.state.results.skeletonCards > 0);
+            assert.equal(scanning.state.results.writingLoaderVisible, true);
+            assert.equal(scanning.state.results.skeletonCards, 0);
 
             await waitForVisibleResults(popup);
             const resultsEvidence = await captureEvidence(popup, reportDir, "page-scan-results");

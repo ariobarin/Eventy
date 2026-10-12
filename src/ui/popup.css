@@ -1,5 +1,5 @@
 /* ===========================================
-   Popup body — spiral planner
+   Popup body — agenda planner
    =========================================== */
 body:not(.settings-page) {
     width: 428px;
@@ -7,41 +7,15 @@ body:not(.settings-page) {
     min-height: 80px;
     max-height: 660px;
     overflow: hidden;
-    background: var(--desk);
+    background: var(--paper);
     position: relative;
 }
 
 /* ===========================================
-   Desk mat
+   Notebook shell
    =========================================== */
-.desk-mat {
-    padding: 24px;
+.notebook-shell {
     position: relative;
-}
-
-/* ===========================================
-   Spiral binding — row of coils across top
-   =========================================== */
-.spiral-binding {
-    position: absolute;
-    top: 12px;
-    left: 24px;
-    right: 24px;
-    display: flex;
-    justify-content: center;
-    gap: 7px;
-    z-index: 3;
-    pointer-events: none;
-}
-
-.coil {
-    width: 12px;
-    height: 25px;
-    border-radius: 6px;
-    background: var(--coil-gradient);
-    transform: rotate(22deg);
-    box-shadow: var(--coil-shadow);
-    flex-shrink: 0;
 }
 
 /* ===========================================
@@ -50,32 +24,15 @@ body:not(.settings-page) {
 .planner-page {
     position: relative;
     background: var(--paper);
-    border-radius: 4px;
+    border-radius: 0;
     overflow: hidden;
-    box-shadow: var(--page-shadow);
-}
-
-.page-top-shadow {
-    height: 14px;
-    background: linear-gradient(180deg, rgba(0, 0, 0, .06), rgba(0, 0, 0, 0));
-}
-
-body.dark-mode .page-top-shadow,
-body.auto-mode .page-top-shadow {
-    background: linear-gradient(180deg, rgba(0, 0, 0, .30), rgba(0, 0, 0, 0));
-}
-
-@media (prefers-color-scheme: dark) {
-    body.auto-mode .page-top-shadow {
-        background: linear-gradient(180deg, rgba(0, 0, 0, .30), rgba(0, 0, 0, 0));
-    }
 }
 
 /* ===========================================
    Header / toolbar
    =========================================== */
 .popup-header {
-    padding: 6px 16px 0;
+    padding: 14px 16px 0;
 }
 
 .header-row {
@@ -156,28 +113,17 @@ body.auto-mode .toolbar-btn.primary {
 }
 
 .toolbar-btn.scanning {
-    position: relative;
-    color: transparent;
     pointer-events: none;
-}
-
-.toolbar-btn.scanning::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 14px;
-    height: 14px;
-    border: 2px solid rgba(255, 255, 255, .25);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: spin 0.8s cubic-bezier(0.4, 0.2, 0.2, 1) infinite;
+    cursor: progress;
 }
 
 .toolbar-btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+}
+
+.toolbar-btn.scanning:disabled {
+    cursor: progress;
 }
 
 .toolbar-btn.scan-unavailable {
@@ -316,35 +262,49 @@ body.dark-mode .month-year { color: var(--brand-bright); }
 }
 
 /* ===========================================
-   Segmented toggle
+   Handwritten agenda tabs
    =========================================== */
 .segment-toggle {
     display: inline-flex;
-    margin: 12px 16px 0;
-    background: var(--tab-track);
-    border-radius: 16px;
-    padding: 3px;
+    align-items: baseline;
+    gap: 15px;
+    margin: 13px 16px 1px;
+    padding: 0 2px;
 }
 
 .segment-pill {
+    position: relative;
     font-weight: 700;
-    font-size: 11px;
-    letter-spacing: .8px;
-    text-transform: uppercase;
-    padding: 5px 14px;
-    border-radius: 13px;
+    font-size: 16px;
+    line-height: 1.2;
+    letter-spacing: 0;
+    padding: 3px 4px 5px;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: color var(--transition-fast), background var(--transition-fast);
     border: none;
     background: transparent;
     color: var(--tab-inactive-text);
-    font-family: 'Hanken Grotesk', sans-serif;
+    font-family: 'Kalam', cursive;
+    white-space: nowrap;
+}
+
+.segment-pill:first-child {
+    transform: rotate(-.8deg);
+}
+
+.segment-pill:last-child {
+    transform: rotate(.5deg);
+}
+
+.segment-pill:hover {
+    color: var(--ink);
 }
 
 .segment-pill.active {
-    background: var(--tab-active);
-    color: var(--tab-active-text);
-    box-shadow: var(--tab-shadow);
+    color: var(--ink);
+    background: linear-gradient(177deg,
+        transparent 38%, var(--tab-highlight) 41%,
+        var(--tab-highlight) 81%, transparent 85%);
 }
 
 /* ===========================================
@@ -356,6 +316,10 @@ body.dark-mode .month-year { color: var(--brand-bright); }
     max-height: 300px;
     overflow-y: auto;
     overflow-x: hidden;
+    background: repeating-linear-gradient(180deg,
+        transparent 0, transparent 33px,
+        var(--ruled-line) 33px, var(--ruled-line) 34px) var(--paper);
+    background-attachment: local;
 }
 
 .ruled-list::-webkit-scrollbar {
@@ -557,53 +521,6 @@ body.auto-mode .event-card::before {
 }
 
 /* ===========================================
-   Week strip
-   =========================================== */
-.week-strip {
-    display: flex;
-    justify-content: space-between;
-    gap: 4px;
-    padding: 8px 16px 4px;
-    border-top: var(--week-divider);
-}
-
-.week-day {
-    text-align: center;
-    flex: 1;
-}
-
-.week-day-letter {
-    font-size: 9px;
-    font-weight: 700;
-    color: var(--weekday-text);
-    letter-spacing: .5px;
-}
-
-.week-day-num {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--ink);
-    margin-top: 2px;
-}
-
-.week-day-num.sunday {
-    color: var(--sunday-text);
-}
-
-.week-dot-container {
-    height: 6px;
-    margin-top: 3px;
-    display: flex;
-    justify-content: center;
-}
-
-.week-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-}
-
-/* ===========================================
    Footer
    =========================================== */
 .planner-footer {
@@ -671,87 +588,171 @@ body.auto-mode .event-card::before {
     display: none;
 }
 
-.results-section:not(.has-results) .week-strip {
-    display: none;
-}
-
 .results-section.quota-exceeded .ruled-list,
 .results-section.quota-exceeded .planner-footer,
-.results-section.quota-exceeded .week-strip,
 .results-section.quota-exceeded .segment-toggle,
 .results-section.quota-exceeded .month-line {
     display: none;
 }
 
 /* ===========================================
-   Skeleton loading
+   Quill writing on the ruled page while scanning
    =========================================== */
-@keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-}
-
-@keyframes skeletonFadeIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.skeleton-row {
-    display: grid;
-    grid-template-columns: 20px 44px 1fr;
-    gap: 10px;
-    align-items: start;
-    padding: 9px 2px 7px;
-    animation: skeletonFadeIn 400ms cubic-bezier(0.4, 0, 0.2, 1) both;
-}
-
-.skeleton-checkbox {
-    width: 20px;
-    height: 20px;
-    border-radius: 5px;
-    background: var(--ruled-line);
-}
-
-.skeleton-chip {
-    width: 44px;
-    height: 44px;
-    border-radius: 7px;
-    background: var(--ruled-line);
-}
-
-.skeleton-content {
-    display: flex;
+.writing-loader {
+    display: none;
+    min-height: 290px;
     flex-direction: column;
-    gap: 6px;
-    padding-top: 2px;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink);
 }
 
-.skeleton-line {
-    background: var(--ruled-line);
-    border-radius: 3px;
-    position: relative;
-    overflow: hidden;
+.results-section.scanning .writing-loader {
+    display: flex;
 }
 
-.skeleton-line::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 200%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .15), transparent);
-    animation: shimmer 1.8s linear infinite;
+.writing-scene {
+    width: 260px;
+    max-width: 100%;
+    height: 200px;
+    overflow: visible;
 }
 
-.skeleton-line.title {
-    width: 75%;
-    height: 14px;
+.writing-mark {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: var(--writing-length);
+    stroke-dashoffset: var(--writing-length);
+    opacity: .78;
+    animation-duration: 5.4s;
+    animation-delay: -.65s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
 }
 
-.skeleton-line.note {
-    width: 55%;
-    height: 12px;
+.writing-mark-one { --writing-length: 208; animation-name: writeFirstLine; }
+
+.writing-mark-two { --writing-length: 189; animation-name: writeSecondLine; }
+
+.writing-mark-three { --writing-length: 203; animation-name: writeThirdLine; }
+
+.writing-quill {
+    animation: fillAgenda 5.4s linear infinite;
+    animation-delay: -.65s;
+    filter: drop-shadow(1px 2px 1px rgba(0, 0, 0, .2));
+}
+
+.writing-shaft {
+    fill: var(--brand);
+    stroke: var(--ink);
+    stroke-width: .6;
+    stroke-linejoin: round;
+}
+
+.writing-feather {
+    fill: var(--brand);
+}
+
+.writing-feather-shade {
+    fill: var(--ink);
+    opacity: .16;
+}
+
+.writing-feather-barbs {
+    fill: none;
+    stroke: var(--paper);
+    stroke-width: 1.15;
+    stroke-linecap: round;
+    opacity: .72;
+}
+
+.writing-feather-spine {
+    fill: none;
+    stroke: var(--paper);
+    stroke-width: 1.3;
+    stroke-linecap: round;
+}
+
+.writing-caption {
+    margin: 0;
+    font-family: 'Kalam', cursive;
+    font-size: 16px;
+    color: var(--ink-muted);
+}
+
+@keyframes writeFirstLine {
+    0%, 5% { stroke-dashoffset: var(--writing-length); opacity: .78; }
+    25%, 96% { stroke-dashoffset: 0; opacity: .78; }
+    100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+@keyframes writeSecondLine {
+    0%, 35% { stroke-dashoffset: var(--writing-length); opacity: .78; }
+    59%, 96% { stroke-dashoffset: 0; opacity: .78; }
+    100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+@keyframes writeThirdLine {
+    0%, 69% { stroke-dashoffset: var(--writing-length); opacity: .78; }
+    92%, 96% { stroke-dashoffset: 0; opacity: .78; }
+    100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+@keyframes fillAgenda {
+    0%, 4% { transform: translate(30px, 45px); opacity: 1; }
+    6.1% { transform: translate(46.43px, 41.02px); }
+    8.2% { transform: translate(63.26px, 43.29px); }
+    10.3% { transform: translate(80.95px, 43.95px); }
+    12.4% { transform: translate(98.97px, 39.48px); }
+    14.5% { transform: translate(117.46px, 46.82px); }
+    16.6% { transform: translate(135.42px, 37.24px); }
+    18.7% { transform: translate(153.3px, 47.2px); }
+    20.8% { transform: translate(171.79px, 39.09px); }
+    22.9% { transform: translate(190.59px, 44.72px); }
+    25%, 29% { transform: translate(210px, 42px); opacity: 1; }
+    32% { transform: translate(30px, 79px); opacity: 0; }
+    34% { transform: translate(30px, 79px); opacity: 1; }
+    36.5% { transform: translate(46.66px, 80px); }
+    39% { transform: translate(62.62px, 73.1px); }
+    41.5% { transform: translate(77.83px, 83.95px); }
+    44% { transform: translate(93.53px, 74.75px); }
+    46.5% { transform: translate(110.29px, 77.53px); }
+    49% { transform: translate(126.99px, 81.15px); }
+    51.5% { transform: translate(142.69px, 72.04px); }
+    54% { transform: translate(158.72px, 81.82px); }
+    56.5% { transform: translate(176.13px, 77.66px); }
+    59%, 63% { transform: translate(191px, 79px); opacity: 1; }
+    66% { transform: translate(30px, 113px); opacity: 0; }
+    68% { transform: translate(30px, 113px); opacity: 1; }
+    70.4% { transform: translate(48.11px, 113.71px); }
+    72.8% { transform: translate(65.27px, 107.39px); }
+    75.2% { transform: translate(81.77px, 118.51px); }
+    77.6% { transform: translate(98.55px, 107.64px); }
+    80% { transform: translate(116.5px, 113.39px); }
+    82.4% { transform: translate(134.68px, 113.79px); }
+    84.8% { transform: translate(152.34px, 107.62px); }
+    87.2% { transform: translate(169.69px, 117.67px); }
+    89.6% { transform: translate(186.83px, 107.54px); }
+    92%, 96% { transform: translate(205px, 113px); opacity: 1; }
+    100% { transform: translate(205px, 105px); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .writing-mark,
+    .writing-quill {
+        animation: none;
+    }
+
+    .writing-mark {
+        stroke-dashoffset: 0;
+    }
+
+    .writing-quill {
+        transform: translate(205px, 113px);
+    }
 }
 
 /* ===========================================
@@ -886,23 +887,8 @@ body.auto-mode .event-card::before {
 }
 
 .scan-media-btn.scanning {
-    position: relative;
-    color: transparent;
     pointer-events: none;
-}
-
-.scan-media-btn.scanning::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 14px;
-    height: 14px;
-    border: 2px solid rgba(255, 255, 255, .25);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: spin 0.8s cubic-bezier(0.4, 0.2, 0.2, 1) infinite;
+    cursor: progress;
 }
 
 /* ===========================================
