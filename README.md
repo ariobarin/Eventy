@@ -1,107 +1,52 @@
 # Eventy
 
-Eventy is a Chrome extension that finds event details on webpages, images, and pasted text, then turns them into calendar-ready entries.
+Chrome extension that turns event pages, selected text, pasted text, and flyer images into calendar events.
 
-Version: v1.2.0
+[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/eventy/kfancgcbhdkeohknmidbnioccmmoknjl) · [Homepage](https://eventy.ariobarin.com/)
 
-Homepage: https://eventy.ariobarin.com/
+## Use it
 
-## What It Does
+| To scan | Do this |
+| --- | --- |
+| The whole page | Click the Eventy icon, then **Scan Page** |
+| Some text | Select it, then right-click **Scan selected text for events** or press `Ctrl+Shift+E` (`Cmd+Shift+E` on Mac) |
+| An image or flyer | Right-click it, then **Scan image for events** |
+| Text or photos you have | Click the upload icon in the popup, paste text or add images, then **Scan Media** |
 
-- Scans active pages, selected text, pasted text, images, flyers, and schedules.
-- Extracts titles, dates, times, locations, descriptions, previews, and recurrence hints.
-- Adds selected events to Google Calendar or downloads iCalendar files.
-- Separates upcoming and past events before you add anything.
-- Supports light, dark, and system themes.
-- Lets advanced users bring their own OpenRouter API key and choose a model.
-- Shows shared free scan usage in settings from the hosted proxy.
+Pick the events you want and click **Add to Calendar**. Eventy opens a prefilled Google Calendar tab per event, or downloads `.ics` files (open them to import into Apple Calendar, Outlook, and others). Choose which in Settings.
 
-## Install For Development
+Scans use a shared free daily limit. For unlimited scans, add your own [OpenRouter](https://openrouter.ai/) key in Settings and pick any model that supports structured outputs.
 
-1. Clone or download this repository.
-2. Open `chrome://extensions/`.
-3. Enable Developer mode.
-4. Click Load unpacked.
-5. Select this repository folder.
+## How it works
 
-Reload the extension from `chrome://extensions/` after code changes.
+1. The popup reads the page, converts it to compact Markdown, and pulls tables out as CSV.
+2. The background worker sends that context to the Eventy proxy, which calls an LLM through OpenRouter with a strict JSON schema.
+3. Eventy dedupes the events, converts explicit timezones to yours, and builds Google Calendar links or `.ics` files locally.
 
-## Configuration
+The proxy (`eventy-proxy.eventy.workers.dev`) is a separate Cloudflare Worker and is not in this repo. See [PRIVACY.md](PRIVACY.md) for what it receives.
 
-Runtime knobs live in [config.js](config.js):
-
-- `PROXY_URL`: hosted Eventy extraction proxy.
-- `PROXY_TOKEN`: optional shared proxy token.
-- `MOCK_MODE`: loads sample events instead of calling the proxy.
-
-The hosted proxy is not part of this repository. It is operated separately. BYOK users can provide their own OpenRouter key in settings, with key validation and model listing routed through the proxy.
-
-## Project Structure
-
-```text
-assets/          Extension icons
-src/background/  Calendar opening helpers
-src/content/     Page marker script
-src/lib/         Calendar URL and ICS helpers
-src/llm/         Client and preprocessing pipeline
-src/mocks/       Mock scan data
-src/ui/          Popup, settings, and styles
-src/utils/       Storage, scan, string, timezone, and logging helpers
-tests/           Node tests
-webstore-docs/   Chrome Web Store submission notes
-```
-
-## Tests
+## Develop
 
 ```bash
+npm install
 npm test
 ```
 
-Browser-backed UI verification launches Chrome, loads the extension from a
-temporary mock-mode copy, and runs popup and settings flows with automated
-state, interaction, and layout assertions. Screenshots and a JSON report are
-written under `tests/fixtures/ui/` for debugging failures.
+Load the repo folder at `chrome://extensions` with Developer mode on (Load unpacked), and reload it after changes. There is no build step; the extension runs plain ES modules.
 
-```bash
-npm run verify:ui
-```
+Set `MOCK_MODE = true` in [config.js](config.js) to get sample events without calling the proxy, and `DEBUG = true` for verbose logs. Keep both `false` and `PROXY_TOKEN` empty in commits.
 
-Use `npm run verify:ui -- --headless` for headless environments, or
-`npm run verify:ui -- --keep-browser` when inspecting the final Chrome state.
+| Command | What it does |
+| --- | --- |
+| `npm test` | Unit tests (Node test runner) |
+| `npm run verify:ui -- --headless` | Loads the extension in Chrome (mock mode) and drives the popup and settings |
+| `npm run audit:real-pages` | Checks that real-page snapshots keep their event details after preprocessing (`capture:real-pages` first) |
+| `npm run verify:release` | All of the above plus a live LLM eval through the proxy |
+| `npm run package` | Builds `dist/eventy-v<version>.zip` for the Web Store |
+| `npm run deploy:home` | Deploys the homepage Worker ([workers/eventyHome.js](workers/eventyHome.js)) |
 
-Real-page verification uses local static snapshots so the test corpus can be
-audited without committing large captured pages.
-
-```bash
-npm run capture:real-pages
-npm run audit:real-pages
-```
-
-Use `npm run verify:real-pages` to recapture every corpus page and audit the
-fresh snapshots in one command.
-
-For local release confidence, run `npm run verify:release`. It combines unit
-tests, static real-page comparison, the headless browser UI suite, and a live
-LLM integration eval against a small labeled real-page set. The live eval uses
-the public Eventy proxy URL and reads any required token from
-`EVENTY_EVAL_PROXY_TOKEN` or `EVENTY_TOKEN`.
-
-For an offline confidence pass that does not call an LLM, run
-`npm run verify:offline`.
-
-## Homepage Front
-
-The public product page is served from this repository's GitHub Pages output and fronted at `https://eventy.ariobarin.com/` by the Cloudflare Worker in [workers/eventyHome.js](workers/eventyHome.js). The previous `https://ariobarin.com/eventy-home/` URL remains supported.
-
-```bash
-npm run deploy:home
-```
+UI tests need Chrome installed; set `CHROME_PATH` if it isn't found. See [CONTRIBUTING.md](CONTRIBUTING.md) for more.
 
 ## Legal
 
-- [Privacy Policy](https://ariobarin.github.io/Eventy/privacy.html)
-- [Terms of Service](https://ariobarin.github.io/Eventy/terms.html)
-
-## License
-
-MIT
+[Privacy Policy](https://eventy.ariobarin.com/privacy.html) · [Terms of Service](https://eventy.ariobarin.com/terms.html) · MIT License
