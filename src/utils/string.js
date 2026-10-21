@@ -65,12 +65,3 @@ export function parseTime(timeStr) {
     
     return null;
 }
-
-/**
- * Check if value is a non-empty array
- * @param {*} arr - Value to check
- * @returns {boolean} True if arr is an array with at least one element
- */
-export function hasItems(arr) {
-    return Array.isArray(arr) && arr.length > 0;
-}
