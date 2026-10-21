@@ -421,8 +421,6 @@ async function handleScan() {
             action: "scanPage",
             modelInput: modelHtml,
             csvSnippets,
-            html, // Required for background fallback
-            text, // Keep text just in case, or for title context?
             title,
             lang,
             url,
@@ -784,9 +782,7 @@ scanMediaBtn?.addEventListener("click", async () => {
 
         const response = await chrome.runtime.sendMessage({
             action: "scanPage",
-            html: "", // No HTML for custom context scan
-            modelInput, // precomputed compressed input
-            text: text,
+            modelInput,
             title: "Custom Context",
             lang: "en", // Default to en
             url: url,

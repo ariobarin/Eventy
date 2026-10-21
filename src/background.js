@@ -1,7 +1,7 @@
 import { extractEventsWithOpenRouter } from "./llm/client.js";
 import { openCalendarEventsInBackground } from "./background/openCalendar.js";
 import { DEBUG, MOCK_MODE, MOCK_EVENTS_PATH, MOCK_DELAY_MS } from "../config.js";
-import { preprocessForBackground, preprocessForPopup } from "./utils/scan.js";
+import { preprocessForBackground } from "./utils/scan.js";
 import { shouldCacheScanRequest } from "./utils/scanRequest.js";
 import { debug, error } from "./utils/logger.js";
 
@@ -343,13 +343,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "scanPage") {
         // Handle scan request asynchronously
         (async () => {
-            const { html, text, title, lang, url, imageUrls } = request;
+            const { modelInput, csvSnippets = [], title, lang, url, imageUrls = [] } = request;
             const shouldCache = shouldCacheScanRequest(request);
             let response = { success: false, error: "Unknown error" };
 
-            // Validate inputs early - allow empty html if text or images are present
-            if ((!html && !text && (!imageUrls || !imageUrls.length)) || !url) {
+            if (!url) {
                 sendResponse({ success: false, error: "Missing required fields" });
+                return;
+            }
+            // The popup preprocesses page content (the service worker has no DOMParser).
+            // Nothing left to scan means no events, without spending a request.
+            if (!modelInput && !imageUrls.length) {
+                sendResponse({ success: true, events: [] });
                 return;
             }
 
@@ -361,9 +366,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 }
 
                 DEBUG && debug("[Eventy][BG] Popup scan invoked", {
-                    htmlLength: html?.length || 0,
-                    textLength: text?.length || 0,
-                    imageCount: imageUrls?.length || 0,
+                    inputLength: modelInput?.length || 0,
+                    imageCount: imageUrls.length,
                     url,
                 });
 
@@ -378,26 +382,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     return;
                 }
 
-                // Process with LLM
-                // Use pre-processed markdown from popup if available (preferred for MV3/SW)
-                let modelHtml = request.modelInput;
-                let csvSnippets = request.csvSnippets || [];
-
-                if (!modelHtml) {
-                    // Fallback (might fail in SW if DOMParser is needed)
-                    const res = preprocessForPopup(text || "", html || "");
-                    modelHtml = res.modelHtml;
-                    csvSnippets = res.csvSnippets;
-                }
-
                 DEBUG && debug("[Eventy][BG] Model context:", context);
 
                 const events = await extractEventsWithOpenRouter({
-                    modelInput: modelHtml, // Pass as modelInput
+                    modelInput,
                     url,
                     context,
                     csvSnippets,
-                    imageUrls: imageUrls || [],
+                    imageUrls,
                 });
 
                 if (DEBUG) {
