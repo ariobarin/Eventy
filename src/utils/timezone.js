@@ -1,5 +1,4 @@
 import { debug, warn } from "./logger.js";
-import { DEBUG } from "../../config.js";
 import { parseTime } from "./string.js";
 
 /**
@@ -95,14 +94,12 @@ export function convertTimezone(dateStr, timeStr, sourceTimezone) {
             return { date: dateStr, time: timeStr };
         }
 
-        if (DEBUG) {
-            debug("[Timezone] Converting:", {
-                dateStr,
-                timeStr,
-                sourceTimezone,
-                userTimezone,
-            });
-        }
+        debug("[Timezone] Converting:", {
+            dateStr,
+            timeStr,
+            sourceTimezone,
+            userTimezone,
+        });
 
         // Parse time using shared utility
         const parsed = parseTime(timeStr);
@@ -233,12 +230,10 @@ export function convertTimezone(dateStr, timeStr, sourceTimezone) {
         const convertedDate = `${userComponents.year}-${userComponents.month}-${userComponents.day}`;
         const convertedTime = `${userComponents.hour}:${userComponents.minute}`;
 
-        if (DEBUG) {
-            debug("[Timezone] Converted:", {
-                from: `${dateStr} ${timeStr} (${sourceTimezone})`,
-                to: `${convertedDate} ${convertedTime} (${userTimezone})`,
-            });
-        }
+        debug("[Timezone] Converted:", {
+            from: `${dateStr} ${timeStr} (${sourceTimezone})`,
+            to: `${convertedDate} ${convertedTime} (${userTimezone})`,
+        });
 
         return {
             date: convertedDate,
@@ -280,8 +275,7 @@ export function processEventTimezones(events) {
                         processedEvent.startDate = converted.date;
                         processedEvent.startTime = converted.time;
 
-                        DEBUG &&
-                            debug("[Timezone] Start time converted:", {
+                        debug("[Timezone] Start time converted:", {
                                 original: `${event.startDate} ${event.startTime}`,
                                 converted: `${converted.date} ${converted.time}`,
                                 timezone: startTz,
@@ -318,8 +312,7 @@ export function processEventTimezones(events) {
                         processedEvent.endDate = converted.date;
                         processedEvent.endTime = converted.time;
 
-                        DEBUG &&
-                            debug("[Timezone] End time converted:", {
+                        debug("[Timezone] End time converted:", {
                                 original: `${
                                     event.endDate || event.startDate
                                 } ${event.endTime}`,
