@@ -28,73 +28,37 @@
 
 <body>
     <h1>Eventy Privacy Policy</h1>
-    <div class="muted">Effective date: 2026-01-26</div>
+    <div class="muted">Effective date: 2026-10-21</div>
+    <p>Eventy only reads a page when you start a scan.</p>
+
+    <h2>What is sent</h2>
     <p>
-        Eventy processes webpage content or selected text only when you use
-        the "Scan" action. The selected text or page text is sent to our
-        Cloudflare Worker proxy and to OpenRouter to extract event details.
-        Depending on your Settings, Eventy then either opens a prefilled
-        Google Calendar page or creates events via the Google Calendar API
-        after you authorize with Google.
+        When you scan, Eventy sends the following to the Eventy proxy (a Cloudflare Worker), which forwards the
+        request to OpenRouter and the model provider it routes to:
     </p>
-    <h2>What data we handle</h2>
     <ul>
-        <li>No third-party trackers are embedded.</li>
-        <li>
-            We do not sell or share your personal information. We do not
-            maintain server-side user profiles.
-        </li>
-        <li>
-            Text and images you choose to scan are sent to our Cloudflare Worker and to
-            OpenRouter solely to extract event fields (title, date/time,
-            location, description, optional recurrence).
-        </li>
-        <li>
-            <strong>Bring Your Own Key (BYOK):</strong> If you provide your own OpenRouter API key, it is transmitted
-            securely via our proxy to authenticate your requests. We do not store your API key on our servers.
-        </li>
-        <li>
-            When you enable "Use Google Calendar API (OAuth)", Eventy uses
-            the minimal scope <code>https://www.googleapis.com/auth/calendar.events</code>
-            to create calendar events you select. Eventy does not request
-            broader calendar scopes.
-        </li>
+        <li>The page text, selected text, pasted text, or images you chose to scan</li>
+        <li>The page URL and title, your timezone, and your browser language (used to resolve dates like "next Friday")</li>
+        <li>A random installation ID, created on first use, used only to enforce the shared daily scan limit</li>
+        <li>Your OpenRouter API key, if you added one (BYOK). It is passed through to OpenRouter and not stored on our servers.</li>
     </ul>
-    <h2>OAuth and tokens</h2>
+    <p>
+        We do not store scanned content on our servers, build user profiles, or sell or share personal information.
+        The extension has no analytics or third-party trackers.
+    </p>
+
+    <h2>What stays in your browser</h2>
     <ul>
-        <li>
-            Authentication uses Chrome Identity. Access tokens are obtained
-            from Google and cached by Chrome; Eventy does not store tokens on
-            our servers.
-        </li>
-        <li>
-            Tokens are used only to call Google Calendar's REST API from the
-            extension. They are not sent to our Cloudflare proxy.
-        </li>
-        <li>
-            You can revoke access at any time via Settings &gt; Disconnect, or
-            in your Google Account at
-            <a href="https://myaccount.google.com/permissions">Google Account &gt; Security &gt; Third-party access</a>.
-        </li>
+        <li>Settings (theme, time format, calendar type, API mode) in <code>chrome.storage.sync</code></li>
+        <li>Your API key, model choice, installation ID, recent scan results, and any text or images you pasted into the popup in <code>chrome.storage.local</code></li>
     </ul>
-    <h2>Storage and retention</h2>
-    <ul>
-        <li>
-            Basic preferences (e.g., theme, whether API mode is enabled) are
-            stored in your browser's <code>chrome.storage</code>. Event
-            extraction results may be cached locally to improve UX. We do
-            not store your data on our servers.
-        </li>
-        <li>All network traffic is transmitted over HTTPS.</li>
-    </ul>
+    <p>
+        Adding events opens a prefilled Google Calendar page in a new tab or downloads an <code>.ics</code> file.
+        Eventy never connects to your calendar account.
+    </p>
+
     <h2>Contact</h2>
-    <ul>
-        <li>Support and privacy inquiries: <a href="mailto:eventy.sup@gmail.com">eventy.sup@gmail.com</a></li>
-    </ul>
-    <p>
-        If you have questions about this policy, contact us at the email
-        above.
-    </p>
+    <p><a href="mailto:eventy.sup@gmail.com">eventy.sup@gmail.com</a></p>
 </body>
 
 </html>
