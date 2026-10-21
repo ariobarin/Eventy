@@ -1,5 +1,5 @@
 import { buildCalendarCreateUrl } from "../lib/calendarUrl.js";
-import { createICSDownloadUrl, createMergedICSDownloadUrl, generateICSFilename } from "../lib/icsGenerator.js";
+import { createICSDownloadUrl, generateICSFilename } from "../lib/icsGenerator.js";
 
 // Track active downloads to revoke blob URLs
 const activeDownloads = new Map();
@@ -28,29 +28,6 @@ chrome.downloads.onChanged.addListener((delta) => {
         }
     }
 });
-
-export async function downloadMergedICS(events) {
-    if (!events || events.length === 0) return;
-
-    const icsUrl = createMergedICSDownloadUrl(events);
-    // Use the first event's title for the filename, or a generic name
-    const filename = events.length === 1 
-        ? generateICSFilename(events[0]) 
-        : `events_export_${new Date().toISOString().slice(0,10)}.ics`;
-
-    try {
-        const downloadId = await chrome.downloads.download({
-            url: icsUrl,
-            filename: filename,
-            saveAs: true // Prompt for save location for merged file
-        });
-        
-        activeDownloads.set(downloadId, icsUrl);
-    } catch (e) {
-        console.error("Download failed:", e);
-        URL.revokeObjectURL(icsUrl);
-    }
-}
 
 export async function openCalendarEventsInBackground(events) {
     // Load user's calendar preference

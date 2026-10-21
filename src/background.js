@@ -2,7 +2,6 @@ import { extractEventsWithOpenRouter } from "./llm/client.js";
 import { openCalendarEventsInBackground } from "./background/openCalendar.js";
 import { DEBUG, MOCK_MODE, MOCK_EVENTS_PATH, MOCK_DELAY_MS } from "../config.js";
 import { preprocessForBackground } from "./utils/scan.js";
-import { shouldCacheScanRequest } from "./utils/scanRequest.js";
 import { debug, error } from "./utils/logger.js";
 
 const HIGHLIGHT_RESULTS_KEY = "eventy-highlight-results";
@@ -25,11 +24,7 @@ async function tryOpenPopup() {
     try {
         await chrome.action.openPopup();
     } catch (popupErr) {
-        if (DEBUG) {
-            try {
-                debug("[Eventy][BG] Failed to open popup", popupErr);
-            } catch (_) { }
-        }
+        debug("[Eventy][BG] Failed to open popup", popupErr);
     }
 }
 
@@ -189,15 +184,11 @@ async function handleScanFromSelection(selectionText, tab) {
         const context = { pageTitle: tab?.title, pageLang: undefined };
         const tabId = tab?.id;
 
-        if (DEBUG) {
-            try {
-                debug("[Eventy][BG] Scan invoked", {
-                    selectionLength: selectionText.length,
-                    url,
-                    pageTitle: context.pageTitle,
-                });
-            } catch (_) { }
-        }
+        debug("[Eventy][BG] Scan invoked", {
+            selectionLength: selectionText.length,
+            url,
+            pageTitle: context.pageTitle,
+        });
 
         const highlightMeta = {
             sourceUrl: url,
@@ -217,11 +208,7 @@ async function handleScanFromSelection(selectionText, tab) {
                 csvSnippets,
             });
 
-            if (DEBUG) {
-                try {
-                    debug("[Eventy][BG] Extracted events count:", events.length);
-                } catch (_) { }
-            }
+            debug("[Eventy][BG] Extracted events count:", events.length);
 
             await updateScanStatus(HIGHLIGHT_RESULTS_KEY, "complete", {
                 ...highlightMeta,
@@ -247,15 +234,11 @@ async function handleScanFromImage(imageUrl, tab) {
         const context = { pageTitle: tab?.title, pageLang: undefined };
         const tabId = tab?.id;
 
-        if (DEBUG) {
-            try {
-                debug("[Eventy][BG] Image scan invoked", {
-                    imageUrl,
-                    url,
-                    pageTitle: context.pageTitle,
-                });
-            } catch (_) { }
-        }
+        debug("[Eventy][BG] Image scan invoked", {
+            imageUrl,
+            url,
+            pageTitle: context.pageTitle,
+        });
 
         await chrome.storage.local.remove(IMAGE_RESULTS_KEY);
 
@@ -281,11 +264,7 @@ async function handleScanFromImage(imageUrl, tab) {
                 imageUrls: [imageInput],
             });
 
-            if (DEBUG) {
-                try {
-                    debug("[Eventy][BG] Extracted events count (image):", events.length);
-                } catch (_) { }
-            }
+            debug("[Eventy][BG] Extracted events count (image):", events.length);
 
             await updateScanStatus(IMAGE_RESULTS_KEY, "complete", {
                 ...imageMeta,
@@ -344,7 +323,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         // Handle scan request asynchronously
         (async () => {
             const { modelInput, csvSnippets = [], title, lang, url, imageUrls = [] } = request;
-            const shouldCache = shouldCacheScanRequest(request);
+            const shouldCache = request.cacheResults !== false;
             let response = { success: false, error: "Unknown error" };
 
             if (!url) {
@@ -365,7 +344,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     });
                 }
 
-                DEBUG && debug("[Eventy][BG] Popup scan invoked", {
+                debug("[Eventy][BG] Popup scan invoked", {
                     inputLength: modelInput?.length || 0,
                     imageCount: imageUrls.length,
                     url,
@@ -382,7 +361,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     return;
                 }
 
-                DEBUG && debug("[Eventy][BG] Model context:", context);
+                debug("[Eventy][BG] Model context:", context);
 
                 const events = await extractEventsWithOpenRouter({
                     modelInput,
@@ -392,11 +371,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     imageUrls,
                 });
 
-                if (DEBUG) {
-                    try {
-                        debug("[Eventy][BG] Extracted events count:", events.length);
-                    } catch (_) { }
-                }
+                debug("[Eventy][BG] Extracted events count:", events.length);
 
                 if (shouldCache) {
                     await chrome.storage.local.set({

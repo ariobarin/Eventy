@@ -5,6 +5,7 @@ import {
     fetchAvailableModels,
     fetchUsageStats,
     formatProviderName,
+    getApiKeyBalanceStatus,
     validateApiKey,
 } from "./settings/api.js";
 
@@ -430,26 +431,12 @@ function setupEventListeners() {
                     // Save the API key to local storage
                     await chrome.storage.local.set({ apiKey });
 
-                    const parseNumber = (value) => {
-                        if (value === null || value === undefined) return null;
-                        const num = Number(value);
-                        return Number.isFinite(num) ? num : null;
-                    };
-
                     let balanceMsg = "";
                     if (result.data) {
-                        const limit = parseNumber(result.data.limit);
-                        const usage = parseNumber(result.data.usage) ?? 0;
-                        const remaining = parseNumber(result.data.limit_remaining);
-
-                        if (remaining !== null) {
-                            balanceMsg = ` | Remaining: $${remaining.toFixed(2)}`;
-                        } else if (limit !== null) {
-                            const computedRemaining = limit - usage;
-                            balanceMsg = ` | Remaining: $${computedRemaining.toFixed(2)}`;
-                        } else {
-                            balanceMsg = ` | Usage: $${usage.toFixed(2)}`;
-                        }
+                        const { usage, remaining } = getApiKeyBalanceStatus(result.data);
+                        balanceMsg = remaining !== null
+                            ? ` | Remaining: $${remaining.toFixed(2)}`
+                            : ` | Usage: $${usage.toFixed(2)}`;
                     }
 
                     // Fetch and populate available models
@@ -474,9 +461,6 @@ function setupEventListeners() {
         });
     }
 
-    // Check Balance button
-
-
     // Refresh usage button
     const refreshUsageBtn = document.getElementById("refreshUsageBtn");
     if (refreshUsageBtn) {
@@ -485,30 +469,6 @@ function setupEventListeners() {
         });
     }
 
-    // Save button (kept as fallback; hidden in UI)
-    const saveButton = document.getElementById("saveButton");
-    if (saveButton) {
-        saveButton.addEventListener("click", async () => {
-            const newSettings = getSettingsFromUI();
-            try {
-                if (!haveSettingsChanged(lastSavedSettings, newSettings)) {
-                    disableSaveButton();
-                    return;
-                }
-
-                await saveSettings(newSettings);
-                lastSavedSettings = { ...newSettings };
-                showSuccessPrompt();
-                disableSaveButton();
-            } catch (err) {
-                error("Failed to save settings:", err);
-                showErrorPrompt(
-                    "Error saving settings: " +
-                    (err?.message || "Unknown error")
-                );
-            }
-        });
-    }
     // Close prompt button
     if (promptClose) {
         promptClose.addEventListener("click", () => {
@@ -580,14 +540,6 @@ function updateUsageDisplay(usage) {
 
     // Also update labels if they differ (proxy is source of truth)
     updateLimitLabels(usage.dayLimit);
-}
-
-// Disable save button (stub - button is hidden, autosave is used)
-function disableSaveButton() {
-    const saveButton = document.getElementById("saveButton");
-    if (saveButton) {
-        saveButton.disabled = true;
-    }
 }
 
 // Show success prompt

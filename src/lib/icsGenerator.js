@@ -171,31 +171,11 @@ export function generateICS(event) {
 }
 
 /**
- * Generate an iCalendar (.ics) file content from multiple event objects
- */
-export function generateMergedICS(events) {
-    const vevents = [];
-    for (const event of events) {
-        vevents.push(...generateVEVENT(event));
-    }
-    return generateVCALENDAR(vevents);
-}
-
-/**
  * Create a downloadable .ics file from event data
  * Returns a blob URL that can be used to download the file
  */
 export function createICSDownloadUrl(event) {
     const icsContent = generateICS(event);
-    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-    return URL.createObjectURL(blob);
-}
-
-/**
- * Create a downloadable .ics file from multiple events
- */
-export function createMergedICSDownloadUrl(events) {
-    const icsContent = generateMergedICS(events);
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     return URL.createObjectURL(blob);
 }
