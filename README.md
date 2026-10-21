@@ -78,10 +78,7 @@ npm run audit:real-pages
 ```
 
 Use `npm run verify:real-pages` to recapture every corpus page and audit the
-fresh snapshots in one command. Compare retained labels and context size against
-the v1.1.1-era preprocessing baseline with `npm run compare:real-pages:static`.
-LLM judging is available through `npm run compare:real-pages:llm` when an eval
-transport is configured.
+fresh snapshots in one command.
 
 For local release confidence, run `npm run verify:release`. It combines unit
 tests, static real-page comparison, the headless browser UI suite, and a live
