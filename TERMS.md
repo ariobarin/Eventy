@@ -1,34 +1,10 @@
 # Eventy Terms of Service
 
-Effective date: 2026-01-26
+Effective date: 2026-10-21
 
-1. Overview
-
--   Eventy is a browser extension that extracts event details from webpages and helps you add them to your Google Calendar.
-
-2. Your responsibilities
-
--   Use Eventy in compliance with applicable laws.
--   Review extracted details before creating events.
--   Maintain the security of your Google account and device.
-
-3. Permissions and data use
-
--   Minimal Google scope used: https://www.googleapis.com/auth/calendar.events (create events only, when enabled).
--   **API Keys (BYOK):** Users providing their own API keys depend on OpenRouter services. We facilitate the request but are not responsible for OpenRouter availability.
--   Tokens are obtained via Chrome Identity; Eventy does not store tokens on our servers.
--   See Privacy Policy for more details: https://ariobarin.github.io/Eventy/privacy.html.
-
-4. Availability and changes
-
--   Eventy is provided "as is", without warranties.
--   Features and integrations may change or be discontinued.
-
-5. Liability
-
--   To the extent permitted by law, Eventy is not liable for indirect, incidental, or consequential damages.
--   Our total liability will not exceed fees paid (if any) for Eventy.
-
-6. Contact
-
--   eventy.sup@gmail.com
+1. **Overview.** Eventy is a browser extension that extracts event details from webpages, text, and images and helps you add them to your calendar.
+2. **Your responsibilities.** Use Eventy lawfully and review extracted details before adding events. AI extraction can be wrong.
+3. **Data use.** See the [Privacy Policy](https://eventy.ariobarin.com/privacy.html). If you use your own OpenRouter key, you depend on OpenRouter's service and terms.
+4. **Availability.** Eventy is provided "as is", without warranties. The shared free tier, its limits, and other features may change or end.
+5. **Liability.** To the extent permitted by law, Eventy is not liable for indirect, incidental, or consequential damages, and total liability will not exceed what you paid for Eventy, if anything.
+6. **Contact.** eventy.sup@gmail.com

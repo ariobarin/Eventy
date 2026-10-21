@@ -1,20 +1,27 @@
-Effective date: 2026-01-26
+# Eventy Privacy Policy
 
-Eventy processes webpage or selected text only when you use the "Scan" action. The selected text is sent to our Cloudflare Worker proxy and to OpenRouter to extract event fields (title, dates/times, location, description, optional recurrence). Depending on your Settings, Eventy either opens a prefilled Google Calendar page or creates events via the Google Calendar API after you authorize with Google.
+Effective date: 2026-10-21
 
-Data handling:
+Eventy only reads a page when you start a scan.
 
--   No third-party trackers are embedded. We do not sell or share your personal information.
--   Minimal Google scope used: https://www.googleapis.com/auth/calendar.events (create events only).
--   **BYOK (Bring Your Own Key):** If you provide your own OpenRouter API key, it is transmitted securely via our Cloudflare Worker proxy to authenticate your requests. We do not store your API key on our servers; it is passed through to OpenRouter.
--   **Image Scanning:** Images you choose to scan are processed by our proxy and LLM provider to extract event details. We do not store these images.
--   Tokens: Chrome Identity obtains and caches access tokens; Eventy does not store tokens on our servers.
--   Tokens are only used by the extension to call Google Calendar's REST API and are not sent to our proxy.
--   Preferences are stored locally via chrome.storage. Event extraction results may be cached locally for UX.
--   All network traffic is over HTTPS.
+## What is sent
 
-Revocation:
+When you scan, Eventy sends the following to the Eventy proxy (a Cloudflare Worker), which forwards the request to OpenRouter and the model provider it routes to:
 
--   You can disconnect in the extension (Settings > Disconnect) or via https://myaccount.google.com/permissions.
+- The page text, selected text, pasted text, or images you chose to scan
+- The page URL and title, your timezone, and your browser language (used to resolve dates like "next Friday")
+- A random installation ID, created on first use, used only to enforce the shared daily scan limit
+- Your OpenRouter API key, if you added one (BYOK). It is passed through to OpenRouter and not stored on our servers.
 
-Contact: eventy.sup@gmail.com
+We do not store scanned content on our servers, build user profiles, or sell or share personal information. The extension has no analytics or third-party trackers.
+
+## What stays in your browser
+
+- Settings (theme, time format, calendar type, API mode) in `chrome.storage.sync`
+- Your API key, model choice, installation ID, recent scan results, and any text or images you pasted into the popup in `chrome.storage.local`
+
+Adding events opens a prefilled Google Calendar page in a new tab or downloads an `.ics` file. Eventy never connects to your calendar account.
+
+## Contact
+
+eventy.sup@gmail.com

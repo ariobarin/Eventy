@@ -45,28 +45,6 @@ body.auto-mode .top-bar {
     color: var(--text);
 }
 
-.save-button {
-    padding: 9px 20px;
-    font-size: 14px;
-    font-weight: 500;
-    background: var(--accent-primary);
-    color: white;
-    border-radius: 8px;
-    box-shadow: var(--shadow-sm);
-    transition: all var(--transition-base);
-}
-
-.save-button:hover:not(:disabled) {
-    background: var(--accent-hover);
-    box-shadow: var(--shadow-md);
-}
-
-.save-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    box-shadow: none;
-}
-
 /* Save prompt toast */
 @keyframes slideInToast {
     from {

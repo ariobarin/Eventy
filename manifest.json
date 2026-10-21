@@ -40,15 +40,5 @@
                 "mac": "Command+Shift+E"
             }
         }
-    },
-    "web_accessible_resources": [
-        {
-            "resources": [
-                "src/content/eventMarkers.js"
-            ],
-            "matches": [
-                "<all_urls>"
-            ]
-        }
-    ]
+    }
 }

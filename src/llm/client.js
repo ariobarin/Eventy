@@ -1,44 +1,21 @@
-import { PROXY_URL, PROXY_TOKEN, DEBUG } from "../../config.js";
+import { PROXY_URL, PROXY_TOKEN } from "../../config.js";
 import { debug } from "../utils/logger.js";
 import { processEventTimezones } from "../utils/timezone.js";
 import { getInstallationId } from "../utils/storage.js";
 
-// getInstallationId imported from utils/storage.js
-
-/**
- * Get API configuration (BYOK mode and keys).
- */
 async function getApiConfig() {
-    try {
-        const [syncResult, localResult] = await Promise.all([
-            chrome.storage.sync.get("settings"),
-            chrome.storage.local.get(["apiKey", "userModel", "installationId"])
-        ]);
-
-        let installationId = localResult.installationId;
-        if (!installationId) {
-            installationId = crypto.randomUUID();
-            await chrome.storage.local.set({ installationId });
-        }
-
-        const settings = syncResult.settings || {};
-        const mode = settings.apiKeyMode || "shared";
-
-        return {
-            mode,
-            userApiKey: mode === "byok" ? localResult.apiKey : null,
-            userModel: mode === "byok" ? localResult.userModel : null,
-            installationId
-        };
-    } catch (err) {
-        DEBUG && debug("[Eventy][LLM] Error getting API config:", err);
-        return {
-            mode: "shared",
-            userApiKey: null,
-            userModel: null,
-            installationId: await getInstallationId()
-        };
-    }
+    const [{ settings = {} }, { apiKey, userModel }, installationId] = await Promise.all([
+        chrome.storage.sync.get("settings"),
+        chrome.storage.local.get(["apiKey", "userModel"]),
+        getInstallationId(),
+    ]);
+    const mode = settings.apiKeyMode || "shared";
+    return {
+        mode,
+        userApiKey: mode === "byok" ? apiKey : null,
+        userModel: mode === "byok" ? userModel : null,
+        installationId,
+    };
 }
 
 /**
@@ -170,7 +147,7 @@ export function extractEventsFromStructuredOutput(data) {
             }
         } catch (parseErr) {
             // Fallback: try to extract JSON from content
-            DEBUG && debug("[Eventy][LLM] Failed to parse structured output, trying fallback:", parseErr);
+            debug("[Eventy][LLM] Failed to parse structured output, trying fallback:", parseErr);
 
             // Try to find JSON in code blocks
             const fences = [...content.matchAll(/```(?:json)?\n([\s\S]*?)```/gi)];
@@ -287,31 +264,21 @@ export function buildEventExtractionMessages({
 }
 
 export async function extractEventsWithOpenRouter({
-    modelInput, // Renamed from html, contains Markdown or Text or HTML
-    html, // Backward compatibility
+    modelInput,
     url,
     context = {},
     csvSnippets = [],
     imageUrls = [],
 }) {
-    const contentInput = modelInput || html || ""; // Use modelInput preferred
-
-
-
     if (!PROXY_URL) throw new Error("Proxy not configured.");
 
-    // Get API configuration
     const apiConfig = await getApiConfig();
 
     const headers = { "Content-Type": "application/json" };
     if (PROXY_TOKEN) headers["X-Eventy-Token"] = PROXY_TOKEN;
-
-    // Add installation ID for rate limiting
     if (apiConfig.installationId) {
         headers["X-Installation-Id"] = apiConfig.installationId;
     }
-
-    // Add user API key and model if BYOK mode
     if (apiConfig.mode === "byok" && apiConfig.userApiKey) {
         headers["X-User-Api-Key"] = apiConfig.userApiKey;
         if (apiConfig.userModel) {
@@ -319,34 +286,20 @@ export async function extractEventsWithOpenRouter({
         }
     }
 
-    DEBUG && debug(
-        "[Eventy][LLM] Prepared context:",
-        buildEventContext({ url, context })
-    );
-    DEBUG && debug("[Eventy][LLM] Request preview:", {
-        url: PROXY_URL,
-        headers: Object.keys(headers),
-        messageSummary: {
-            hasCsvSnippets: !!csvSnippets.length,
-            csvSnippetCount: csvSnippets.length,
-            inputLength: typeof contentInput === "string" ? contentInput.length : 0,
-            pageUrl: url,
-        },
-    });
-
-    // Build messages with optional image content (OpenAI-style multimodal format)
     const messages = buildEventExtractionMessages({
-        modelInput: contentInput,
+        modelInput: modelInput || "",
         url,
         context,
         csvSnippets,
         imageUrls,
     });
-    DEBUG && debug("[Eventy][LLM] Including image URLs:", imageUrls);
-
-    // Add timeout to prevent hanging (60 seconds)
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    debug("[Eventy][LLM] Request:", {
+        headers: Object.keys(headers),
+        inputLength: (modelInput || "").length,
+        csvSnippetCount: csvSnippets.length,
+        imageCount: imageUrls.length,
+        pageUrl: url,
+    });
 
     let response;
     try {
@@ -354,74 +307,46 @@ export async function extractEventsWithOpenRouter({
             method: "POST",
             headers,
             body: JSON.stringify(buildOpenRouterRequestBody(messages)),
-            signal: controller.signal,
+            signal: AbortSignal.timeout(60000),
         });
     } catch (err) {
-        clearTimeout(timeoutId);
-        if (err.name === "AbortError") {
+        if (err.name === "TimeoutError") {
             throw new Error("Request timed out after 60 seconds");
         }
         throw err;
     }
-    clearTimeout(timeoutId);
 
     if (!response.ok) {
         const text = await response.text();
-        // Limit error log size to prevent overflow
         const truncatedText = text.slice(0, 1000) + (text.length > 1000 ? "..." : "");
-        if (DEBUG) {
-            try {
-                debug("[Eventy][LLM] Error response text:", truncatedText);
-            } catch (_) { }
-        }
+        debug("[Eventy][LLM] Error response text:", truncatedText);
 
-        // Handle rate limiting
         if (response.status === 429) {
+            let errorData = {};
             try {
-                const errorData = JSON.parse(text);
-                throw new RateLimitError(
-                    errorData.message || "Rate limit exceeded. Please try again later.",
-                    {
-                        retryAfter: errorData.retryAfter,
-                        limitType: errorData.limitType,
-                        remaining: errorData.remaining
-                    }
-                );
-            } catch (parseErr) {
-                if (parseErr instanceof RateLimitError) throw parseErr;
-                throw new RateLimitError("Rate limit exceeded. Please try again later.");
-            }
+                errorData = JSON.parse(text);
+            } catch (_) { }
+            throw new RateLimitError(
+                errorData.message || "Rate limit exceeded. Please try again later.",
+                {
+                    retryAfter: errorData.retryAfter,
+                    limitType: errorData.limitType,
+                    remaining: errorData.remaining,
+                }
+            );
         }
 
         throw new Error(`OpenRouter error: ${response.status} ${truncatedText}`);
     }
 
     const data = await response.json();
-    DEBUG && debug(
-        "[Eventy][LLM] Raw model response (truncated):",
-        JSON.stringify(data).slice(0, 4000)
-    );
+    const events = dedupeEvents(extractEventsFromStructuredOutput(data));
+    debug("[Eventy][LLM] Extracted events:", events.length);
 
-    // Extract events from structured output
-    const extractedEvents = extractEventsFromStructuredOutput(data);
-    DEBUG && debug(
-        "[Eventy][LLM] Extracted events from structured output:",
-        extractedEvents.length
-    );
-
-    // Process events for timezone conversion
-    const events = dedupeEvents(extractedEvents);
-
-    // Convert timezones if detected
     try {
-        const processedEvents = processEventTimezones(events);
-
-        DEBUG && debug("[Eventy][LLM] Events after timezone processing:", processedEvents.length);
-
-        return processedEvents;
+        return processEventTimezones(events);
     } catch (error) {
-        // If timezone processing fails, return original events
-        DEBUG && debug("[Eventy][LLM] Timezone processing failed, returning original events:", error);
+        debug("[Eventy][LLM] Timezone processing failed, returning original events:", error);
         return events;
     }
 }
