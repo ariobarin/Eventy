@@ -124,16 +124,21 @@ function convertElementToMarkdown(node) {
     }
 }
 
+export function parseHtml(htmlInput) {
+    if (typeof DOMParser === "undefined") return null;
+    return new DOMParser().parseFromString(String(htmlInput || ""), "text/html");
+}
+
+// Accepts an HTML string or a parsed Document. Mutates a passed Document.
 export function htmlToMarkdown(htmlInput) {
     try {
-        // Check availability of DOMParser
-        if (typeof DOMParser === 'undefined') {
+        const doc = typeof htmlInput === "string" || htmlInput == null
+            ? parseHtml(htmlInput)
+            : htmlInput;
+        if (!doc) {
             console.warn("DOMParser not available, returning raw HTML");
             return htmlInput || "";
         }
-
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(String(htmlInput || ""), "text/html");
 
         removeNoisyElements(doc);
         const contentRoot = chooseContentRoot(doc);
@@ -146,7 +151,7 @@ export function htmlToMarkdown(htmlInput) {
             .trim();
     } catch (e) {
         console.error("Markdown conversion failed", e);
-        return String(htmlInput || "");
+        return typeof htmlInput === "string" ? htmlInput : "";
     }
 }
 
@@ -202,13 +207,10 @@ export function tablesToCsvSnippets(
     maxCharsPerSnippet = 6000
 ) {
     try {
-        if (typeof DOMParser === 'undefined') return [];
-
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(
-            String(htmlInput || ""),
-            "text/html"
-        );
+        const doc = typeof htmlInput === "string" || htmlInput == null
+            ? parseHtml(htmlInput)
+            : htmlInput;
+        if (!doc) return [];
         const tables = Array.from(doc.querySelectorAll("table"));
         const snippets = [];
         for (let ti = 0; ti < Math.min(tables.length, maxTables); ti++) {
@@ -1143,11 +1145,13 @@ function condenseContent(text, maxChars = MODEL_INPUT_MAX_CHARS) {
     return prependTruncationNotice(compact, maxChars);
 }
 
+// `html` may be an HTML string or a parsed Document (which gets mutated).
 export function buildModelInput(text, html, maxChars = MODEL_INPUT_MAX_CHARS) {
     const textContent = String(text || "");
     let htmlContent = "";
-    const hasHtml = html && typeof html === "string" && html.trim();
-    const canParseHtml = hasHtml && typeof DOMParser !== "undefined";
+    const isDoc = Boolean(html) && typeof html === "object";
+    const hasHtml = isDoc || (html && typeof html === "string" && html.trim());
+    const canParseHtml = isDoc || (hasHtml && typeof DOMParser !== "undefined");
 
     // Prefer HTML path when available, converting to Markdown
     if (canParseHtml) {

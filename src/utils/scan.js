@@ -1,6 +1,7 @@
 import {
     buildModelInput,
     MODEL_INPUT_MAX_CHARS,
+    parseHtml,
     tablesToCsvSnippets,
 } from "../llm/preprocess.js";
 
@@ -57,10 +58,12 @@ function modelBudgetForCsv(csvSnippets) {
 }
 
 export function preprocessForPopup(text, html) {
-    // IMPORTANT: Extract tables from RAW HTML to avoid losing tables
-    // that reside in containers filtered out by modelHtml heuristics.
-    const csvSnippets = fitCsvSnippetsToBudget(tablesToCsvSnippets(html));
-    const modelHtml = buildModelInput(text, html, modelBudgetForCsv(csvSnippets));
+    // Parse once. Tables are read first because buildModelInput strips
+    // noisy containers from the document, and tables inside them still count.
+    const doc = html && typeof html === "string" && html.trim() ? parseHtml(html) : null;
+    const source = doc || html;
+    const csvSnippets = fitCsvSnippetsToBudget(tablesToCsvSnippets(source));
+    const modelHtml = buildModelInput(text, source, modelBudgetForCsv(csvSnippets));
     return { modelHtml, csvSnippets };
 }
 
