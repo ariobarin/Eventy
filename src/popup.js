@@ -38,6 +38,19 @@ import { createPopupSettingsStore } from "./popup/settingsStore.js";
 import { captureActiveTabHtml, getActiveTab } from "./popup/tabCapture.js";
 import { hideToast, showToast } from "./popup/toast.js";
 
+function scanErrorMessage(message = "") {
+    const text = String(message).toLowerCase();
+    if (text.includes("timed out") || text.includes("timeout")) {
+        return "Scan timed out. Try again.";
+    }
+    if (text.includes("failed to fetch") || text.includes("network")) {
+        return "Network error. Check your connection.";
+    }
+    return "Scan failed. Try again.";
+}
+
+const NO_EVENTS_MESSAGE = "No events found.";
+
 const scanBtn = document.getElementById("scanBtn");
 const upcomingEventsListEl = document.getElementById("upcomingEventsList");
 const pastEventsListEl = document.getElementById("pastEventsList");
@@ -442,21 +455,15 @@ async function handleScan() {
                 return;
             }
 
-            // Clean up UI state for other errors
             setState(UI_STATE.IDLE);
-
-            // Then disable button to force refresh/retry if needed (or just show error)
-            if (scanBtn) {
-                scanBtn.disabled = true;
-            }
+            showToast(scanErrorMessage(errorMsg), "error");
             return;
         }
 
         const events = response.events || [];
         if (!events.length) {
-            error("No events found on this page");
-            // Silent failure
             setState(UI_STATE.IDLE);
+            showToast(NO_EVENTS_MESSAGE, "info");
             return;
         }
 
@@ -499,9 +506,8 @@ async function handleScan() {
             return;
         }
 
-        // Silent error handling for other errors - disable button instead of showing toast
         setState(UI_STATE.IDLE);
-        setScanAvailabilityReason("An error occurred. Please refresh the page.");
+        showToast(scanErrorMessage(errorStr), "error");
     }
 }
 
@@ -807,16 +813,15 @@ scanMediaBtn?.addEventListener("click", async () => {
                 return;
             }
 
-            showToast(errorMsg, "error");
             setState(UI_STATE.IDLE);
+            showToast(scanErrorMessage(errorMsg), "error");
             return;
         }
 
         const events = response.events || [];
         if (!events.length) {
-            console.log("No events found");
             setState(UI_STATE.IDLE);
-            // customContextSection.classList.remove("hidden"); // Already visible
+            showToast(NO_EVENTS_MESSAGE, "info");
             return;
         }
 
@@ -835,17 +840,8 @@ scanMediaBtn?.addEventListener("click", async () => {
             return;
         }
 
-        // Provide user-friendly error messages for other cases
-        let userMessage = "An unexpected error occurred";
-
-        if (errorStr.includes("network") || errorStr.includes("fetch")) {
-            userMessage = "Network error. Check your connection.";
-        } else if (errorStr.includes("timeout")) {
-            userMessage = "Request timed out";
-        }
-
-        showToast(userMessage, "error");
         setState(UI_STATE.IDLE);
+        showToast(scanErrorMessage(errorStr), "error");
     }
 });
 
@@ -917,6 +913,7 @@ async function ensureDeferredScanningAnimation() {
 function displayDeferredResults(events) {
     if (!events || events.length === 0) {
         setState(UI_STATE.IDLE);
+        showToast(NO_EVENTS_MESSAGE, "info");
         return false;
     }
     transitionFromSkeletonsToResults(events);
@@ -959,6 +956,7 @@ async function tryLoadDeferredResults(storageKey) {
                 setState(UI_STATE.QUOTA_EXCEEDED);
             } else {
                 setState(UI_STATE.IDLE);
+                showToast(scanErrorMessage(stored.error), "error");
             }
             return true;
         }
