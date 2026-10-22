@@ -55,18 +55,35 @@ function escapeICS(text) {
         .replace(/\r/g, '');
 }
 
-// Helper to fold lines longer than 75 characters (per RFC 5545)
+// Helper to fold lines longer than 75 octets (per RFC 5545)
 function foldLine(line) {
-    if (line.length <= 75) return line;
+    const encoder = typeof TextEncoder !== 'undefined' ? new TextEncoder() : null;
+
+    if (!encoder || encoder.encode(line).length <= 75) return line;
 
     const folded = [];
-    let currentLine = line;
+    let remaining = line;
 
-    while (currentLine.length > 75) {
-        folded.push(currentLine.substring(0, 75));
-        currentLine = ' ' + currentLine.substring(75);
+    while (remaining.length > 0) {
+        const maxChars = folded.length === 0 ? 75 : 74;
+        let cutPoint = remaining.length;
+
+        for (let i = Math.min(cutPoint, maxChars); i > 0; i--) {
+            const chunk = remaining.substring(0, i);
+            if (encoder.encode(chunk).length <= maxChars) {
+                cutPoint = i;
+                break;
+            }
+        }
+
+        if (cutPoint === 0) cutPoint = 1;
+
+        folded.push(remaining.substring(0, cutPoint));
+        remaining = remaining.substring(cutPoint);
+        if (remaining.length > 0) {
+            remaining = ' ' + remaining;
+        }
     }
-    folded.push(currentLine);
 
     return folded.join(CRLF);
 }
@@ -114,9 +131,10 @@ function generateVEVENT(event) {
         lines.push(`DTSTART;VALUE=DATE:${formatICSAllDayDate(startDate)}`);
         lines.push(`DTEND;VALUE=DATE:${formatICSAllDayDate(endDate)}`);
     } else {
-        const endDate = event.endTime
+        const parsedEnd = event.endTime
             ? toDate(event.endDate || event.startDate, event.endTime)
-            : addHours(startDate, 1);
+            : null;
+        const endDate = parsedEnd || addHours(startDate, 1);
         lines.push(`DTSTART:${formatICSDateTime(startDate)}`);
         lines.push(`DTEND:${formatICSDateTime(endDate)}`);
     }

@@ -67,10 +67,24 @@ export function isEventPast(event, { now = new Date(), warn = () => { }, error =
     }
 }
 
+function normalizeTimeStr(timeStr) {
+    if (!timeStr) return null;
+    const match = timeStr.match(/(\d{1,2})(?::(\d{2}))?(?::(\d{2}))?\s*([AP]M)/i);
+    if (!match) return timeStr;
+    let hours = parseInt(match[1], 10);
+    const minutes = match[2] ? match[2] : "00";
+    const seconds = match[3] ? match[3] : "00";
+    const meridiem = match[4].toUpperCase();
+    if (meridiem === "PM" && hours !== 12) hours += 12;
+    else if (meridiem === "AM" && hours === 12) hours = 0;
+    return `${String(hours).padStart(2, "0")}:${minutes}:${seconds}`;
+}
+
 export function formatDateTime(dateStr, timeStr, timeFormat = "12") {
     try {
         if (!dateStr) return "";
-        const iso = `${dateStr}${timeStr ? `T${timeStr}` : ""}`;
+        const normalizedTime = normalizeTimeStr(timeStr);
+        const iso = `${dateStr}${normalizedTime ? `T${normalizedTime}` : ""}`;
         const d = new Date(iso);
         if (Number.isNaN(d.getTime())) {
             return `${dateStr}${timeStr ? ` ${timeStr}` : ""}`;

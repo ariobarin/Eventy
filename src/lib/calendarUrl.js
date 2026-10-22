@@ -49,6 +49,9 @@ export function buildCalendarCreateUrl(event) {
         if (isAllDay) {
             return addDays(startDate, 1);
         }
+        if (!explicitEnd || explicitEnd <= startDate) {
+            return new Date(startDate.getTime() + 60 * 60 * 1000);
+        }
         return explicitEnd;
     }
 

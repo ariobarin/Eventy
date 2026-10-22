@@ -27,6 +27,8 @@ export function createScanPoller({
 } = {}) {
     const pollTimeouts = new Map();
 
+    let deferredTimeoutId = null;
+
     async function pollForResults(url, storageKey, onComplete, onError, options = {}) {
         let currentInterval = SCAN_POLL_INITIAL_INTERVAL_MS;
         let attempts = 0;
@@ -35,6 +37,7 @@ export function createScanPoller({
 
         const cleanup = () => {
             if (url) pollTimeouts.delete(url);
+            else deferredTimeoutId = null;
         };
 
         const poll = async () => {
@@ -109,6 +112,7 @@ export function createScanPoller({
 
                 const timeoutId = setTimeoutFn(poll, currentInterval);
                 if (url) pollTimeouts.set(url, timeoutId);
+                else deferredTimeoutId = timeoutId;
             } catch (err) {
                 error(err);
                 cleanup();
@@ -118,6 +122,7 @@ export function createScanPoller({
 
         const initialTimeoutId = setTimeoutFn(poll, currentInterval);
         if (url) pollTimeouts.set(url, initialTimeoutId);
+        else deferredTimeoutId = initialTimeoutId;
     }
 
     function clearForUrl(url) {
@@ -131,6 +136,10 @@ export function createScanPoller({
             if (timeout) clearTimeoutFn(timeout);
         }
         pollTimeouts.clear();
+        if (deferredTimeoutId) {
+            clearTimeoutFn(deferredTimeoutId);
+            deferredTimeoutId = null;
+        }
     }
 
     return {
