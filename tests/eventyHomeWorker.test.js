@@ -59,3 +59,13 @@ test("eventy page declares a relative favicon", async () => {
     assert.match(page, /<link rel="icon" type="image\/png" sizes="128x128" href="\.\/assets\/icon128\.png">/);
     assert.match(page, /<link rel="apple-touch-icon" href="\.\/assets\/icon128\.png">/);
 });
+
+for (const name of ["privacy", "terms"]) {
+    test(`eventy ${name} page declares its canonical url`, async () => {
+        const page = await import("node:fs/promises").then((fs) =>
+            fs.readFile(new URL(`../docs/${name}.html`, import.meta.url), "utf8"),
+        );
+
+        assert.match(page, new RegExp(`<link rel="canonical" href="https://eventy\\.ariobarin\\.com/${name}\\.html">`));
+    });
+}
